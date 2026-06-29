@@ -44,7 +44,10 @@ export async function middleware(request: NextRequest) {
   }
 
   // ── Logged in, on auth page → redirect to dashboard ──────────
-  if (pathname.startsWith("/auth/")) {
+  // Exception: /auth/callback and /auth/reset-password must stay accessible
+  // even with an active session (callback creates session; reset-password needs recovery session)
+  const AUTH_PASSTHROUGH = ["/auth/callback", "/auth/reset-password"];
+  if (pathname.startsWith("/auth/") && !AUTH_PASSTHROUGH.some((p) => pathname.startsWith(p))) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 

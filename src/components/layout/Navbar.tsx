@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
 const NAV = [
@@ -11,6 +13,7 @@ const NAV = [
 ];
 
 export default function Navbar() {
+  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -89,10 +92,11 @@ export default function Navbar() {
 
         {/* CTA */}
         <div className="hidden md:flex items-center gap-3">
-          <button className="btn-ghost text-sm px-5 py-2.5">Sign in</button>
+          <Link href="/auth/login" className="btn-ghost text-sm px-5 py-2.5">Sign in</Link>
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
+            onClick={() => router.push("/auth/register")}
             className="btn-primary text-sm px-5 py-2.5"
           >
             Get Started
@@ -138,8 +142,8 @@ export default function Navbar() {
                 </a>
               ))}
               <div className="pt-4 border-t flex flex-col gap-2" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-                <button className="btn-ghost w-full">Sign in</button>
-                <button className="btn-primary w-full">Get Started Free</button>
+                <Link href="/auth/login" className="btn-ghost w-full text-center" onClick={() => setOpen(false)}>Sign in</Link>
+                <button className="btn-primary w-full" onClick={() => { setOpen(false); router.push("/auth/register"); }}>Get Started Free</button>
               </div>
             </div>
           </motion.div>

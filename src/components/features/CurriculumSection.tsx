@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
 const LEVELS = [
@@ -37,6 +38,7 @@ const LEVELS = [
 ];
 
 export default function CurriculumSection() {
+  const router = useRouter();
   const [active, setActive] = useState("o-level");
   const lvl = LEVELS.find((l) => l.id === active)!;
 
@@ -131,6 +133,7 @@ export default function CurriculumSection() {
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.97 }}
+                onClick={() => router.push("/auth/register")}
                 className="mt-8 px-6 py-3 rounded-xl text-sm font-semibold font-display transition-all"
                 style={{
                   background: `${lvl.accent}15`,

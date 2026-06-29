@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import { useRouter } from "next/navigation";
 import { motion, useScroll, useTransform } from "framer-motion";
 
 const STAGES = [
@@ -49,6 +50,7 @@ const STAGES = [
 ];
 
 export default function HbcSection() {
+  const router = useRouter();
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start end", "end start"] });
   const lineHeight = useTransform(scrollYProgress, [0.1, 0.9], ["0%", "100%"]);
@@ -174,6 +176,7 @@ export default function HbcSection() {
           <motion.button
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
+            onClick={() => router.push("/auth/register")}
             className="flex-shrink-0 px-6 py-3 rounded-xl text-sm font-semibold font-display"
             style={{
               background: "rgba(245,166,35,0.15)",

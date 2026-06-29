@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion, useScroll, useTransform } from "framer-motion";
 
 const WORDS = ["LEARN.", "EXCEL.", "LEAD."];
@@ -57,6 +58,7 @@ function RotatingSubject() {
 }
 
 export default function HeroSection() {
+  const router = useRouter();
   const heroRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
   const opacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
@@ -161,6 +163,7 @@ export default function HeroSection() {
           <motion.button
             whileHover={{ scale: 1.03, boxShadow: "0 0 50px rgba(77,127,255,0.45)" }}
             whileTap={{ scale: 0.96 }}
+            onClick={() => router.push("/auth/register")}
             className="btn-primary text-base px-7 py-3.5"
           >
             Start Learning Free
@@ -171,6 +174,7 @@ export default function HeroSection() {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
+            onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
             className="btn-ghost text-base px-7 py-3.5"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
 const ROLES = [
@@ -10,6 +11,7 @@ const ROLES = [
 ];
 
 export default function CTASection() {
+  const router = useRouter();
   return (
     <section className="section" id="cta">
       <div className="container-voa">
@@ -51,6 +53,7 @@ export default function CTASection() {
                 <p className="text-sm leading-relaxed" style={{ color: "#6B7290" }}>{r.sub}</p>
               </div>
               <button
+                onClick={() => router.push("/auth/register")}
                 className="w-full py-2.5 rounded-lg text-sm font-semibold transition-all duration-200"
                 style={{
                   background: `${r.accent}12`,
@@ -118,6 +121,7 @@ export default function CTASection() {
                 <motion.button
                   whileHover={{ scale: 1.04, boxShadow: "0 0 60px rgba(77,127,255,0.5)" }}
                   whileTap={{ scale: 0.97 }}
+                  onClick={() => router.push("/auth/register")}
                   className="btn-primary text-base px-10 py-4"
                 >
                   Start Learning Free →
@@ -125,6 +129,7 @@ export default function CTASection() {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.97 }}
+                  onClick={() => router.push("/auth/register")}
                   className="btn-ghost text-base px-10 py-4"
                 >
                   Book a School Demo

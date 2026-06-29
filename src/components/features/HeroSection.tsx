@@ -148,7 +148,7 @@ export default function HeroSection() {
         >
           <span>Master</span>
           <RotatingSubject />
-          <span>with Zimbabwe's most advanced AI tutor — Sir Taks.</span>
+          <span>with Zimbabwe&apos;s most advanced AI tutor — Sir Taks.</span>
         </motion.div>
 
         {/* CTA row */}

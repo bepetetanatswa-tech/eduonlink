@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
                         'form1','form2','form3','form4','form5','form6'
                       )),
   school_id           UUID REFERENCES public.schools(id) ON DELETE SET NULL,
+  school_name         TEXT,
   enrolled_subjects   TEXT[],
   -- Teacher fields
   teaching_subjects   TEXT[],
@@ -83,7 +84,7 @@ BEGIN
 
   INSERT INTO public.profiles (
     id, email, role, first_name, last_name,
-    form_level, school_id, enrolled_subjects,
+    form_level, school_id, school_name, enrolled_subjects,
     teaching_subjects, qualifications, bio, years_experience
   ) VALUES (
     NEW.id,
@@ -97,6 +98,7 @@ BEGIN
       THEN (NEW.raw_user_meta_data->>'school_id')::UUID
       ELSE NULL
     END,
+    NEW.raw_user_meta_data->>'school_name',
     CASE
       WHEN NEW.raw_user_meta_data->'enrolled_subjects' IS NOT NULL
       THEN ARRAY(SELECT jsonb_array_elements_text(NEW.raw_user_meta_data->'enrolled_subjects'))

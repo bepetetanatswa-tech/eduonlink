@@ -5,9 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const NAV = [
   { label: "Curriculum", href: "#curriculum" },
-  { label: "Sir Taks AI", href: "#ai" },
+  { label: "Features",   href: "#features" },
+  { label: "HBC Projects", href: "#hbc" },
   { label: "For Schools", href: "#cta" },
-  { label: "Pricing", href: "#pricing" },
 ];
 
 export default function Navbar() {

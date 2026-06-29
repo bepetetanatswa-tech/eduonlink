@@ -3,11 +3,12 @@ import HeroSection from "@/components/features/HeroSection";
 import MarqueeSection from "@/components/features/MarqueeSection";
 import StatsSection from "@/components/features/StatsSection";
 import FeaturesSection from "@/components/features/FeaturesSection";
-import AiSection from "@/components/features/AiSection";
 import CurriculumSection from "@/components/features/CurriculumSection";
 import HbcSection from "@/components/features/HbcSection";
 import CTASection from "@/components/features/CTASection";
 import Footer from "@/components/layout/Footer";
+
+// AiSection (Sir Taks tutor demo) lives inside the authenticated app — not on the public landing page
 
 export default function HomePage() {
   return (
@@ -17,7 +18,6 @@ export default function HomePage() {
       <MarqueeSection />
       <StatsSection />
       <FeaturesSection />
-      <AiSection />
       <CurriculumSection />
       <HbcSection />
       <CTASection />

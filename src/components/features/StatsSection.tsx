@@ -3,122 +3,71 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
 
-interface Stat {
-  value: number;
-  suffix: string;
-  label: string;
-  sublabel: string;
-  color: "blue" | "gold";
-}
-
-const stats: Stat[] = [
-  { value: 10000, suffix: "+", label: "Active Students", sublabel: "Across Zimbabwe", color: "blue" },
-  { value: 500, suffix: "+", label: "Schools Onboarded", sublabel: "Urban & Rural", color: "gold" },
-  { value: 2000, suffix: "+", label: "Teachers", sublabel: "Verified Educators", color: "blue" },
-  { value: 12, suffix: "", label: "ZIMSEC Subjects", sublabel: "O & A Level + Primary", color: "gold" },
+const STATS = [
+  { value: 10000,   suffix: "+", label: "Active Students",    sub: "and growing daily",      accent: "#4D7FFF" },
+  { value: 500,     suffix: "+", label: "Schools Onboarded",  sub: "urban & rural Zimbabwe",  accent: "#F5A623" },
+  { value: 2000,    suffix: "+", label: "Verified Teachers",  sub: "across all subjects",     accent: "#00E5A3" },
+  { value: 4.9,     suffix: "",  label: "Average Rating",     sub: "from 3,000+ reviews",     accent: "#4D7FFF", isFloat: true },
 ];
 
-function useCountUp(target: number, duration: number, active: boolean) {
-  const [count, setCount] = useState(0);
+function Counter({ value, suffix, active, isFloat }: { value: number; suffix: string; active: boolean; isFloat?: boolean }) {
+  const [display, setDisplay] = useState(0);
 
   useEffect(() => {
     if (!active) return;
-    let start = 0;
-    const step = target / (duration / 16);
-    const timer = setInterval(() => {
-      start += step;
-      if (start >= target) {
-        setCount(target);
-        clearInterval(timer);
-      } else {
-        setCount(Math.floor(start));
-      }
-    }, 16);
-    return () => clearInterval(timer);
-  }, [active, target, duration]);
-
-  return count;
-}
-
-function StatCard({ stat, index }: { stat: Stat; index: number }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-100px" });
-  const count = useCountUp(stat.value, 2000, inView);
-
-  const colorMap = {
-    blue: { text: "text-voa-blue", glow: "glow-blue", border: "border-voa-blue/20" },
-    gold: { text: "text-voa-gold", glow: "glow-gold", border: "border-voa-gold/20" },
-  };
-  const c = colorMap[stat.color];
+    const duration = 1800;
+    const start = performance.now();
+    const raf = requestAnimationFrame(function tick(now) {
+      const t = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setDisplay(isFloat ? parseFloat((value * eased).toFixed(1)) : Math.floor(value * eased));
+      if (t < 1) requestAnimationFrame(tick);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [active, value, isFloat]);
 
   return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: 0.6, delay: index * 0.1, ease: "easeOut" }}
-      whileHover={{ y: -6 }}
-      className={`glass rounded-2xl p-8 border ${c.border} relative overflow-hidden group cursor-default`}
-    >
-      {/* Background glow on hover */}
-      <div
-        className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl`}
-        style={{
-          background:
-            stat.color === "blue"
-              ? "radial-gradient(circle at 30% 30%, rgba(0,212,255,0.08) 0%, transparent 70%)"
-              : "radial-gradient(circle at 30% 30%, rgba(255,215,0,0.08) 0%, transparent 70%)",
-        }}
-      />
-
-      <div className="relative z-10">
-        <div className={`font-display font-bold text-5xl lg:text-6xl ${c.text} mb-2 leading-none`}>
-          {count.toLocaleString()}
-          <span className="text-3xl">{stat.suffix}</span>
-        </div>
-        <div className="text-white font-semibold text-lg mb-1">{stat.label}</div>
-        <div className="text-white/40 text-sm">{stat.sublabel}</div>
-      </div>
-
-      {/* Corner accent */}
-      <div
-        className={`absolute top-0 right-0 w-16 h-16 rounded-bl-full opacity-20`}
-        style={{
-          background:
-            stat.color === "blue"
-              ? "linear-gradient(225deg, rgba(0,212,255,0.6) 0%, transparent 100%)"
-              : "linear-gradient(225deg, rgba(255,215,0,0.6) 0%, transparent 100%)",
-        }}
-      />
-    </motion.div>
+    <>
+      {isFloat ? display.toFixed(1) : display.toLocaleString()}
+      {suffix}
+    </>
   );
 }
 
 export default function StatsSection() {
-  return (
-    <section className="py-24 relative overflow-hidden" id="stats">
-      {/* Section header */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16"
-        >
-          <p className="text-voa-blue text-sm font-semibold tracking-widest uppercase mb-4">
-            By The Numbers
-          </p>
-          <h2 className="font-display font-bold text-4xl lg:text-5xl text-white">
-            Zimbabwe&apos;s education is{" "}
-            <span className="text-gradient-blue">levelling up</span>
-          </h2>
-        </motion.div>
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-100px" });
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {stats.map((stat, i) => (
-            <StatCard key={stat.label} stat={stat} index={i} />
+  return (
+    <section ref={ref} className="section-sm" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+      <div className="container-voa">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-px rounded-2xl overflow-hidden"
+          style={{ background: "rgba(255,255,255,0.04)" }}
+        >
+          {STATS.map((s, i) => (
+            <motion.div
+              key={s.label}
+              initial={{ opacity: 0 }}
+              animate={inView ? { opacity: 1 } : {}}
+              transition={{ duration: 0.5, delay: i * 0.1 }}
+              className="flex flex-col p-8 group transition-colors duration-300"
+              style={{ background: "#07080C" }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.background = `${s.accent}06`;
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.background = "#07080C";
+              }}
+            >
+              <span
+                className="font-display font-bold mb-1 tabular-nums"
+                style={{ fontSize: "clamp(36px, 5vw, 56px)", lineHeight: 1, color: s.accent }}
+              >
+                <Counter value={s.value} suffix={s.suffix} active={inView} isFloat={s.isFloat} />
+              </span>
+              <span className="font-semibold text-sm text-white mb-1">{s.label}</span>
+              <span className="text-xs" style={{ color: "#4A5170" }}>{s.sub}</span>
+            </motion.div>
           ))}
         </div>
       </div>

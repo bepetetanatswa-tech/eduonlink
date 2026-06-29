@@ -1,152 +1,187 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useRef } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
 
-const stages = [
+const STAGES = [
   {
-    number: "01",
+    n: "01",
     name: "Identification",
-    description: "Identify a problem or opportunity in your community using traditional and modern methods.",
+    description: "Spot a problem or opportunity in your community. Consult local leaders, elders, and peers. Document the challenge with evidence.",
+    accent: "#4D7FFF",
     icon: "🔍",
-    color: "#00D4FF",
   },
   {
-    number: "02",
+    n: "02",
     name: "Investigation",
-    description: "Research your topic, gather data, consult elders and experts, review relevant literature.",
+    description: "Deep research. Gather data, conduct interviews, review heritage literature. Sir Taks helps you structure your findings.",
+    accent: "#6A8FFF",
     icon: "📊",
-    color: "#4DE8FF",
   },
   {
-    number: "03",
+    n: "03",
     name: "Design",
-    description: "Plan your solution or project. Create prototypes, models, and detailed project plans.",
+    description: "Plan your solution. Prototypes, models, detailed timelines. Sir Taks generates your full SBP blueprint automatically.",
+    accent: "#F5A623",
     icon: "✏️",
-    color: "#FFD700",
   },
   {
-    number: "04",
+    n: "04",
     name: "Implementation",
-    description: "Execute your plan, track progress, document every step with evidence and reflections.",
+    description: "Execute the plan. Document every step with photos, notes, and evidence. Track milestones on your VOA dashboard.",
+    accent: "#F5C423",
     icon: "⚙️",
-    color: "#FFC107",
   },
   {
-    number: "05",
+    n: "05",
     name: "Evaluation",
-    description: "Assess your project outcomes against goals. What worked? What would you improve?",
+    description: "Measure your outcomes against your objectives. What worked? What would you do differently? Honest reflection earns marks.",
+    accent: "#00E5A3",
     icon: "📋",
-    color: "#00D4FF",
   },
   {
-    number: "06",
+    n: "06",
     name: "Presentation",
-    description: "Present your work to peers, teachers, and community. Showcase Zimbabwe's next generation of innovators.",
+    description: "Present your work to peers, teachers, and community. VOA helps you build a polished slide deck and speaking notes.",
+    accent: "#00B882",
     icon: "🎤",
-    color: "#FFD700",
   },
 ];
 
 export default function HbcSection() {
-  return (
-    <section className="py-24 relative overflow-hidden" id="hbc">
-      {/* Gradient background */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background:
-            "radial-gradient(ellipse at 20% 50%, rgba(0,212,255,0.06) 0%, transparent 50%), radial-gradient(ellipse at 80% 50%, rgba(255,215,0,0.06) 0%, transparent 50%)",
-        }}
-      />
+  const sectionRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start end", "end start"] });
+  const lineHeight = useTransform(scrollYProgress, [0.1, 0.9], ["0%", "100%"]);
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  return (
+    <section ref={sectionRef} className="section" id="hbc">
+      <div className="container-voa">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className="max-w-2xl mb-16"
         >
-          <p className="text-voa-gold text-sm font-semibold tracking-widest uppercase mb-4">
+          <p className="font-mono text-xs font-medium tracking-[0.15em] uppercase mb-4" style={{ color: "#F5A623" }}>
             Heritage-Based Curriculum
           </p>
-          <h2 className="font-display font-bold text-4xl lg:text-5xl text-white mb-6">
-            The{" "}
-            <span className="text-shimmer">HBC Project</span>{" "}
-            — guided, step by step
+          <h2 className="font-display font-bold text-white mb-4" style={{ fontSize: "clamp(30px, 5vw, 52px)", lineHeight: 1.1 }}>
+            The HBC project —{" "}
+            <span className="text-gradient-amber">guided by AI,</span><br />
+            owned by you.
           </h2>
-          <p className="text-white/50 text-lg max-w-2xl mx-auto">
-            Zimbabwe&apos;s HBC project is unique. VOA is the only platform with built-in support for
-            all 6 official HBC stages — from identification to final presentation.
+          <p className="text-sm leading-relaxed" style={{ color: "#6B7290" }}>
+            Zimbabwe&apos;s HBC project is unlike anything in global education. VOA is the only platform
+            with built-in AI support for all 6 official stages — from community identification to final presentation.
           </p>
         </motion.div>
 
-        {/* Stages */}
+        {/* Timeline */}
         <div className="relative">
-          {/* Connecting line */}
-          <div className="hidden lg:block absolute top-12 left-0 right-0 h-px bg-gradient-to-r from-transparent via-voa-blue/20 to-transparent" />
+          {/* Vertical progress line */}
+          <div
+            className="absolute left-[19px] top-5 bottom-5 w-px hidden lg:block"
+            style={{ background: "rgba(255,255,255,0.06)" }}
+          >
+            <motion.div
+              className="w-full"
+              style={{
+                height: lineHeight,
+                background: "linear-gradient(to bottom, #4D7FFF, #F5A623, #00E5A3)",
+              }}
+            />
+          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {stages.map((stage, i) => (
+          <div className="space-y-3 lg:space-y-2">
+            {STAGES.map((stage, i) => (
               <motion.div
-                key={stage.number}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.6, delay: i * 0.1, ease: "easeOut" }}
-                whileHover={{ y: -4 }}
-                className="glass rounded-2xl p-6 relative group"
-                style={{ borderColor: `${stage.color}22` }}
+                key={stage.n}
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.55, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
+                className="flex gap-6 group"
               >
-                {/* Stage number */}
-                <div className="flex items-start justify-between mb-4">
-                  <span
-                    className="font-display font-bold text-5xl leading-none"
-                    style={{ color: stage.color, opacity: 0.2 }}
+                {/* Node */}
+                <div className="flex-shrink-0 relative z-10">
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center font-mono text-xs font-bold transition-all duration-300 group-hover:scale-110"
+                    style={{
+                      background: `${stage.accent}15`,
+                      border: `1px solid ${stage.accent}35`,
+                      color: stage.accent,
+                    }}
                   >
-                    {stage.number}
-                  </span>
-                  <span className="text-3xl">{stage.icon}</span>
+                    {stage.n}
+                  </div>
                 </div>
 
-                <h3
-                  className="font-display font-bold text-xl mb-3 transition-colors"
-                  style={{ color: stage.color }}
-                >
-                  {stage.name}
-                </h3>
-                <p className="text-white/50 text-sm leading-relaxed">{stage.description}</p>
-
-                {/* Bottom accent */}
-                <div
-                  className="absolute bottom-0 left-6 right-6 h-px opacity-0 group-hover:opacity-100 transition-opacity"
+                {/* Card */}
+                <motion.div
+                  whileHover={{ x: 4, transition: { duration: 0.2 } }}
+                  className="flex-1 rounded-xl p-5 mb-0 transition-all duration-300 group"
                   style={{
-                    background: `linear-gradient(90deg, transparent, ${stage.color}, transparent)`,
+                    background: "rgba(15,16,24,0.6)",
+                    border: "1px solid rgba(255,255,255,0.05)",
                   }}
-                />
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.borderColor = `${stage.accent}30`;
+                    (e.currentTarget as HTMLElement).style.background = `${stage.accent}05`;
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.05)";
+                    (e.currentTarget as HTMLElement).style.background = "rgba(15,16,24,0.6)";
+                  }}
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-lg">{stage.icon}</span>
+                    <h3 className="font-display font-bold text-white text-base" style={{ color: stage.accent }}>
+                      {stage.name}
+                    </h3>
+                  </div>
+                  <p className="text-sm leading-relaxed pl-7" style={{ color: "#6B7290" }}>
+                    {stage.description}
+                  </p>
+                </motion.div>
               </motion.div>
             ))}
           </div>
         </div>
 
-        {/* CTA */}
+        {/* SBP blueprint CTA */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="text-center mt-12"
+          transition={{ duration: 0.6 }}
+          className="mt-12 rounded-2xl p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6"
+          style={{
+            background: "rgba(245,166,35,0.06)",
+            border: "1px solid rgba(245,166,35,0.15)",
+          }}
         >
-          <p className="text-white/40 text-sm mb-4">
-            Students get AI-powered guidance at every stage. Teachers can track all projects in real-time.
-          </p>
+          <div>
+            <p className="font-mono text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "#F5A623" }}>
+              New in VOA
+            </p>
+            <h4 className="font-display font-bold text-white text-xl mb-1">SBP Blueprint Generator</h4>
+            <p className="text-sm" style={{ color: "#6B7290" }}>
+              Describe your project idea — Sir Taks generates a full, ZIMSEC-compliant SBP blueprint in seconds.
+            </p>
+          </div>
           <motion.button
-            whileHover={{ scale: 1.04 }}
+            whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
-            className="glass-gold px-8 py-3 rounded-xl font-semibold text-voa-gold text-sm hover:glow-gold transition-all"
+            className="flex-shrink-0 px-6 py-3 rounded-xl text-sm font-semibold font-display"
+            style={{
+              background: "rgba(245,166,35,0.15)",
+              color: "#F5A623",
+              border: "1px solid rgba(245,166,35,0.3)",
+            }}
           >
-            See How HBC Projects Work →
+            Generate My Blueprint →
           </motion.button>
         </motion.div>
       </div>

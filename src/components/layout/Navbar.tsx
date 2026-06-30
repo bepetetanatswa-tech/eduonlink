@@ -6,10 +6,11 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
 const NAV = [
-  { label: "Curriculum", href: "#curriculum" },
-  { label: "Features",   href: "#features" },
-  { label: "HBC Projects", href: "#hbc" },
-  { label: "For Schools", href: "#cta" },
+  { label: "Curriculum",  href: "/#curriculum" },
+  { label: "Features",    href: "/#features" },
+  { label: "HBC Projects",href: "/#hbc" },
+  { label: "For Schools", href: "/#cta" },
+  { label: "About",       href: "/about" },
 ];
 
 export default function Navbar() {

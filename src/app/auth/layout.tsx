@@ -106,19 +106,18 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
           {/* Trust bar */}
           <div className="mt-8 pt-6" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-            <p className="text-xs mb-3" style={{ color: "#4A5170" }}>Trusted by students across Zimbabwe</p>
-            <div className="flex items-center gap-4">
-              <div className="flex -space-x-1.5">
-                {["#4D7FFF","#F5A623","#00E5A3","#A78BFA","#4D7FFF"].map((c, i) => (
-                  <div key={i} className="w-7 h-7 rounded-full border-2" style={{ background: `radial-gradient(circle at 35% 35%, white, ${c})`, borderColor: "#07080C" }} />
-                ))}
-              </div>
-              <div>
-                <div className="flex gap-0.5">
-                  {[1,2,3,4,5].map((i) => <span key={i} className="text-[#F5A623] text-xs">★</span>)}
+            <p className="text-xs mb-3" style={{ color: "#4A5170" }}>Powering Zimbabwe&apos;s next generation</p>
+            <div className="flex flex-col gap-2">
+              {[
+                { label: "28+ ZIMSEC subjects covered", accent: "#4D7FFF" },
+                { label: "All 10 provinces, urban & rural", accent: "#00E5A3" },
+                { label: "Free for every student, always", accent: "#F5A623" },
+              ].map((f) => (
+                <div key={f.label} className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: f.accent }} />
+                  <span className="text-xs" style={{ color: "#4A5170" }}>{f.label}</span>
                 </div>
-                <p className="text-xs" style={{ color: "#4A5170" }}>10,000+ students · 4.9/5 rating</p>
-              </div>
+              ))}
             </div>
           </div>
         </div>

@@ -114,7 +114,7 @@ export default function CTASection() {
                 <span className="text-shimmer-cobalt">Zimbabwe&apos;s education.</span>
               </h3>
               <p className="text-base mb-10 max-w-xl mx-auto" style={{ color: "#6B7290" }}>
-                10,000+ students. 500+ schools. Free to start — no credit card, no commitment.
+                28+ ZIMSEC subjects. All 10 provinces. Free for every student — no credit card, no commitment.
                 Join the platform that&apos;s redefining what education looks like in Zimbabwe.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">

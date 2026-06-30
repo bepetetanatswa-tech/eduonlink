@@ -1,10 +1,33 @@
 "use client";
 
-const COL = {
-  Platform: ["Curriculum","Sir Taks AI","Live Classes","HBC Projects","Past Papers","SBP Blueprints"],
-  Students:  ["O-Level Courses","A-Level Courses","Primary School","ZIMSEC Prep","Study Groups"],
-  Schools:   ["Partner Schools","Teacher Portal","Parent Portal","Admin Dashboard","Book a Demo"],
-  Company:   ["About VOA","Our Mission","Blog","Careers","Contact","Privacy"],
+import Link from "next/link";
+
+const COL: Record<string, { label: string; href: string }[]> = {
+  Platform: [
+    { label: "ZIMSEC Curriculum",  href: "/#curriculum" },
+    { label: "Sir Taks AI",        href: "/#features" },
+    { label: "HBC Projects",       href: "/#hbc" },
+    { label: "For Schools",        href: "/#cta" },
+  ],
+  Students: [
+    { label: "O-Level Courses",    href: "/auth/register" },
+    { label: "A-Level Courses",    href: "/auth/register" },
+    { label: "Primary School",     href: "/auth/register" },
+    { label: "ZIMSEC Prep",        href: "/auth/register" },
+  ],
+  Schools: [
+    { label: "Partner Schools",    href: "mailto:schools@voa.co.zw" },
+    { label: "Teacher Portal",     href: "/auth/register" },
+    { label: "Parent Portal",      href: "/auth/register" },
+    { label: "Book a Demo",        href: "mailto:demo@voa.co.zw" },
+  ],
+  Company: [
+    { label: "About VOA",          href: "/about" },
+    { label: "Our Mission",        href: "/about#mission" },
+    { label: "Contact",            href: "mailto:hello@voa.co.zw" },
+    { label: "Privacy Policy",     href: "/privacy" },
+    { label: "Terms of Service",   href: "/terms" },
+  ],
 };
 
 export default function Footer() {
@@ -18,7 +41,7 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-12 mb-16">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
-            <a href="/" className="flex items-center gap-2.5 mb-4 group">
+            <Link href="/" className="flex items-center gap-2.5 mb-4 group">
               <div className="relative w-9 h-9">
                 <div className="absolute inset-0 rounded-xl opacity-50" style={{ background: "linear-gradient(135deg, #4D7FFF, #00E5A3)" }} />
                 <div className="absolute inset-[1px] rounded-[11px] flex items-center justify-center" style={{ background: "#07080C" }}>
@@ -26,7 +49,7 @@ export default function Footer() {
                 </div>
               </div>
               <span className="font-display font-bold text-white">VOA</span>
-            </a>
+            </Link>
             <p className="text-xs leading-relaxed mb-5" style={{ color: "#4A5170" }}>
               The intelligence behind Zimbabwe&apos;s education. AI-powered. ZIMSEC-aligned. Built for every student.
             </p>
@@ -44,15 +67,15 @@ export default function Footer() {
               </p>
               <ul className="space-y-2.5">
                 {links.map((l) => (
-                  <li key={l}>
+                  <li key={l.label}>
                     <a
-                      href="#"
+                      href={l.href}
                       className="text-sm transition-colors duration-150"
                       style={{ color: "#4A5170" }}
                       onMouseEnter={(e) => ((e.target as HTMLElement).style.color = "#8892B0")}
                       onMouseLeave={(e) => ((e.target as HTMLElement).style.color = "#4A5170")}
                     >
-                      {l}
+                      {l.label}
                     </a>
                   </li>
                 ))}

@@ -14,7 +14,10 @@ export default function PrivacyPage() {
         </Link>
 
         <h1 className="font-display font-bold text-white text-3xl mb-2">Privacy Policy</h1>
-        <p className="text-sm mb-10" style={{ color: "#4A5170" }}>Last updated: June 2025</p>
+        <p className="text-sm mb-1" style={{ color: "#4A5170" }}>Last updated: June 2026</p>
+        <p className="text-xs mb-10" style={{ color: "#2A2D3E" }}>
+          Vavhimi Online Academy (VOA) is a product of <strong style={{ color: "#4A5170" }}>Vavhimi Threads (Pvt) Ltd</strong>, a registered company in Zimbabwe.
+        </p>
 
         <div className="flex flex-col gap-8" style={{ color: "#8892B0" }}>
           <section>

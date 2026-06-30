@@ -11,7 +11,9 @@ import VoiceGreeting from "@/components/features/VoiceGreeting";
 
 export default function HomePage() {
   return (
-    <div className="relative min-h-screen" style={{ background: "#07080C" }}>
+    <div className="grain relative min-h-screen" style={{ background: "#07080C" }}>
+      {/* mesh-bg scoped to landing page only — prevents gradient bleeding into other pages */}
+      <div className="mesh-bg" aria-hidden="true" />
       <VoiceGreeting />
       <Navbar />
       <HeroSection />

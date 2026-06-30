@@ -25,8 +25,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           rel="stylesheet"
         />
       </head>
-      <body className="grain antialiased">
-        <div className="mesh-bg" aria-hidden="true" />
+      <body className="antialiased">
         {children}
       </body>
     </html>

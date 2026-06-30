@@ -90,7 +90,9 @@ export default function Footer() {
           style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}
         >
           <p className="text-xs" style={{ color: "#4A5170" }}>
-            © 2025 Vavhimi Online Academy · Built in Zimbabwe, for Zimbabwe.
+            © 2026 Vavhimi Threads (Pvt) Ltd. All rights reserved.
+            <span className="mx-2 opacity-40">·</span>
+            VOA is a product of Vavhimi Threads · Built in Zimbabwe, for Zimbabwe.
           </p>
           <div className="flex items-center gap-4">
             <span className="badge badge-cobalt text-[11px]">🇿🇼 ZIMSEC Aligned</span>

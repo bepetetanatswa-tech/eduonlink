@@ -52,10 +52,10 @@ const TIMELINE = [
 function FadeIn({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] }}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      viewport={{ once: true, amount: 0.1 }}
+      transition={{ duration: 0.3, delay }}
       className={className}
     >
       {children}
@@ -123,8 +123,8 @@ export default function AboutPage() {
             <div
               className="rounded-3xl p-10 lg:p-16 relative overflow-hidden"
               style={{
-                background: "rgba(77,127,255,0.04)",
-                border: "1px solid rgba(77,127,255,0.12)",
+                background: "#0D0F1A",
+                border: "1px solid rgba(77,127,255,0.18)",
               }}
             >
               <div
@@ -190,7 +190,7 @@ export default function AboutPage() {
                   <div
                     key={s.stat}
                     className="flex items-center gap-5 p-5 rounded-2xl"
-                    style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}
+                    style={{ background: "#0F1018", border: "1px solid rgba(255,255,255,0.07)" }}
                   >
                     <span className="font-display font-bold text-2xl flex-shrink-0 w-20" style={{ color: s.accent }}>
                       {s.stat}
@@ -221,7 +221,7 @@ export default function AboutPage() {
               <FadeIn key={v.title} delay={i * 0.08}>
                 <div
                   className="p-7 rounded-2xl h-full"
-                  style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}
+                  style={{ background: "#0F1018", border: "1px solid rgba(255,255,255,0.07)" }}
                 >
                   <div
                     className="w-10 h-10 rounded-xl flex items-center justify-center text-lg mb-5"
@@ -294,7 +294,7 @@ export default function AboutPage() {
               <FadeIn key={m.name}>
                 <div
                   className="flex flex-col sm:flex-row gap-6 p-7 rounded-2xl"
-                  style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}
+                  style={{ background: "#0F1018", border: "1px solid rgba(255,255,255,0.07)" }}
                 >
                   <div
                     className="w-14 h-14 rounded-2xl flex items-center justify-center font-display font-bold text-xl flex-shrink-0"

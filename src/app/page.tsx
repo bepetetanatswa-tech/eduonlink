@@ -7,12 +7,12 @@ import CurriculumSection from "@/components/features/CurriculumSection";
 import HbcSection from "@/components/features/HbcSection";
 import CTASection from "@/components/features/CTASection";
 import Footer from "@/components/layout/Footer";
-
-// AiSection (Sir Taks tutor demo) lives inside the authenticated app — not on the public landing page
+import VoiceGreeting from "@/components/features/VoiceGreeting";
 
 export default function HomePage() {
   return (
     <div className="relative min-h-screen" style={{ background: "#07080C" }}>
+      <VoiceGreeting />
       <Navbar />
       <HeroSection />
       <MarqueeSection />

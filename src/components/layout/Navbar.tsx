@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -15,6 +15,7 @@ const NAV = [
 
 export default function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -23,6 +24,9 @@ export default function Navbar() {
     window.addEventListener("scroll", fn, { passive: true });
     return () => window.removeEventListener("scroll", fn);
   }, []);
+
+  // Close mobile drawer on navigation
+  useEffect(() => { setOpen(false); }, [pathname]);
 
   return (
     <motion.header
@@ -72,22 +76,22 @@ export default function Navbar() {
         {/* Desktop links */}
         <div className="hidden md:flex items-center gap-1">
           {NAV.map((item) => (
-            <a
+            <Link
               key={item.label}
               href={item.href}
               className="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200"
               style={{ color: "#8892B0" }}
               onMouseEnter={(e) => {
-                (e.target as HTMLElement).style.color = "#fff";
-                (e.target as HTMLElement).style.background = "rgba(255,255,255,0.05)";
+                (e.currentTarget as HTMLElement).style.color = "#fff";
+                (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)";
               }}
               onMouseLeave={(e) => {
-                (e.target as HTMLElement).style.color = "#8892B0";
-                (e.target as HTMLElement).style.background = "transparent";
+                (e.currentTarget as HTMLElement).style.color = "#8892B0";
+                (e.currentTarget as HTMLElement).style.background = "transparent";
               }}
             >
               {item.label}
-            </a>
+            </Link>
           ))}
         </div>
 
@@ -132,7 +136,7 @@ export default function Navbar() {
           >
             <div className="container-voa py-6 flex flex-col gap-2">
               {NAV.map((item) => (
-                <a
+                <Link
                   key={item.label}
                   href={item.href}
                   onClick={() => setOpen(false)}
@@ -140,7 +144,7 @@ export default function Navbar() {
                   style={{ color: "#8892B0" }}
                 >
                   {item.label}
-                </a>
+                </Link>
               ))}
               <div className="pt-4 border-t flex flex-col gap-2" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
                 <Link href="/auth/login" className="btn-ghost w-full text-center" onClick={() => setOpen(false)}>Sign in</Link>

@@ -34,9 +34,9 @@ const VALUES = [
 
 const TEAM = [
   {
-    name: "Taks Bepete",
+    name: "Tanatswa Bepete",
     role: "Founder & CEO",
-    bio: "Taks built VOA to solve the education gap he witnessed firsthand. Sir Taks AI — the platform's tutor — is named after him. He believes every Zimbabwean child deserves a world-class education, regardless of postcode or income.",
+    bio: "Tanatswa built VOA to solve the education gap he witnessed firsthand. Sir Taks AI — the platform's tutor — is named after him. He believes every Zimbabwean child deserves a world-class education, regardless of postcode or income.",
     accent: "#4D7FFF",
     initial: "T",
   },
@@ -146,7 +146,7 @@ export default function AboutPage() {
                 a world-class education. VOA is how we make that happen.&rdquo;
               </blockquote>
               <p className="text-sm font-semibold" style={{ color: "#4D7FFF" }}>
-                — Taks Bepete, Founder
+                — Tanatswa Bepete, Founder
               </p>
             </div>
           </FadeIn>

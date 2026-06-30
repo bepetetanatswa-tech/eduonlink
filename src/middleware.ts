@@ -3,7 +3,17 @@ import { updateSession } from "@/lib/supabase/middleware";
 import type { Profile } from "@/types/database";
 
 // Routes that never need auth
-const PUBLIC_ROUTES = ["/", "/auth/login", "/auth/register", "/auth/forgot-password", "/auth/verify-email", "/auth/callback"];
+const PUBLIC_ROUTES = [
+  "/",
+  "/about",
+  "/privacy",
+  "/terms",
+  "/auth/login",
+  "/auth/register",
+  "/auth/forgot-password",
+  "/auth/verify-email",
+  "/auth/callback",
+];
 
 // Role → allowed path prefixes
 const ROLE_ROUTES: Record<string, string[]> = {

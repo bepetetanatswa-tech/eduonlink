@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, useScroll, useTransform } from "framer-motion";
+import dynamic from "next/dynamic";
+
+const HeroScene = dynamic(() => import("./HeroScene"), { ssr: false, loading: () => null });
 
 const WORDS = ["LEARN.", "EXCEL.", "LEAD."];
 const SUBJECTS = ["Mathematics", "Physics", "Chemistry", "Biology", "Geography", "History", "Shona", "Accounts", "Commerce", "English", "Economics"];
@@ -63,6 +66,19 @@ export default function HeroSection() {
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
   const opacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
+  const [show3D, setShow3D] = useState(false);
+
+  useEffect(() => {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const lowEnd =
+      typeof navigator !== "undefined" &&
+      navigator.hardwareConcurrency !== undefined &&
+      navigator.hardwareConcurrency < 4;
+
+    if (!reduced && !lowEnd) {
+      setShow3D(true);
+    }
+  }, []);
 
   return (
     <section
@@ -70,10 +86,22 @@ export default function HeroSection() {
       className="relative min-h-screen flex flex-col justify-center overflow-hidden pt-20"
       style={{ background: "transparent" }}
     >
+      {/* 3D canvas — behind everything, pointer events disabled */}
+      {show3D && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ zIndex: 1 }}
+          aria-hidden="true"
+        >
+          <HeroScene />
+        </div>
+      )}
+
       {/* Geometric grid overlay */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
+          zIndex: 2,
           backgroundImage: `
             linear-gradient(rgba(77,127,255,0.04) 1px, transparent 1px),
             linear-gradient(90deg, rgba(77,127,255,0.04) 1px, transparent 1px)
@@ -89,6 +117,7 @@ export default function HeroSection() {
         transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
         className="absolute pointer-events-none"
         style={{
+          zIndex: 2,
           top: "-10%",
           left: "50%",
           transform: "translateX(-50%)",
@@ -105,6 +134,7 @@ export default function HeroSection() {
         transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 3 }}
         className="absolute bottom-0 right-[15%] pointer-events-none"
         style={{
+          zIndex: 2,
           width: 500,
           height: 500,
           borderRadius: "50%",
@@ -113,7 +143,8 @@ export default function HeroSection() {
         }}
       />
 
-      <motion.div style={{ y, opacity }} className="relative z-10 container-voa">
+      {/* Text content — above canvas and orbs */}
+      <motion.div style={{ y, opacity, position: "relative", zIndex: 10 }} className="container-voa">
         {/* Eyebrow */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -191,7 +222,7 @@ export default function HeroSection() {
           </div>
         </motion.div>
 
-        {/* Stats row — inline, minimal */}
+        {/* Stats row */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -219,6 +250,7 @@ export default function HeroSection() {
         animate={{ opacity: 1 }}
         transition={{ delay: 2 }}
         className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
+        style={{ zIndex: 10 }}
       >
         <motion.div
           animate={{ y: [0, 6, 0] }}

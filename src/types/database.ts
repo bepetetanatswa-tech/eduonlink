@@ -17,6 +17,8 @@ export interface Profile {
   form_level: FormLevel | null;
   school_id: string | null;
   school_name: string | null;
+  province: string | null;
+  school_type: "government" | "private" | "mission" | "international" | null;
   enrolled_subjects: string[] | null;
   // Teacher
   teaching_subjects: string[] | null;

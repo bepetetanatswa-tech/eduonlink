@@ -114,37 +114,51 @@ export default function RegisterPage() {
 
     setLoading(true);
 
-    const { error: signUpError } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
-      options: {
-        data: {
-          first_name: form.firstName,
-          last_name: form.lastName,
-          role: form.role,
-          form_level: form.formLevel || null,
-          school_name: form.schoolName || null,
-          province: form.province || null,
-          school_type: form.schoolType || null,
-          qualifications: form.qualifications || null,
-          years_experience: form.yearsExperience ? parseInt(form.yearsExperience) : null,
-          teaching_subjects: form.teachingSubjects.length > 0 ? form.teachingSubjects : null,
+    try {
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+        options: {
+          data: {
+            first_name: form.firstName,
+            last_name: form.lastName,
+            role: form.role,
+            form_level: form.formLevel || null,
+            school_name: form.schoolName || null,
+            province: form.province || null,
+            school_type: form.schoolType || null,
+            qualifications: form.qualifications || null,
+            years_experience: form.yearsExperience ? parseInt(form.yearsExperience) : null,
+            teaching_subjects: form.teachingSubjects.length > 0 ? form.teachingSubjects : null,
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=/onboarding`,
         },
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=/onboarding`,
-      },
-    });
+      });
 
-    setLoading(false);
+      if (signUpError) {
+        console.error("Supabase signUp error:", {
+          message: signUpError.message,
+          status: signUpError.status,
+          name: signUpError.name,
+          raw: signUpError,
+        });
+        const msg = typeof signUpError.message === "string" ? signUpError.message : "";
+        setError(
+          msg.toLowerCase().includes("already registered") || msg.toLowerCase().includes("already exists")
+            ? "An account with this email already exists. Try signing in instead."
+            : msg || `Registration failed (code ${signUpError.status ?? "unknown"}). Please try again.`
+        );
+        return;
+      }
 
-    if (signUpError) {
-      setError(signUpError.message.includes("already registered")
-        ? "An account with this email already exists. Try signing in instead."
-        : signUpError.message
-      );
-      return;
+      router.push(`/auth/verify-email?email=${encodeURIComponent(form.email)}`);
+    } catch (err: unknown) {
+      console.error("Unexpected signUp error:", err);
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(msg || "An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    router.push(`/auth/verify-email?email=${encodeURIComponent(form.email)}`);
   };
 
   const toggleSubject = (subject: string) => {

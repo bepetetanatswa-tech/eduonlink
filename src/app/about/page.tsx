@@ -69,7 +69,7 @@ export default function AboutPage() {
       <Navbar />
 
       {/* ── Hero ────────────────────────────────────────────────── */}
-      <section className="pt-36 pb-24 px-6 relative overflow-hidden">
+      <section className="pt-28 md:pt-36 pb-16 md:pb-24 px-6 relative overflow-hidden">
         {/* Background glow */}
         <div
           className="absolute inset-0 pointer-events-none"
@@ -182,8 +182,8 @@ export default function AboutPage() {
             <FadeIn delay={0.15}>
               <div className="flex flex-col gap-4">
                 {[
-                  { stat: "14 subjects", desc: "Full ZIMSEC O-Level and A-Level curriculum covered", accent: "#4D7FFF" },
-                  { stat: "24 / 7", desc: "Sir Taks AI tutor available any time, on any device", accent: "#00E5A3" },
+                  { stat: "28+",  desc: "ZIMSEC subjects — O-Level, A-Level and Primary", accent: "#4D7FFF" },
+                  { stat: "24/7", desc: "AI tutor access on any device, urban or rural", accent: "#00E5A3" },
                   { stat: "All 10", desc: "Zimbabwe provinces served — urban and rural", accent: "#F5A623" },
                   { stat: "Free", desc: "For every student. No credit card. No commitment.", accent: "#A78BFA" },
                 ].map((s) => (

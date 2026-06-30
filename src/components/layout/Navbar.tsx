@@ -48,7 +48,7 @@ export default function Navbar() {
 
       <nav className="relative container-voa h-16 flex items-center justify-between">
         {/* Logo */}
-        <a href="/" className="flex items-center gap-2.5 group">
+        <Link href="/" className="flex items-center gap-2.5 group">
           <div className="relative w-8 h-8 flex-shrink-0">
             {/* Animated logo mark */}
             <div
@@ -71,7 +71,7 @@ export default function Navbar() {
             <span className="font-display font-bold text-white text-[15px] tracking-tight">VOA</span>
             <span className="text-[9px] font-mono uppercase tracking-[0.15em]" style={{ color: "#4A5170" }}>Vavhimi</span>
           </div>
-        </a>
+        </Link>
 
         {/* Desktop links */}
         <div className="hidden md:flex items-center gap-1">

@@ -123,13 +123,13 @@ export default function HeroSection() {
         >
           <span className="badge badge-cobalt">
             <span className="w-1.5 h-1.5 rounded-full bg-[#4D7FFF] animate-pulse" />
-            Public Beta — ZIMSEC 2024–2025
+            Launching 2026 — ZIMSEC Aligned
           </span>
           <span className="badge badge-mint">
             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
             </svg>
-            Sir Taks AI Now Live
+            Sir Taks AI — Coming Soon
           </span>
         </motion.div>
 
@@ -200,10 +200,10 @@ export default function HeroSection() {
           style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
         >
           {[
-            { n: "10K+", l: "Active Students" },
-            { n: "500+", l: "Schools" },
-            { n: "12",   l: "ZIMSEC Subjects" },
-            { n: "6",    l: "HBC Stages Supported" },
+            { n: "28+",  l: "ZIMSEC Subjects" },
+            { n: "10",   l: "Provinces Covered" },
+            { n: "6",    l: "HBC Stages" },
+            { n: "Free", l: "For Every Student" },
           ].map((s) => (
             <div key={s.l} className="flex flex-col">
               <span className="font-display font-bold text-2xl text-white">{s.n}</span>

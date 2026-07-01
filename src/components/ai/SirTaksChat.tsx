@@ -190,11 +190,17 @@ export function SirTaksChat({ profileId, userName, userRole, initialQuestionsUse
     setStreamText("");
 
     try {
+      // Strip leading assistant messages — the welcome message is UI-only.
+      // Every AI provider requires the first message to be from the user.
+      const flat = nextMessages.map((m) => ({ role: m.role, content: m.content }));
+      const firstUserIdx = flat.findIndex((m) => m.role === "user");
+      const apiMessages = firstUserIdx > 0 ? flat.slice(firstUserIdx) : flat;
+
       const res = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: nextMessages.map((m) => ({ role: m.role, content: m.content })),
+          messages: apiMessages,
           topic,
           profileId,
           role: userRole,

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { streamWithFallback } from "@/lib/ai/providers";
 
 type UserRole = "student" | "teacher" | "parent" | "school_admin" | "super_admin";
 
@@ -144,19 +144,10 @@ export async function POST(req: Request) {
       return jsonError("Missing profileId or messages", 400, "bad_request");
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey || apiKey === "placeholder_set_in_vercel") {
-      return jsonError(
-        "GEMINI_API_KEY is not configured. Set it in Vercel → Project → Settings → Environment Variables.",
-        503,
-        "gemini_key_missing"
-      );
-    }
-
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceKey || serviceKey === "placeholder_set_in_vercel") {
       return jsonError(
-        "SUPABASE_SERVICE_ROLE_KEY is not configured. Set it in Vercel → Project → Settings → Environment Variables.",
+        "SUPABASE_SERVICE_ROLE_KEY is not configured in Vercel environment variables.",
         503,
         "supabase_key_missing"
       );
@@ -165,7 +156,7 @@ export async function POST(req: Request) {
     const admin = createAdminClient();
     const today = new Date().toISOString().split("T")[0];
 
-    // Get usage row (non-fatal — default to 0 if table missing)
+    // Get usage row (non-fatal)
     const { data: usageRow, error: usageErr } = await (admin.from("ai_usage") as any)
       .select("id, questions_used")
       .eq("user_id", profileId)
@@ -203,46 +194,31 @@ export async function POST(req: Request) {
     const userRole: UserRole = role ?? "student";
     const systemPrompt = SYSTEM_PROMPTS[userRole]?.(topic, userName) ?? SYSTEM_PROMPTS.student(topic, userName);
 
-    let genAI: GoogleGenerativeAI;
-    try {
-      genAI = new GoogleGenerativeAI(apiKey);
-    } catch (initErr) {
-      return jsonError(`Gemini init failed: ${String(initErr)}`, 503, "gemini_init_failed");
-    }
-
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",  // flash is faster and more available than pro
-      systemInstruction: systemPrompt,
-    });
-
     const history = messages.slice(0, -1).map((m) => ({
-      role: m.role === "assistant" ? "model" : "user",
-      parts: [{ text: m.content }],
-    }));
+      role: m.role === "assistant" ? "assistant" : "user",
+      content: m.content,
+    })) as { role: "user" | "assistant"; content: string }[];
 
-    const chat = model.startChat({ history });
-
-    let result;
+    // Try providers in order: Gemini → Groq → OpenAI → Anthropic
+    let providerResult;
     try {
-      result = await chat.sendMessageStream(messages[messages.length - 1].content);
-    } catch (geminiErr: any) {
-      const msg = geminiErr?.message ?? String(geminiErr);
-      console.error("[AI Chat] Gemini API error:", msg);
-      return jsonError(`Gemini API error: ${msg}`, 502, "gemini_api_error");
+      providerResult = await streamWithFallback(systemPrompt, history, messages[messages.length - 1].content);
+    } catch (err: any) {
+      return jsonError(err?.message ?? "All AI providers failed", 503, "all_providers_failed");
     }
+
+    const { stream: aiStream, provider } = providerResult;
 
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          for await (const chunk of result.stream) {
-            const text = chunk.text();
+          for await (const text of aiStream) {
             if (text) controller.enqueue(new TextEncoder().encode(text));
           }
         } catch (streamErr: any) {
-          console.error("[AI Chat] Stream error:", streamErr?.message ?? streamErr);
+          console.error(`[AI Chat] Stream error (${provider}):`, streamErr?.message ?? streamErr);
         } finally {
           controller.close();
-          // Track usage
           if (isLimited) {
             try {
               if (usageRow) {
@@ -267,6 +243,7 @@ export async function POST(req: Request) {
         "Cache-Control": "no-cache",
         "X-Questions-Used": String(questionsUsed + 1),
         "X-Daily-Limit": isLimited ? String(dailyLimit) : "unlimited",
+        "X-AI-Provider": provider,
       },
     });
   } catch (err: any) {

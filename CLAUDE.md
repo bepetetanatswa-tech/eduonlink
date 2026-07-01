@@ -1,4 +1,13 @@
+
 # VOA Production — Claude Instructions
+
+## Working Style
+You are my senior app engineer. We are building this app together.
+
+Before writing any code:
+1. Ask any questions needed to fully understand what's being built
+2. Work on one small feature at a time
+
 
 ## Stage Completion Checklist
 Before marking any stage complete, run a full self-audit:

@@ -17,9 +17,17 @@ export default function Icon() {
         }}
       >
         <svg viewBox="0 0 80 80" width="28" height="28">
-          <polygon points="6,6 26,6 40,64 32,74" fill="#1E3D8A" />
-          <polygon points="54,6 74,6 48,74 40,64" fill="#4D7FFF" />
-          <polygon points="32,74 40,64 48,74" fill="#F5A623" />
+          {/* Left page */}
+          <polygon points="5,8 33,14 38,68 7,62"   fill="#1A3575" />
+          {/* Right page */}
+          <polygon points="47,14 75,8 73,62 42,68"  fill="#4D7FFF" />
+          {/* Gold spine tip */}
+          <polygon points="38,68 40,74 42,68 40,63" fill="#F5A623" />
+          {/* Gold star */}
+          <polygon
+            points="40,2.5 41.5,6.9 46.2,7.0 42.5,9.8 43.8,14.3 40,11.6 36.2,14.3 37.5,9.8 33.8,7.0 38.5,6.9"
+            fill="#FFD166"
+          />
         </svg>
       </div>
     ),

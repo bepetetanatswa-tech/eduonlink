@@ -33,9 +33,10 @@ function VoaMark() {
     groupRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.25) * 0.12;
   });
 
-  const leftGeo  = useMemo(() => extrudeShape([[6,6],[26,6],[40,64],[32,74]]), []);
-  const rightGeo = useMemo(() => extrudeShape([[54,6],[74,6],[48,74],[40,64]]), []);
-  const tipGeo   = useMemo(() => extrudeShape([[32,74],[40,64],[48,74]]), []);
+  // Geometry mirrors the 2D open-book logo mark exactly
+  const leftGeo  = useMemo(() => extrudeShape([[5,8],[33,14],[38,68],[7,62]]), []);
+  const rightGeo = useMemo(() => extrudeShape([[47,14],[75,8],[73,62],[42,68]]), []);
+  const tipGeo   = useMemo(() => extrudeShape([[38,68],[40,74],[42,68],[40,63]]), []);
 
   const leftMat = useMemo(() => new THREE.MeshStandardMaterial({
     color: "#1A3A7C", metalness: 0.65, roughness: 0.2,

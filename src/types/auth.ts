@@ -1,5 +1,9 @@
 import { z } from "zod";
-import type { UserRole, FormLevel } from "./database";
+import type { UserRole } from "./database";
+
+export type FormLevel =
+  | "ecd" | "grade1" | "grade2" | "grade3" | "grade4" | "grade5" | "grade6" | "grade7"
+  | "form1" | "form2" | "form3" | "form4" | "form5" | "form6";
 
 export const SUPER_ADMIN_EMAIL = "bepetetanatswa@gmail.com";
 
@@ -136,4 +140,4 @@ export const ROLE_META: Record<
 };
 
 export type RegisterRole = "student" | "teacher" | "parent" | "school_admin";
-export type { UserRole, FormLevel };
+export type { UserRole };

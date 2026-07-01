@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { Profile } from "@/types/database";
 
 const ROLE_REDIRECTS: Record<string, string> = {
   student:      "/student/dashboard",
@@ -15,9 +14,13 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
 
-  const result = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  const profile = result.data as Pick<Profile, "role"> | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: profile } = await (supabase.from("profiles") as any)
+    .select("role")
+    .eq("user_id", user.id)
+    .single();
 
-  const dest = profile?.role ? (ROLE_REDIRECTS[profile.role] ?? "/student/dashboard") : "/student/dashboard";
+  const role = (profile as { role?: string } | null)?.role;
+  const dest = role ? (ROLE_REDIRECTS[role] ?? "/student/dashboard") : "/student/dashboard";
   redirect(dest);
 }

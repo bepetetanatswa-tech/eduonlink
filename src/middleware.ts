@@ -1,8 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
-import type { Profile } from "@/types/database";
 
-// Routes that never need auth
 const PUBLIC_ROUTES = [
   "/",
   "/about",
@@ -15,7 +13,6 @@ const PUBLIC_ROUTES = [
   "/auth/callback",
 ];
 
-// Role → allowed path prefixes
 const ROLE_ROUTES: Record<string, string[]> = {
   student:      ["/student", "/dashboard"],
   teacher:      ["/teacher", "/dashboard"],
@@ -37,14 +34,12 @@ function roleAllowed(role: string, pathname: string): boolean {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Always allow public assets / Next internals
   if (pathname.startsWith("/_next") || pathname.startsWith("/api") || pathname.includes(".")) {
     return NextResponse.next();
   }
 
   const { supabaseResponse, user, supabase } = await updateSession(request);
 
-  // ── Not logged in ─────────────────────────────────────────────
   if (!user) {
     if (isPublic(pathname)) return supabaseResponse;
     const url = request.nextUrl.clone();
@@ -53,29 +48,20 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // ── Logged in, on auth page → redirect to dashboard ──────────
-  // Exception: /auth/callback and /auth/reset-password must stay accessible
-  // even with an active session (callback creates session; reset-password needs recovery session)
   const AUTH_PASSTHROUGH = ["/auth/callback", "/auth/reset-password"];
   if (pathname.startsWith("/auth/") && !AUTH_PASSTHROUGH.some((p) => pathname.startsWith(p))) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  // ── Onboarding guard ─────────────────────────────────────────
-  if (pathname !== "/onboarding") {
-    const profileResult = await supabase
-      .from("profiles")
-      .select("onboarding_completed, role")
-      .eq("id", user.id)
+  if (!isPublic(pathname)) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const profileResult = await (supabase.from("profiles") as any)
+      .select("role")
+      .eq("user_id", user.id)
       .single();
-    const profile = profileResult.data as Pick<Profile, "onboarding_completed" | "role"> | null;
+    const profile = profileResult.data as { role: string } | null;
 
-    if (profile && !profile.onboarding_completed) {
-      return NextResponse.redirect(new URL("/onboarding", request.url));
-    }
-
-    // ── Role-based route guard ────────────────────────────────
-    if (profile && !isPublic(pathname) && !roleAllowed(profile.role, pathname)) {
+    if (profile && !roleAllowed(profile.role, pathname)) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
   }

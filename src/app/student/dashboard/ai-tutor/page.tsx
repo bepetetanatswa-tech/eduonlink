@@ -1,14 +1,36 @@
-﻿export default function Page() {
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { SirTaksChat } from "@/components/ai/SirTaksChat";
+
+export default async function AITutorPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/auth/login");
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: profile } = await (supabase.from("profiles") as any)
+    .select("id, full_name, role")
+    .eq("user_id", user.id)
+    .single();
+
+  if (!profile || profile.role !== "student") redirect("/dashboard");
+
+  const today = new Date().toISOString().split("T")[0];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: usage } = await (supabase.from("ai_usage") as any)
+    .select("questions_used").eq("user_id", profile.id).eq("date", today).maybeSingle();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: sub } = await (supabase.from("subscriptions") as any)
+    .select("plan, status").eq("user_id", profile.id).in("status", ["active", "trial"]).maybeSingle();
+
   return (
-    <div style={{ maxWidth: 700, display: "flex", flexDirection: "column", gap: "20px" }}>
-      <div>
-        <h2 style={{ fontSize: "20px", fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif" }}>Sir Taks AI Tutor</h2>
-        <p style={{ fontSize: "12px", color: "#4A5170", marginTop: 2 }}>Your 24/7 ZIMSEC-aligned AI tutor — ask anything</p>
-      </div>
-      <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "16px", padding: "40px", textAlign: "center" }}>
-        <p style={{ fontSize: "15px", color: "#6B7290", fontFamily: "'Space Grotesk', sans-serif", marginBottom: 8 }}>Sir Taks AI Tutor</p>
-        <p style={{ fontSize: "13px", color: "#4A5170" }}>Full functionality for this section is being built in the next stage.</p>
-      </div>
-    </div>
+    <SirTaksChat
+      profileId={profile.id}
+      userName={profile.full_name || "Student"}
+      userRole="student"
+      initialQuestionsUsed={usage?.questions_used ?? 0}
+      plan={sub?.plan ?? "free"}
+    />
   );
 }

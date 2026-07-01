@@ -3,8 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { createClient } from "@/lib/supabase/client";
-
 const STEPS = [
   {
     id: "welcome",
@@ -36,7 +34,6 @@ export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
-  const supabase = createClient();
 
   const current = STEPS[step];
 
@@ -46,11 +43,6 @@ export default function OnboardingPage() {
       return;
     }
     setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase.from("profiles") as any).update({ onboarding_completed: true }).eq("id", user.id);
-    }
     router.push("/dashboard");
     router.refresh();
   };

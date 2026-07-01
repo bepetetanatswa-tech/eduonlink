@@ -141,10 +141,7 @@ export default async function AdminOverviewPage() {
                 {(recentUsers ?? []).length === 0 ? (
                   <tr><td colSpan={3} style={{ padding: "32px", textAlign: "center", color: "#4A5170", fontSize: "13px" }}>No users yet</td></tr>
                 ) : (recentUsers ?? []).map((u: { id: string; full_name: string; email: string; role: string; created_at: string }) => (
-                  <tr key={u.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.03)", transition: "background 0.1s" }}
-                    onMouseEnter={(e) => ((e.currentTarget as HTMLTableRowElement).style.background = "rgba(255,255,255,0.02)")}
-                    onMouseLeave={(e) => ((e.currentTarget as HTMLTableRowElement).style.background = "transparent")}
-                  >
+                  <tr key={u.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.03)" }}>
                     <td style={{ padding: "12px 20px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                         <div style={{ width: 30, height: 30, borderRadius: "8px", background: "linear-gradient(135deg, #1A3575, #4D7FFF)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, color: "#fff", flexShrink: 0 }}>

@@ -11,6 +11,7 @@ const PUBLIC_ROUTES = [
   "/auth/forgot-password",
   "/auth/verify-email",
   "/auth/callback",
+  "/maintenance",
 ];
 
 const ROLE_ROUTES: Record<string, string[]> = {
@@ -46,6 +47,21 @@ export async function middleware(request: NextRequest) {
     url.pathname = "/auth/login";
     url.searchParams.set("redirectTo", pathname);
     return NextResponse.redirect(url);
+  }
+
+  // Maintenance mode — check for non-admin users
+  if (!pathname.startsWith("/admin") && pathname !== "/maintenance") {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: setting } = await (supabase.from("platform_settings") as any)
+      .select("value").eq("key", "maintenance_mode").maybeSingle();
+    if (setting?.value === true) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const profileRes = await (supabase.from("profiles") as any)
+        .select("role").eq("user_id", user.id).single();
+      if (profileRes.data?.role !== "super_admin") {
+        return NextResponse.redirect(new URL("/maintenance", request.url));
+      }
+    }
   }
 
   const AUTH_PASSTHROUGH = ["/auth/callback", "/auth/reset-password"];

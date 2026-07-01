@@ -1,14 +1,37 @@
-export default function Page() {
-  return (
-    <div style={{ maxWidth: 700, display: "flex", flexDirection: "column", gap: "20px" }}>
-      <div>
-        <h2 style={{ fontSize: "20px", fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif" }}>Subscriptions</h2>
-        <p style={{ fontSize: "12px", color: "#4A5170", marginTop: 2 }}>Manage school and user subscription plans</p>
-      </div>
-      <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "16px", padding: "40px", textAlign: "center" }}>
-        <p style={{ fontSize: "15px", color: "#6B7290", fontFamily: "'Space Grotesk', sans-serif", marginBottom: 8 }}>Subscription Management</p>
-        <p style={{ fontSize: "13px", color: "#4A5170" }}>Plan upgrades, billing history, and renewal management — coming in Stage 5.</p>
-      </div>
-    </div>
-  );
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { SubscriptionsClient } from "./SubscriptionsClient";
+
+export default async function SubscriptionsPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/auth/login");
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: profile } = await (supabase.from("profiles") as any)
+    .select("id, role").eq("user_id", user.id).single();
+  if (!profile || profile.role !== "super_admin") redirect("/dashboard");
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: subs } = await (supabase.from("subscriptions") as any)
+    .select(`
+      id, plan, status, amount_paid, currency, payment_method, start_date, end_date, created_at,
+      profiles!user_id(id, full_name, email, role)
+    `)
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  const [
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    { count: active }, { count: trial }, { count: expired },
+  ] = await Promise.all([
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase.from("subscriptions") as any).select("*", { count: "exact", head: true }).eq("status", "active"),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase.from("subscriptions") as any).select("*", { count: "exact", head: true }).eq("status", "trial"),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase.from("subscriptions") as any).select("*", { count: "exact", head: true }).eq("status", "expired"),
+  ]);
+
+  return <SubscriptionsClient subs={subs ?? []} stats={{ active: active ?? 0, trial: trial ?? 0, expired: expired ?? 0 }} />;
 }

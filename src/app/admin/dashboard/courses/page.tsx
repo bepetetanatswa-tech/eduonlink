@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { SettingsPanel } from "@/components/admin/SettingsPanel";
+import { CourseManager } from "@/components/admin/CourseManager";
 
-export default async function SettingsPage() {
+export default async function CoursesPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
@@ -13,13 +13,9 @@ export default async function SettingsPage() {
   if (!profile || profile.role !== "super_admin") redirect("/dashboard");
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: settings } = await (supabase.from("platform_settings") as any)
-    .select("key, value");
+  const { data: courses } = await (supabase.from("courses") as any)
+    .select("id, title, description, subject, grade_level, is_published, order_index, thumbnail_emoji, created_at")
+    .order("created_at", { ascending: false });
 
-  return (
-    <SettingsPanel
-      initialSettings={settings ?? []}
-      adminId={profile.id}
-    />
-  );
+  return <CourseManager initialCourses={courses ?? []} adminId={profile.id} />;
 }

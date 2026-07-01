@@ -55,7 +55,7 @@ export function StatCard({ label, value, subtitle, icon, accentColor = "#4D7FFF"
               padding: "2px 8px", borderRadius: "20px",
             }}
           >
-            {trend.value >= 0 ? "+" : ""}{trend.value}% {trend.label}
+            {trend.value >= 0 ? "+" : ""}{trend.value} {trend.label}
           </span>
         )}
       </div>

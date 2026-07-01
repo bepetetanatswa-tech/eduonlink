@@ -50,7 +50,7 @@ export default async function SchoolDashboardPage() {
       : Promise.resolve({ data: [] }),
     schoolId
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ? (supabase.from("school_members") as any).select("id, user_id, joined_at").eq("school_id", schoolId).eq("role", "teacher").order("joined_at", { ascending: false }).limit(5)
+      ? (supabase.from("school_members") as any).select("id, user_id, joined_at, profiles(full_name, email)").eq("school_id", schoolId).eq("role", "teacher").order("joined_at", { ascending: false }).limit(5)
       : Promise.resolve({ data: [] }),
   ]);
 
@@ -115,13 +115,13 @@ export default async function SchoolDashboardPage() {
           <div style={{ padding: "8px" }}>
             {(recentTeachers ?? []).length === 0 ? (
               <EmptyState icon={<svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>} title="No teachers yet" description="Invite teachers to join your school." />
-            ) : (recentTeachers ?? []).map((t: { id: string; user_id: string; joined_at: string }) => (
+            ) : (recentTeachers ?? []).map((t: { id: string; joined_at: string; profiles: { full_name: string; email: string } | null }) => (
               <div key={t.id} style={{ padding: "10px", borderRadius: "10px", marginBottom: 4, display: "flex", alignItems: "center", gap: "10px" }}>
-                <div style={{ width: 28, height: 28, borderRadius: "8px", background: "rgba(0,229,163,0.1)", border: "1px solid rgba(0,229,163,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <svg width="13" height="13" fill="none" stroke="#00E5A3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                <div style={{ width: 28, height: 28, borderRadius: "8px", background: "rgba(0,229,163,0.1)", border: "1px solid rgba(0,229,163,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "10px", fontWeight: 700, color: "#00E5A3" }}>
+                  {t.profiles?.full_name?.charAt(0).toUpperCase() ?? "?"}
                 </div>
                 <div>
-                  <p style={{ fontSize: "11px", color: "#8892B0", fontFamily: "monospace" }}>{t.user_id.slice(0, 16)}…</p>
+                  <p style={{ fontSize: "12px", fontWeight: 600, color: "#CDD6F4" }}>{t.profiles?.full_name ?? "Unknown"}</p>
                   <p style={{ fontSize: "10px", color: "#4A5170" }}>Joined {new Date(t.joined_at).toLocaleDateString()}</p>
                 </div>
               </div>

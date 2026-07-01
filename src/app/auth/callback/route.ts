@@ -61,42 +61,28 @@ async function ensureProfileExists(
   user: { id: string; email?: string; user_metadata?: Record<string, unknown> }
 ) {
   try {
+    // New schema: profiles.user_id = auth.users.id
     const { data: existing } = await supabase
       .from("profiles")
       .select("id")
-      .eq("id", user.id)
-      .single();
+      .eq("user_id" as never, user.id)
+      .maybeSingle();
 
     if (existing) return;
 
     const meta = (user.user_metadata ?? {}) as Record<string, string>;
     const email = user.email ?? "";
-
-    const years = meta.years_experience && /^\d+$/.test(meta.years_experience)
-      ? parseInt(meta.years_experience, 10)
-      : 0;
-
-    const validFormLevels = new Set([
-      "ecd","grade1","grade2","grade3","grade4","grade5","grade6","grade7",
-      "form1","form2","form3","form4","form5","form6",
-    ]);
-    const formLevel = validFormLevels.has(meta.form_level) ? meta.form_level : null;
+    const fullName = meta.full_name ?? meta.name ?? email.split("@")[0];
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase.from("profiles") as any).insert({
-      id: user.id,
+      user_id: user.id,
       email,
+      full_name: fullName,
       role: email === SUPER_ADMIN_EMAIL ? "super_admin" : (meta.role ?? "student"),
-      first_name: meta.first_name ?? null,
-      last_name: meta.last_name ?? null,
-      school_name: meta.school_name ?? null,
-      province: meta.province ?? null,
-      school_type: meta.school_type ?? null,
-      form_level: formLevel ?? null,
-      qualifications: meta.qualifications ?? null,
-      years_experience: years,
+      avatar_url: meta.avatar_url ?? meta.picture ?? null,
     });
   } catch {
-    // Must not block the auth redirect
+    // Must not block the auth redirect — DB trigger handles creation anyway
   }
 }

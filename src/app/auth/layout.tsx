@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { VoaLogoMark } from "@/components/logo/VoaLogoMark";
 
 export const dynamic = "force-dynamic";
 
@@ -57,12 +58,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="relative z-10 flex flex-col h-full p-12">
           {/* Logo */}
           <a href="/" className="flex items-center gap-3">
-            <div className="relative w-9 h-9">
-              <div className="absolute inset-0 rounded-xl opacity-70" style={{ background: "linear-gradient(135deg, #4D7FFF, #00E5A3)" }} />
-              <div className="absolute inset-[1px] rounded-[10px] flex items-center justify-center" style={{ background: "#07080C" }}>
-                <span className="font-display font-bold text-sm" style={{ background: "linear-gradient(135deg, #4D7FFF, #00E5A3)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>V</span>
-              </div>
-            </div>
+            <VoaLogoMark size={36} />
             <span className="font-display font-bold text-white text-lg">VOA</span>
           </a>
 

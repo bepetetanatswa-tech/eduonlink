@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { VoaLogoMark } from "@/components/logo/VoaLogoMark";
 
 const COL: Record<string, { label: string; href: string }[]> = {
   Platform: [
@@ -41,13 +42,8 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-12 mb-16">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
-            <Link href="/" className="flex items-center gap-2.5 mb-4 group">
-              <div className="relative w-9 h-9">
-                <div className="absolute inset-0 rounded-xl opacity-50" style={{ background: "linear-gradient(135deg, #4D7FFF, #00E5A3)" }} />
-                <div className="absolute inset-[1px] rounded-[11px] flex items-center justify-center" style={{ background: "#07080C" }}>
-                  <span className="font-display font-bold text-sm" style={{ background: "linear-gradient(135deg, #4D7FFF, #00E5A3)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>V</span>
-                </div>
-              </div>
+            <Link href="/" className="flex items-center gap-2.5 mb-4">
+              <VoaLogoMark size={36} />
               <span className="font-display font-bold text-white">VOA</span>
             </Link>
             <p className="text-xs leading-relaxed mb-5" style={{ color: "#4A5170" }}>

@@ -69,7 +69,7 @@ body {
   background-size: 200% 200%;
   animation: meshDrift 25s ease-in-out infinite;
   pointer-events: none;
-  z-index: 0;
+  z-index: -1;
 }
 @keyframes meshDrift {
   0%,100% { background-position: 0% 0%, 100% 100%, 50% 50%, center; }

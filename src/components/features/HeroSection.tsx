@@ -84,7 +84,7 @@ export default function HeroSection() {
     <section
       ref={heroRef}
       className="relative min-h-screen flex flex-col justify-center overflow-hidden pt-20"
-      style={{ background: "transparent" }}
+      style={{ background: "transparent", isolation: "isolate" }}
     >
       {/* 3D canvas — behind everything, pointer events disabled */}
       {show3D && (

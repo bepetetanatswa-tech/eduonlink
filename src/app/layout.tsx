@@ -24,6 +24,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap"
           rel="stylesheet"
         />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#4D7FFF" />
       </head>
       <body className="antialiased">
         {children}

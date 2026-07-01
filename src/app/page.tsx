@@ -11,19 +11,23 @@ import VoiceGreeting from "@/components/features/VoiceGreeting";
 
 export default function HomePage() {
   return (
-    <div className="grain relative min-h-screen" style={{ background: "#07080C" }}>
-      {/* mesh-bg scoped to landing page only — prevents gradient bleeding into other pages */}
+    <div className="grain" style={{ background: "#07080C" }}>
+      {/* mesh-bg scoped to landing page only */}
       <div className="mesh-bg" aria-hidden="true" />
       <VoiceGreeting />
       <Navbar />
       <HeroSection />
-      <MarqueeSection />
-      <StatsSection />
-      <FeaturesSection />
-      <CurriculumSection />
-      <HbcSection />
-      <CTASection />
-      <Footer />
+
+      {/* Sections paint above the hero's isolated WebGL stacking context */}
+      <div style={{ position: "relative", zIndex: 2, background: "#07080C" }}>
+        <MarqueeSection />
+        <StatsSection />
+        <FeaturesSection />
+        <CurriculumSection />
+        <HbcSection />
+        <CTASection />
+        <Footer />
+      </div>
     </div>
   );
 }

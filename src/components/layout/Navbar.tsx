@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { VoaLogoMark } from "@/components/logo/VoaLogoMark";
 
 const NAV = [
   { label: "Curriculum",  href: "/#curriculum" },
@@ -49,24 +50,7 @@ export default function Navbar() {
       <nav className="relative container-voa h-16 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="relative w-8 h-8 flex-shrink-0">
-            {/* Animated logo mark */}
-            <div
-              className="absolute inset-0 rounded-lg opacity-60 group-hover:opacity-100 transition-opacity duration-300"
-              style={{ background: "linear-gradient(135deg, #4D7FFF, #00E5A3)" }}
-            />
-            <div
-              className="absolute inset-[1px] rounded-[7px] flex items-center justify-center"
-              style={{ background: "#07080C" }}
-            >
-              <span
-                className="font-display font-bold text-sm"
-                style={{ background: "linear-gradient(135deg, #4D7FFF, #00E5A3)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
-              >
-                V
-              </span>
-            </div>
-          </div>
+          <VoaLogoMark size={32} />
           <div className="flex flex-col leading-none">
             <span className="font-display font-bold text-white text-[15px] tracking-tight">VOA</span>
             <span className="text-[9px] font-mono uppercase tracking-[0.15em]" style={{ color: "#4A5170" }}>Vavhimi</span>

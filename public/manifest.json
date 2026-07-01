@@ -1,0 +1,14 @@
+{
+  "name": "VOA — Vavhimi Online Academy",
+  "short_name": "VOA",
+  "description": "AI-powered ZIMSEC learning for every student in Zimbabwe",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#07080C",
+  "theme_color": "#4D7FFF",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/icon", "sizes": "32x32",   "type": "image/png" },
+    { "src": "/apple-icon", "sizes": "180x180", "type": "image/png" }
+  ]
+}

@@ -15,11 +15,11 @@ const PUBLIC_ROUTES = [
 ];
 
 const ROLE_ROUTES: Record<string, string[]> = {
-  student:      ["/student", "/dashboard"],
-  teacher:      ["/teacher", "/dashboard"],
-  parent:       ["/parent", "/dashboard"],
-  school_admin: ["/school", "/dashboard"],
-  super_admin:  ["/admin", "/student", "/teacher", "/parent", "/school", "/dashboard"],
+  student:      ["/student", "/dashboard", "/onboarding"],
+  teacher:      ["/teacher", "/dashboard", "/onboarding"],
+  parent:       ["/parent", "/dashboard", "/onboarding"],
+  school_admin: ["/school", "/dashboard", "/onboarding"],
+  super_admin:  ["/admin", "/student", "/teacher", "/parent", "/school", "/dashboard", "/onboarding"],
 };
 
 function isPublic(pathname: string) {

@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { SUPER_ADMIN_EMAIL } from "@/types/auth";
 import type { Database } from "@/types/database";
 
@@ -32,9 +33,10 @@ export async function GET(request: NextRequest) {
   if (code) {
     const { error, data } = await supabase.auth.exchangeCodeForSession(code);
     if (!error && data.session) {
-      await ensureProfileExists(supabase, data.session.user);
+      await ensureProfileExists(data.session.user);
       return NextResponse.redirect(`${origin}${next}`);
     }
+    console.error("exchangeCodeForSession error:", error);
   }
 
   if (token_hash && type) {
@@ -44,45 +46,65 @@ export async function GET(request: NextRequest) {
     });
     if (!error) {
       if (data.session) {
-        await ensureProfileExists(supabase, data.session.user);
+        await ensureProfileExists(data.session.user);
       }
       const destination = type === "recovery"
         ? `${origin}/auth/reset-password`
         : `${origin}${next}`;
       return NextResponse.redirect(destination);
     }
+    console.error("verifyOtp error:", error);
   }
 
   return NextResponse.redirect(`${origin}/auth/login?error=auth_callback_failed`);
 }
 
 async function ensureProfileExists(
-  supabase: SupabaseClient<Database>,
   user: { id: string; email?: string; user_metadata?: Record<string, unknown> }
 ) {
   try {
-    // New schema: profiles.user_id = auth.users.id
-    const { data: existing } = await supabase
-      .from("profiles")
+    const admin = createAdminClient();
+
+    const { data: existing } = await (admin.from("profiles") as any)
       .select("id")
-      .eq("user_id" as never, user.id)
+      .eq("user_id", user.id)
       .maybeSingle();
 
     if (existing) return;
 
     const meta = (user.user_metadata ?? {}) as Record<string, string>;
     const email = user.email ?? "";
-    const fullName = meta.full_name ?? meta.name ?? email.split("@")[0];
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase.from("profiles") as any).insert({
+    // Build full_name from first+last (form sends these), fallback to full_name or email prefix
+    const firstName = meta.first_name ?? "";
+    const lastName = meta.last_name ?? "";
+    const fullName = (firstName || lastName)
+      ? `${firstName} ${lastName}`.trim()
+      : meta.full_name ?? meta.name ?? email.split("@")[0];
+
+    const role = email === SUPER_ADMIN_EMAIL
+      ? "super_admin"
+      : (meta.role ?? "student");
+
+    const { error } = await (admin.from("profiles") as any).insert({
       user_id: user.id,
       email,
       full_name: fullName,
-      role: email === SUPER_ADMIN_EMAIL ? "super_admin" : (meta.role ?? "student"),
+      role,
       avatar_url: meta.avatar_url ?? meta.picture ?? null,
     });
-  } catch {
-    // Must not block the auth redirect — DB trigger handles creation anyway
+
+    if (error) {
+      console.error("ensureProfileExists insert error:", {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        userId: user.id,
+        email,
+        role,
+      });
+    }
+  } catch (err) {
+    console.error("ensureProfileExists unexpected error:", err);
   }
 }

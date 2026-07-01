@@ -115,11 +115,12 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const { error: signUpError } = await supabase.auth.signUp({
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: form.email,
         password: form.password,
         options: {
           data: {
+            full_name: `${form.firstName} ${form.lastName}`.trim(),
             first_name: form.firstName,
             last_name: form.lastName,
             role: form.role,
@@ -136,26 +137,38 @@ export default function RegisterPage() {
       });
 
       if (signUpError) {
-        console.error("Supabase signUp error:", {
-          message: signUpError.message,
-          status: signUpError.status,
-          name: signUpError.name,
-          raw: signUpError,
-        });
-        const msg = typeof signUpError.message === "string" ? signUpError.message : "";
-        setError(
-          msg.toLowerCase().includes("already registered") || msg.toLowerCase().includes("already exists")
-            ? "An account with this email already exists. Try signing in instead."
-            : msg || `Registration failed (code ${signUpError.status ?? "unknown"}). Please try again.`
-        );
+        const raw = String(signUpError.message ?? "");
+        const lower = raw.toLowerCase();
+
+        let displayError: string;
+        if (lower.includes("already registered") || lower.includes("already exists") || lower.includes("email address is already")) {
+          displayError = "An account with this email already exists. Try signing in instead.";
+        } else if (signUpError.status === 500 || raw === "{}" || raw === "unexpected_failure" || raw === "" || !raw) {
+          displayError = "Registration is currently unavailable — the platform email service is not configured. Please contact the administrator.";
+        } else if (lower.includes("email") && lower.includes("send")) {
+          displayError = "Could not send the verification email. Please contact support.";
+        } else {
+          displayError = raw || `Registration failed (code ${signUpError.status ?? "unknown"}). Please try again.`;
+        }
+
+        setError(displayError);
         return;
       }
 
-      router.push(`/auth/verify-email?email=${encodeURIComponent(form.email)}`);
+      // If email confirmation is disabled, Supabase returns a session immediately
+      // → send to onboarding welcome screen
+      if (signUpData?.session) {
+        router.push("/onboarding");
+      } else {
+        router.push(`/auth/verify-email?email=${encodeURIComponent(form.email)}`);
+      }
     } catch (err: unknown) {
-      console.error("Unexpected signUp error:", err);
-      const msg = err instanceof Error ? err.message : String(err);
-      setError(msg || "An unexpected error occurred. Please try again.");
+      console.error("Unexpected signUp exception:", err);
+      if (err instanceof Error) {
+        setError(err.message || "An unexpected error occurred. Please try again.");
+      } else {
+        setError("An unexpected error occurred. Please try again.");
+      }
     } finally {
       setLoading(false);
     }

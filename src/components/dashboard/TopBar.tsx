@@ -28,9 +28,11 @@ const PAGE_TITLES: Record<string, string> = {
   "/admin/dashboard/messages":       "Messages",
   "/teacher/dashboard":                  "My Dashboard",
   "/teacher/dashboard/classes":          "My Classes",
+  "/teacher/dashboard/lessons":          "Lesson Creator",
   "/teacher/dashboard/assignments":      "Assignments",
   "/teacher/dashboard/attendance":       "Attendance",
   "/teacher/dashboard/grades":           "Grade Book",
+  "/teacher/dashboard/timetable":        "My Timetable",
   "/teacher/dashboard/hbc":             "HBC Projects",
   "/teacher/dashboard/messages":         "Messages",
   "/teacher/dashboard/announcements":    "Announcements",
@@ -38,6 +40,8 @@ const PAGE_TITLES: Record<string, string> = {
   "/student/dashboard/lessons":          "My Lessons",
   "/student/dashboard/assignments":      "Assignments",
   "/student/dashboard/grades":           "My Grades",
+  "/student/dashboard/exam-prep":        "Exam Preparation",
+  "/student/dashboard/timetable":        "My Timetable",
   "/student/dashboard/ai-tutor":         "Sir Taks AI",
   "/student/dashboard/hbc":             "HBC Projects",
   "/student/dashboard/classes":          "My Classes",
@@ -45,7 +49,9 @@ const PAGE_TITLES: Record<string, string> = {
   "/parent/dashboard":                   "Family Overview",
   "/parent/dashboard/messages":          "Messages",
   "/parent/dashboard/announcements":     "School News",
+  "/parent/dashboard/grades":            "Report Cards",
   "/parent/dashboard/payments":          "Payments",
+  "/school/dashboard/timetable":         "Timetable",
 };
 
 interface TopBarProps {

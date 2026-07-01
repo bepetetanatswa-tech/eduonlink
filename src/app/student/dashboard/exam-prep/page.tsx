@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { StudentGrades } from "@/components/academic/StudentGrades";
+import { ExamPrepHub } from "@/components/academic/ExamPrepHub";
 
-export default async function StudentGradesPage() {
+export default async function ExamPrepPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
@@ -12,10 +12,10 @@ export default async function StudentGradesPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>My Grades</h2>
-        <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>View your academic performance and teacher feedback</p>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>Exam Preparation</h2>
+        <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>ZIMSEC past papers, AI practice questions, and timed mock exams</p>
       </div>
-      <StudentGrades profileId={profile.id} />
+      <ExamPrepHub profileId={profile.id} />
     </div>
   );
 }

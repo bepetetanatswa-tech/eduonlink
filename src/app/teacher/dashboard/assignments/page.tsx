@@ -1,14 +1,21 @@
-﻿export default function Page() {
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { AssignmentManager } from "@/components/academic/AssignmentManager";
+
+export default async function TeacherAssignmentsPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/auth/login");
+  const { data: profile } = await (supabase.from("profiles") as any).select("id,role").eq("user_id", user.id).single();
+  if (!profile || profile.role !== "teacher") redirect("/dashboard");
   return (
-    <div style={{ maxWidth: 700, display: "flex", flexDirection: "column", gap: "20px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
-        <h2 style={{ fontSize: "20px", fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif" }}>Assignments</h2>
-        <p style={{ fontSize: "12px", color: "#4A5170", marginTop: 2 }}>Create and grade assignments for your classes</p>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>Assignments</h2>
+        <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>Create assignments, view submissions, and return grades</p>
       </div>
-      <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "16px", padding: "40px", textAlign: "center" }}>
-        <p style={{ fontSize: "15px", color: "#6B7290", fontFamily: "'Space Grotesk', sans-serif", marginBottom: 8 }}>Assignments</p>
-        <p style={{ fontSize: "13px", color: "#4A5170" }}>Full functionality for this section is being built in the next stage.</p>
-      </div>
+      <AssignmentManager profileId={profile.id} />
     </div>
   );
 }

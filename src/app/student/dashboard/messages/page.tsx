@@ -3,21 +3,21 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DirectMessages } from "@/components/communication/DirectMessages";
 
-export default async function ParentMessagesPage() {
+export default async function StudentMessagesPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
 
   const { data: profile } = await (supabase.from("profiles") as any)
     .select("id,full_name,email,role,avatar_url").eq("user_id", user.id).single();
-  if (!profile || profile.role !== "parent") redirect("/dashboard");
+  if (!profile || profile.role !== "student") redirect("/dashboard");
 
   return (
     <DirectMessages
       profileId={profile.id}
-      userRole="parent"
+      userRole="student"
       profile={profile}
-      allowedRoles={["teacher", "school_admin"]}
+      allowedRoles={["teacher"]}
     />
   );
 }

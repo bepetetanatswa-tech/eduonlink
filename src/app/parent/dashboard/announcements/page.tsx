@@ -1,14 +1,30 @@
-﻿export default function Page() {
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { AnnouncementFeed } from "@/components/communication/AnnouncementFeed";
+
+export default async function ParentAnnouncementsPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/auth/login");
+
+  const { data: profile } = await (supabase.from("profiles") as any)
+    .select("id,role,school_members(school_id)").eq("user_id", user.id).single();
+  if (!profile || profile.role !== "parent") redirect("/dashboard");
+
+  const schoolId = profile.school_members?.[0]?.school_id ?? null;
+
   return (
-    <div style={{ maxWidth: 700, display: "flex", flexDirection: "column", gap: "20px" }}>
+    <div style={{ maxWidth: 800, display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
-        <h2 style={{ fontSize: "20px", fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif" }}>School News</h2>
-        <p style={{ fontSize: "12px", color: "#4A5170", marginTop: 2 }}>Announcements from your child&apos;s school</p>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>School News</h2>
+        <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>Announcements from the school and your child&apos;s teachers</p>
       </div>
-      <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "16px", padding: "40px", textAlign: "center" }}>
-        <p style={{ fontSize: "15px", color: "#6B7290", fontFamily: "'Space Grotesk', sans-serif", marginBottom: 8 }}>School News</p>
-        <p style={{ fontSize: "13px", color: "#4A5170" }}>Full functionality for this section is being built in the next stage.</p>
-      </div>
+      <AnnouncementFeed
+        profileId={profile.id}
+        userRole="parent"
+        schoolId={schoolId ?? undefined}
+      />
     </div>
   );
 }

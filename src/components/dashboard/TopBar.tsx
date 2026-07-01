@@ -52,6 +52,10 @@ const PAGE_TITLES: Record<string, string> = {
   "/parent/dashboard/grades":            "Report Cards",
   "/parent/dashboard/payments":          "Payments",
   "/school/dashboard/timetable":         "Timetable",
+  "/school/dashboard/subscription":      "Subscription",
+  "/teacher/dashboard/subscription":     "Subscription",
+  "/student/dashboard/subscription":     "Subscription",
+  "/parent/dashboard/subscription":      "Subscription",
 };
 
 interface TopBarProps {

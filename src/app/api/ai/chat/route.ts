@@ -121,30 +121,57 @@ TONE: Strategic, data-informed, and concise.
 Current focus: ${topic || "General platform strategy"}`,
 };
 
+function jsonError(message: string, status: number, code?: string) {
+  console.error(`[AI Chat] ${code ?? status}: ${message}`);
+  return new Response(JSON.stringify({ error: message, code }), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
 export async function POST(req: Request) {
   try {
-    const { messages, topic, profileId, role } = await req.json() as {
+    const body = await req.json() as {
       messages: { role: string; content: string }[];
       topic: string;
       profileId: string;
       role: UserRole;
-      userName?: string;
     };
 
-    if (!profileId || !messages?.length) return new Response("Bad Request", { status: 400 });
-    if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === "placeholder_set_in_vercel") {
-      return new Response("GEMINI_API_KEY not configured", { status: 503 });
+    const { messages, topic, profileId, role } = body;
+
+    if (!profileId || !messages?.length) {
+      return jsonError("Missing profileId or messages", 400, "bad_request");
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey || apiKey === "placeholder_set_in_vercel") {
+      return jsonError(
+        "GEMINI_API_KEY is not configured. Set it in Vercel → Project → Settings → Environment Variables.",
+        503,
+        "gemini_key_missing"
+      );
+    }
+
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey || serviceKey === "placeholder_set_in_vercel") {
+      return jsonError(
+        "SUPABASE_SERVICE_ROLE_KEY is not configured. Set it in Vercel → Project → Settings → Environment Variables.",
+        503,
+        "supabase_key_missing"
+      );
     }
 
     const admin = createAdminClient();
     const today = new Date().toISOString().split("T")[0];
 
-    // Get usage row
-    const { data: usageRow } = await (admin.from("ai_usage") as any)
+    // Get usage row (non-fatal — default to 0 if table missing)
+    const { data: usageRow, error: usageErr } = await (admin.from("ai_usage") as any)
       .select("id, questions_used")
       .eq("user_id", profileId)
       .eq("date", today)
       .maybeSingle();
+    if (usageErr) console.warn("[AI Chat] ai_usage fetch:", usageErr.message);
 
     const questionsUsed: number = usageRow?.questions_used ?? 0;
 
@@ -156,7 +183,7 @@ export async function POST(req: Request) {
       .maybeSingle();
 
     const plan: string = sub?.plan ?? "free";
-    const isLimited = plan === "free" && role === "student"; // Only students are rate-limited
+    const isLimited = plan === "free" && role === "student";
     const dailyLimit = 10;
 
     if (isLimited && questionsUsed >= dailyLimit) {
@@ -166,7 +193,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Get user name for personalised prompt
+    // Get user name
     const { data: profile } = await (admin.from("profiles") as any)
       .select("full_name")
       .eq("id", profileId)
@@ -176,8 +203,17 @@ export async function POST(req: Request) {
     const userRole: UserRole = role ?? "student";
     const systemPrompt = SYSTEM_PROMPTS[userRole]?.(topic, userName) ?? SYSTEM_PROMPTS.student(topic, userName);
 
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro", systemInstruction: systemPrompt });
+    let genAI: GoogleGenerativeAI;
+    try {
+      genAI = new GoogleGenerativeAI(apiKey);
+    } catch (initErr) {
+      return jsonError(`Gemini init failed: ${String(initErr)}`, 503, "gemini_init_failed");
+    }
+
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash",  // flash is faster and more available than pro
+      systemInstruction: systemPrompt,
+    });
 
     const history = messages.slice(0, -1).map((m) => ({
       role: m.role === "assistant" ? "model" : "user",
@@ -185,7 +221,15 @@ export async function POST(req: Request) {
     }));
 
     const chat = model.startChat({ history });
-    const result = await chat.sendMessageStream(messages[messages.length - 1].content);
+
+    let result;
+    try {
+      result = await chat.sendMessageStream(messages[messages.length - 1].content);
+    } catch (geminiErr: any) {
+      const msg = geminiErr?.message ?? String(geminiErr);
+      console.error("[AI Chat] Gemini API error:", msg);
+      return jsonError(`Gemini API error: ${msg}`, 502, "gemini_api_error");
+    }
 
     const stream = new ReadableStream({
       async start(controller) {
@@ -194,13 +238,23 @@ export async function POST(req: Request) {
             const text = chunk.text();
             if (text) controller.enqueue(new TextEncoder().encode(text));
           }
+        } catch (streamErr: any) {
+          console.error("[AI Chat] Stream error:", streamErr?.message ?? streamErr);
         } finally {
           controller.close();
+          // Track usage
           if (isLimited) {
-            if (usageRow) {
-              await (admin.from("ai_usage") as any).update({ questions_used: questionsUsed + 1 }).eq("id", usageRow.id);
-            } else {
-              await (admin.from("ai_usage") as any).insert({ user_id: profileId, date: today, questions_used: 1, tokens_used: 0 });
+            try {
+              if (usageRow) {
+                await (admin.from("ai_usage") as any)
+                  .update({ questions_used: questionsUsed + 1 })
+                  .eq("id", usageRow.id);
+              } else {
+                await (admin.from("ai_usage") as any)
+                  .insert({ user_id: profileId, date: today, questions_used: 1, tokens_used: 0 });
+              }
+            } catch (trackErr) {
+              console.warn("[AI Chat] Usage tracking failed:", trackErr);
             }
           }
         }
@@ -215,8 +269,9 @@ export async function POST(req: Request) {
         "X-Daily-Limit": isLimited ? String(dailyLimit) : "unlimited",
       },
     });
-  } catch (err) {
-    console.error("[AI Chat]", err);
-    return new Response("Internal Server Error", { status: 500 });
+  } catch (err: any) {
+    const msg = err?.message ?? String(err);
+    console.error("[AI Chat] Unhandled error:", msg);
+    return jsonError(`Server error: ${msg}`, 500, "internal_error");
   }
 }

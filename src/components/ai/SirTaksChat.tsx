@@ -210,7 +210,15 @@ export function SirTaksChat({ profileId, userName, userRole, initialQuestionsUse
       }
 
       if (!res.ok || !res.body) {
-        setError("Sir Taks is unavailable right now. Please try again.");
+        let errMsg = `Sir Taks is unavailable (${res.status})`;
+        try {
+          const errData = await res.json();
+          if (errData?.error) errMsg = errData.error;
+        } catch {
+          try { const txt = await res.text(); if (txt) errMsg = txt; } catch { /* ignore */ }
+        }
+        console.error("[SirTaks]", res.status, errMsg);
+        setError(errMsg);
         setMessages((p) => p.slice(0, -1));
         setStreaming(false);
         return;

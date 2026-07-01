@@ -199,28 +199,44 @@ export function Sidebar({ role, isOpen, onClose }: SidebarProps) {
         />
       )}
 
-      {/* Desktop sidebar */}
+      {/*
+        Desktop sidebar — position:fixed, never in layout flow.
+        Tailwind classes control display (hidden on mobile, flex on lg+).
+        No inline display property — prevents inline styles overriding Tailwind.
+      */}
       <aside
-        style={{
-          width: 220, flexShrink: 0,
-          background: "#090B12", borderRight: "1px solid rgba(255,255,255,0.05)",
-          display: "flex", flexDirection: "column", height: "100vh", position: "sticky", top: 0,
-        }}
         className="hidden lg:flex"
+        style={{
+          position: "fixed",
+          left: 0, top: 0, bottom: 0,
+          width: 220,
+          flexDirection: "column",
+          background: "#090B12",
+          borderRight: "1px solid rgba(255,255,255,0.05)",
+          zIndex: 30,
+        }}
       >
         {sidebarContent}
       </aside>
 
-      {/* Mobile drawer */}
+      {/*
+        Mobile drawer — fixed overlay, slides in/out with transform.
+        Tailwind classes control display (flex on mobile, hidden on lg+).
+        Never takes up layout space — content stays 100vw on mobile.
+      */}
       <aside
+        className="flex lg:hidden"
         style={{
-          position: "fixed", inset: "0 auto 0 0", width: 240, zIndex: 50,
-          background: "#090B12", borderRight: "1px solid rgba(255,255,255,0.08)",
-          display: "flex", flexDirection: "column", height: "100vh",
+          position: "fixed",
+          left: 0, top: 0, bottom: 0,
+          width: 240,
+          flexDirection: "column",
+          background: "#090B12",
+          borderRight: "1px solid rgba(255,255,255,0.08)",
+          zIndex: 50,
           transform: isOpen ? "translateX(0)" : "translateX(-100%)",
-          transition: "transform 0.25s ease",
+          transition: "transform 0.22s ease",
         }}
-        className="lg:hidden"
       >
         {sidebarContent}
       </aside>

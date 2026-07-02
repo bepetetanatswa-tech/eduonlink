@@ -19,18 +19,20 @@ export async function POST(request: NextRequest) {
   if (profile.role !== "school_admin") {
     return NextResponse.json({ error: "Only school admins can register a school" }, { status: 403 });
   }
-  if (!profile.school_name) {
-    return NextResponse.json({ error: "School name is missing from your profile" }, { status: 400 });
-  }
 
   const body = await request.json().catch(() => null);
-  const { address, phone, email, website, logoUrl, subscriptionPlan } = body ?? {};
+  const { name, address, phone, email, website, logoUrl, subscriptionPlan } = body ?? {};
+
+  const schoolName = (name && String(name).trim()) || profile.school_name;
+  if (!schoolName) {
+    return NextResponse.json({ error: "School name is required" }, { status: 400 });
+  }
 
   const { data: school, error } = await (admin.from("schools") as any)
     .upsert(
       {
         admin_id: profile.id,
-        name: profile.school_name,
+        name: schoolName,
         type: profile.school_type,
         province: profile.province,
         district: profile.district,

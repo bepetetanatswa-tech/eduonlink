@@ -157,9 +157,11 @@ export default function RegisterPage() {
         return;
       }
 
-      // If email confirmation is disabled, Supabase returns a session immediately
-      // → send to onboarding welcome screen
+      // If email confirmation is disabled, Supabase returns a session immediately.
+      // This path never hits /auth/callback, so profile creation/backfill has
+      // to be triggered explicitly here before we send them to onboarding.
       if (signUpData?.session) {
+        await fetch("/api/auth/ensure-profile", { method: "POST" }).catch(() => {});
         router.push("/onboarding");
       } else {
         router.push(`/auth/verify-email?email=${encodeURIComponent(form.email)}`);

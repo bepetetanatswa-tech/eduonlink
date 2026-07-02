@@ -76,6 +76,7 @@ export default function OnboardingPage() {
   const [linkError, setLinkError] = useState<string | null>(null);
 
   // School admin
+  const [schoolNameLocal, setSchoolNameLocal] = useState("");
   const [schoolAddress, setSchoolAddress] = useState("");
   const [schoolPhone, setSchoolPhone] = useState("");
   const [schoolEmail, setSchoolEmail] = useState("");
@@ -123,6 +124,8 @@ export default function OnboardingPage() {
       setOccupation(p.occupation ?? "");
       setContactMethod(p.preferred_contact_method ?? "");
 
+      setSchoolNameLocal(p.school_name ?? "");
+
       const mySchool = data.mySchool as { address: string | null; phone: string | null; email: string | null; website: string | null; logo_url: string | null; subscription_plan: string | null } | null;
       if (mySchool) {
         setSchoolAddress(mySchool.address ?? "");
@@ -164,6 +167,10 @@ export default function OnboardingPage() {
       setError("Please select your grade/form level.");
       return;
     }
+    if (currentKey === "school" && !schoolNameLocal.trim()) {
+      setError("Please enter your school's name.");
+      return;
+    }
 
     setSaving(true);
     try {
@@ -199,10 +206,12 @@ export default function OnboardingPage() {
       }
 
       if (currentKey === "school") {
+        Object.assign(fields, { school_name: schoolNameLocal.trim() });
         const res = await fetch("/api/school/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            name: schoolNameLocal.trim(),
             address: schoolAddress || null,
             phone: schoolPhone || null,
             email: schoolEmail || null,
@@ -462,7 +471,8 @@ export default function OnboardingPage() {
 
               {currentKey === "school" && (
                 <>
-                  <SchoolLogoUpload userId={userId} currentUrl={schoolLogoUrl} schoolName={profile?.school_name ?? ""} onUploaded={setSchoolLogoUrl} />
+                  <SchoolLogoUpload userId={userId} currentUrl={schoolLogoUrl} schoolName={schoolNameLocal} onUploaded={setSchoolLogoUrl} />
+                  <FormInput label="School name" value={schoolNameLocal} onChange={(e) => setSchoolNameLocal(e.target.value)} placeholder="e.g. St George's College" />
                   <FormInput label="School address" value={schoolAddress} onChange={(e) => setSchoolAddress(e.target.value)} placeholder="e.g. 123 Samora Machel Ave, Harare CBD" />
                   <div className="grid grid-cols-2 gap-3">
                     <FormInput label="School phone" type="tel" value={schoolPhone} onChange={(e) => setSchoolPhone(e.target.value)} placeholder="+263 7XX XXX XXX" />

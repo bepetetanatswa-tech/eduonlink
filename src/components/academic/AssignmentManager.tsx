@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { uploadToR2 } from "@/lib/uploadToR2";
 
 interface Cls { id: string; name: string; subject: string }
 interface Assignment {
@@ -30,6 +31,8 @@ export function AssignmentManager({ profileId }: { profileId: string }) {
   const [view, setView] = useState<"list"|"create"|"grade">("list");
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadPct, setUploadPct] = useState(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   // Form state
   const [fTitle, setFTitle] = useState("");
@@ -81,11 +84,17 @@ export function AssignmentManager({ profileId }: { profileId: string }) {
     let attachmentUrl: string | null = null;
     if (fFile) {
       setUploading(true);
-      const ext = fFile.name.split(".").pop();
-      const path = `assignments/${selectedClass}/${Date.now()}.${ext}`;
-      await supabase.storage.from("course-materials").upload(path, fFile, { upsert: true });
-      const { data: u } = supabase.storage.from("course-materials").getPublicUrl(path);
-      attachmentUrl = u.publicUrl;
+      setUploadError(null);
+      setUploadPct(0);
+      try {
+        const { fileUrl } = await uploadToR2(fFile, "assignment-brief", { classId: selectedClass }, setUploadPct);
+        attachmentUrl = fileUrl;
+      } catch (err) {
+        setUploadError(err instanceof Error ? err.message : "Upload failed");
+        setUploading(false);
+        setSaving(false);
+        return;
+      }
       setUploading(false);
     }
     await (supabase.from("assignments") as any).insert({
@@ -184,6 +193,12 @@ export function AssignmentManager({ profileId }: { profileId: string }) {
             <div>
               <label style={{ fontSize: 11, fontWeight: 600, color: S.muted, display: "block", marginBottom: 5 }}>Attachment (optional)</label>
               <input type="file" accept=".pdf,.doc,.docx,.png,.jpg,.ppt,.pptx" onChange={e => setFFile(e.target.files?.[0] ?? null)} style={{ ...inp, padding: "7px 12px" }} />
+              {uploading && (
+                <div style={{ height: 4, borderRadius: 4, background: "rgba(255,255,255,0.06)", overflow: "hidden", marginTop: 8 }}>
+                  <div style={{ height: "100%", width: `${uploadPct}%`, background: S.accent, transition: "width 0.2s" }} />
+                </div>
+              )}
+              {uploadError && <p style={{ fontSize: 11, color: "#FF6B6B", marginTop: 5 }}>{uploadError}</p>}
             </div>
           </div>
           <div>

@@ -3,6 +3,7 @@
 
 import { useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { uploadToR2, deleteR2File } from "@/lib/uploadToR2";
 
 interface Material {
   id: string;
@@ -51,6 +52,7 @@ export function CourseManager({ initialCourses, adminId }: { initialCourses: Cou
   const [matContent, setMatContent] = useState("");
   const [matType, setMatType] = useState<"pdf" | "text">("pdf");
   const [uploading, setUploading] = useState(false);
+  const [uploadPct, setUploadPct] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const supabase = createClient();
@@ -111,14 +113,15 @@ export function CourseManager({ initialCourses, adminId }: { initialCourses: Cou
     let fileUrl: string | null = null;
 
     if (matType === "pdf" && matFile) {
-      const ext = matFile.name.split(".").pop();
-      const path = `${courseId}/${Date.now()}.${ext}`;
-      const { data: uploadData, error: uploadErr } = await supabase.storage
-        .from("course-materials")
-        .upload(path, matFile, { cacheControl: "3600", upsert: false });
-      if (uploadErr) { notify("Upload failed: " + uploadErr.message); setUploading(false); return; }
-      const { data: urlData } = supabase.storage.from("course-materials").getPublicUrl(uploadData.path);
-      fileUrl = urlData?.publicUrl ?? null;
+      setUploadPct(0);
+      try {
+        const { fileUrl: uploadedUrl } = await uploadToR2(matFile, "course-material", { courseId }, setUploadPct);
+        fileUrl = uploadedUrl;
+      } catch (err) {
+        notify("Upload failed: " + (err instanceof Error ? err.message : "unknown error"));
+        setUploading(false);
+        return;
+      }
     }
 
     const { data: mat } = await (supabase.from("course_materials") as any)
@@ -141,10 +144,7 @@ export function CourseManager({ initialCourses, adminId }: { initialCourses: Cou
   };
 
   const deleteMaterial = async (courseId: string, matId: string, fileUrl: string | null) => {
-    if (fileUrl) {
-      const path = fileUrl.split("/course-materials/")[1];
-      if (path) await supabase.storage.from("course-materials").remove([path]);
-    }
+    if (fileUrl) await deleteR2File(fileUrl);
     await (supabase.from("course_materials") as any).delete().eq("id", matId);
     setCoursesMaterials((p) => ({ ...p, [courseId]: (p[courseId] ?? []).filter((m) => m.id !== matId) }));
     notify("Material removed");
@@ -298,6 +298,11 @@ export function CourseManager({ initialCourses, adminId }: { initialCourses: Cou
                             <button onClick={() => fileRef.current?.click()} style={{ padding: "8px 16px", borderRadius: 8, fontSize: 12, background: "rgba(255,255,255,0.04)", border: "1px dashed rgba(255,255,255,0.15)", color: "#6B7290", cursor: "pointer", width: "100%" }}>
                               {matFile ? `📄 ${matFile.name} (${(matFile.size / 1024 / 1024).toFixed(1)} MB)` : "Click to select PDF file"}
                             </button>
+                            {uploading && matType === "pdf" && (
+                              <div style={{ height: 4, borderRadius: 4, background: "rgba(255,255,255,0.06)", overflow: "hidden", marginTop: 6 }}>
+                                <div style={{ height: "100%", width: `${uploadPct}%`, background: "#BD93F9", transition: "width 0.2s" }} />
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <textarea value={matContent} onChange={(e) => setMatContent(e.target.value)} placeholder="Write lesson content here..." rows={4} style={{ padding: "8px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: 13, color: "#CDD6F4", fontFamily: "inherit", resize: "vertical", outline: "none" }} />

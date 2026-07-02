@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { uploadToR2 } from "@/lib/uploadToR2";
 
 interface Assignment {
   id: string; title: string; description: string | null; instructions: string | null;
@@ -34,6 +35,8 @@ export function SubmissionPortal({ profileId }: { profileId: string }) {
   const [content, setContent] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadPct, setUploadPct] = useState(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [filter, setFilter] = useState<"all"|"pending"|"submitted"|"graded">("all");
 
@@ -80,11 +83,18 @@ export function SubmissionPortal({ profileId }: { profileId: string }) {
     setSubmitting(true);
     let fileUrl: string | null = selected.mySubmission?.file_url ?? null;
     if (file) {
-      const ext = file.name.split(".").pop();
-      const path = `submissions/${selected.id}/${profileId}/${Date.now()}.${ext}`;
-      await supabase.storage.from("course-materials").upload(path, file, { upsert: true });
-      const { data: u } = supabase.storage.from("course-materials").getPublicUrl(path);
-      fileUrl = u.publicUrl;
+      setUploadError(null);
+      setUploadPct(0);
+      try {
+        const { fileUrl: uploadedUrl } = await uploadToR2(
+          file, "assignment-submission", { assignmentId: selected.id, studentId: profileId }, setUploadPct
+        );
+        fileUrl = uploadedUrl;
+      } catch (err) {
+        setUploadError(err instanceof Error ? err.message : "Upload failed");
+        setSubmitting(false);
+        return;
+      }
     }
     const isLate = selected.due_date ? new Date(selected.due_date) < new Date() : false;
     const payload = { assignment_id: selected.id, student_id: profileId, content: content.trim() || null, file_url: fileUrl, is_late: isLate, status: "submitted", submitted_at: new Date().toISOString() };
@@ -202,6 +212,12 @@ export function SubmissionPortal({ profileId }: { profileId: string }) {
                   <label style={{ fontSize: 11, fontWeight: 600, color: S.muted, display: "block", marginBottom: 5 }}>File Upload (PDF, Word, Image)</label>
                   {selected.mySubmission?.file_url && <p style={{ fontSize: 11, color: "#00E5A3", marginBottom: 6 }}>Current: <a href={selected.mySubmission.file_url} target="_blank" rel="noreferrer" style={{ color: "#00E5A3" }}>view file</a></p>}
                   <input type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onChange={e => setFile(e.target.files?.[0] ?? null)} style={{ ...inp, padding: "7px 12px" }} />
+                  {submitting && file && (
+                    <div style={{ height: 4, borderRadius: 4, background: "rgba(255,255,255,0.06)", overflow: "hidden", marginTop: 8 }}>
+                      <div style={{ height: "100%", width: `${uploadPct}%`, background: S.accent, transition: "width 0.2s" }} />
+                    </div>
+                  )}
+                  {uploadError && <p style={{ fontSize: 11, color: "#FF6B6B", marginTop: 5 }}>{uploadError}</p>}
                 </div>
                 {isOverdue(selected) && !selected.allow_late && (
                   <p style={{ fontSize: 12, color: "#FF6B6B", margin: 0 }}>⚠ This assignment is past due and does not accept late submissions.</p>

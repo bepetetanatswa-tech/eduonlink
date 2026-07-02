@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { uploadToR2 } from "@/lib/uploadToR2";
 
 interface Course {
   id: string; title: string; description: string | null; subject: string;
@@ -34,6 +35,8 @@ export function LessonCreator({ profileId }: { profileId: string }) {
   const [editMaterial, setEditMaterial] = useState<Material | null>(null);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadPct, setUploadPct] = useState(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   // Course form
   const [cTitle, setCTitle] = useState("");
@@ -113,11 +116,20 @@ export function LessonCreator({ profileId }: { profileId: string }) {
     let fileUrl = editMaterial?.file_url ?? null;
     if (mFile) {
       setUploading(true);
-      const ext = mFile.name.split(".").pop();
-      const path = `lessons/${selected.id}/${Date.now()}.${ext}`;
-      await supabase.storage.from("course-materials").upload(path, mFile, { upsert: true });
-      const { data: urlData } = supabase.storage.from("course-materials").getPublicUrl(path);
-      fileUrl = urlData.publicUrl;
+      setUploadError(null);
+      setUploadPct(0);
+      try {
+        const category = mType === "video" ? "lesson-video" : "lesson-material";
+        const { fileUrl: uploadedUrl } = await uploadToR2(
+          mFile, category, { teacherId: profileId, lessonId: selected.id }, setUploadPct
+        );
+        fileUrl = uploadedUrl;
+      } catch (err) {
+        setUploadError(err instanceof Error ? err.message : "Upload failed");
+        setUploading(false);
+        setSaving(false);
+        return;
+      }
       setUploading(false);
     }
 
@@ -383,6 +395,12 @@ export function LessonCreator({ profileId }: { profileId: string }) {
                   onChange={e => setMFile(e.target.files?.[0] ?? null)}
                   style={{ ...inp, padding: "7px 12px" }} />
                 {mType === "video" && <p style={{ fontSize: 11, color: S.dim, marginTop: 5 }}>Max 500MB. Large videos may take a moment to upload.</p>}
+                {uploading && (
+                  <div style={{ height: 4, borderRadius: 4, background: "rgba(255,255,255,0.06)", overflow: "hidden", marginTop: 8 }}>
+                    <div style={{ height: "100%", width: `${uploadPct}%`, background: S.accent, transition: "width 0.2s" }} />
+                  </div>
+                )}
+                {uploadError && <p style={{ fontSize: 11, color: "#FF6B6B", marginTop: 5 }}>{uploadError}</p>}
               </div>
             )}
 

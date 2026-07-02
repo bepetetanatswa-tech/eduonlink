@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { FormInput, PasswordStrength } from "@/components/auth/FormInput";
 
 interface LoginEntry {
   ip: string | null;
@@ -28,12 +29,22 @@ function describeUserAgent(ua: string | null): string {
   return `${browser} on ${os}`;
 }
 
+const PASSWORD_RULE = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}$/;
+
 export function SecurityPanel() {
   const router = useRouter();
   const [logins, setLogins] = useState<LoginEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
+
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [changingPassword, setChangingPassword] = useState(false);
+
   const supabase = createClient();
 
   useEffect(() => {
@@ -41,7 +52,43 @@ export function SecurityPanel() {
       .then((r) => r.json())
       .then((data) => setLogins(data.logins ?? []))
       .finally(() => setLoading(false));
+    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const changePassword = async () => {
+    setPasswordError(null);
+    if (!currentPassword) { setPasswordError("Enter your current password."); return; }
+    if (!PASSWORD_RULE.test(newPassword)) {
+      setPasswordError("New password must be 8+ characters with an uppercase letter, a number, and a special character.");
+      return;
+    }
+    if (newPassword !== confirmPassword) { setPasswordError("New passwords do not match."); return; }
+    if (!email) { setPasswordError("Could not verify your account. Please refresh and try again."); return; }
+
+    setChangingPassword(true);
+    try {
+      // Re-authenticate with the current password before allowing a change —
+      // without this, anyone who grabs an already-open, unlocked session
+      // could silently take over the account by just setting a new password.
+      const { error: verifyError } = await supabase.auth.signInWithPassword({ email, password: currentPassword });
+      if (verifyError) {
+        setPasswordError("Current password is incorrect.");
+        return;
+      }
+
+      const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+      if (updateError) {
+        setPasswordError(updateError.message);
+        return;
+      }
+
+      setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
+      setMessage("Password changed.");
+    } finally {
+      setChangingPassword(false);
+    }
+  };
 
   const logoutOthers = async () => {
     setBusy(true);
@@ -81,6 +128,46 @@ export function SecurityPanel() {
             ))}
           </div>
         )}
+      </div>
+
+      <div className="h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
+
+      <div className="flex flex-col gap-2">
+        <p className="text-sm font-medium" style={{ color: "#8892B0" }}>Change password</p>
+        {passwordError && <p className="text-xs" style={{ color: "#FF6B6B" }}>{passwordError}</p>}
+        <FormInput
+          label="Current password"
+          type="password"
+          value={currentPassword}
+          onChange={(e) => setCurrentPassword(e.target.value)}
+          autoComplete="current-password"
+        />
+        <div>
+          <FormInput
+            label="New password"
+            type="password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            autoComplete="new-password"
+          />
+          <PasswordStrength password={newPassword} />
+        </div>
+        <FormInput
+          label="Confirm new password"
+          type="password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          autoComplete="new-password"
+          error={confirmPassword && newPassword !== confirmPassword ? "Passwords don't match" : undefined}
+        />
+        <button
+          onClick={changePassword}
+          disabled={changingPassword}
+          className="text-xs font-semibold px-3 py-2 rounded-lg self-start"
+          style={{ background: "rgba(0,229,163,0.1)", border: "1px solid rgba(0,229,163,0.25)", color: "#00E5A3", cursor: changingPassword ? "not-allowed" : "pointer" }}
+        >
+          {changingPassword ? "Changing…" : "Change password"}
+        </button>
       </div>
 
       <div className="h-px" style={{ background: "rgba(255,255,255,0.06)" }} />

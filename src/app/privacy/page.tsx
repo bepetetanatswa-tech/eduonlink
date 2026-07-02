@@ -59,7 +59,7 @@ export default function PrivacyPage() {
             <h2 className="font-display font-semibold text-white text-lg mb-3">6. Your Rights</h2>
             <p className="text-sm leading-relaxed">
               You have the right to access, correct, or delete your personal data. To exercise these rights, contact us at{" "}
-              <a href="mailto:support@voa.co.zw" style={{ color: "#4D7FFF" }}>support@voa.co.zw</a>.
+              <a href="mailto:vavhimiacademy@gmail.com" style={{ color: "#4D7FFF" }}>vavhimiacademy@gmail.com</a>.
             </p>
           </section>
 

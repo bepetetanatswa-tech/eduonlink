@@ -325,7 +325,7 @@ export default function AboutPage() {
                   in what we are building.
                 </p>
                 <a
-                  href="mailto:careers@voa.co.zw"
+                  href="mailto:vavhimiacademy@gmail.com"
                   className="text-sm font-semibold transition-colors"
                   style={{ color: "#4D7FFF" }}
                 >
@@ -355,7 +355,7 @@ export default function AboutPage() {
                 Create your account →
               </Link>
               <a
-                href="mailto:hello@voa.co.zw"
+                href="mailto:vavhimiacademy@gmail.com"
                 className="btn-ghost text-sm px-8 py-3.5"
               >
                 Contact us

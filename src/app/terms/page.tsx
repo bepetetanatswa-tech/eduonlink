@@ -68,7 +68,7 @@ export default function TermsPage() {
             <h2 className="font-display font-semibold text-white text-lg mb-3">7. Contact</h2>
             <p className="text-sm leading-relaxed">
               For questions about these Terms, contact us at{" "}
-              <a href="mailto:support@voa.co.zw" style={{ color: "#4D7FFF" }}>support@voa.co.zw</a>.
+              <a href="mailto:vavhimiacademy@gmail.com" style={{ color: "#4D7FFF" }}>vavhimiacademy@gmail.com</a>.
             </p>
           </section>
         </div>

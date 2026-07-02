@@ -15,10 +15,13 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirectTo") ?? "/dashboard";
+  const reason = searchParams.get("reason");
 
   const [mode, setMode] = useState<Mode>("password");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    reason === "inactivity" ? "You were signed out after a period of inactivity. Please sign in again." : null
+  );
   const [success, setSuccess] = useState<string | null>(null);
 
   const [email, setEmail] = useState("");

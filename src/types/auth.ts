@@ -129,6 +129,29 @@ export const PROVINCES = [
   "Matabeleland North","Matabeleland South","Midlands","Masvingo","Manicaland",
 ];
 
+export const GENDER_OPTIONS: { value: string; label: string }[] = [
+  { value: "male",             label: "Male" },
+  { value: "female",           label: "Female" },
+  { value: "other",            label: "Other" },
+  { value: "prefer_not_to_say",label: "Prefer not to say" },
+];
+
+export const RELATIONSHIP_OPTIONS: { value: string; label: string }[] = [
+  { value: "mother",     label: "Mother" },
+  { value: "father",     label: "Father" },
+  { value: "guardian",   label: "Guardian" },
+  { value: "uncle",      label: "Uncle" },
+  { value: "aunt",       label: "Aunt" },
+  { value: "grandparent",label: "Grandparent" },
+  { value: "other",      label: "Other" },
+];
+
+export const CONTACT_METHOD_OPTIONS: { value: string; label: string }[] = [
+  { value: "email",    label: "Email" },
+  { value: "sms",       label: "SMS" },
+  { value: "whatsapp",  label: "WhatsApp" },
+];
+
 export const ROLE_META: Record<
   "student" | "teacher" | "parent" | "school_admin",
   { icon: string; label: string; description: string; accent: string }

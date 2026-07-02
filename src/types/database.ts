@@ -15,8 +15,41 @@ export interface Profile {
   role: UserRole;
   avatar_url: string | null;
   phone: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  date_of_birth: string | null;
+  gender: "male" | "female" | "other" | "prefer_not_to_say" | null;
+  province: string | null;
+  district: string | null;
+  town: string | null;
+  bio: string | null;
+  school_id: string | null;
+  school_name: string | null;
+  school_type: "government" | "private" | "mission" | "international" | null;
+  form_level: string | null;
+  enrolled_subjects: string[] | null;
+  guardian_name: string | null;
+  guardian_phone: string | null;
+  emergency_contact_name: string | null;
+  emergency_contact_phone: string | null;
+  occupation: string | null;
+  preferred_contact_method: "email" | "sms" | "whatsapp" | null;
+  qualifications: string | null;
+  years_experience: number | null;
+  teaching_subjects: string[] | null;
+  onboarding_completed: boolean;
+  onboarding_step: number;
   created_at: string;
   updated_at: string;
+}
+
+export interface ParentChild {
+  id: string;
+  parent_id: string;
+  child_id: string;
+  relationship: "mother" | "father" | "guardian" | "uncle" | "aunt" | "grandparent" | "other";
+  status: "pending" | "verified" | "rejected";
+  created_at: string;
 }
 
 export interface School {

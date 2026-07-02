@@ -72,26 +72,38 @@ async function ensureProfileExists(
 
     if (existing) return;
 
-    const meta = (user.user_metadata ?? {}) as Record<string, string>;
+    const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
     const email = user.email ?? "";
 
     // Build full_name from first+last (form sends these), fallback to full_name or email prefix
-    const firstName = meta.first_name ?? "";
-    const lastName = meta.last_name ?? "";
+    const firstName = (meta.first_name as string) ?? "";
+    const lastName = (meta.last_name as string) ?? "";
     const fullName = (firstName || lastName)
       ? `${firstName} ${lastName}`.trim()
-      : meta.full_name ?? meta.name ?? email.split("@")[0];
+      : (meta.full_name as string) ?? (meta.name as string) ?? email.split("@")[0];
 
     const role = email === SUPER_ADMIN_EMAIL
       ? "super_admin"
-      : (meta.role ?? "student");
+      : ((meta.role as string) ?? "student");
 
+    // These are collected on the registration form today but had no
+    // columns to land in until the profile-system migration (004) —
+    // persist them now instead of silently dropping them.
     const { error } = await (admin.from("profiles") as any).insert({
       user_id: user.id,
       email,
       full_name: fullName,
+      first_name: firstName || null,
+      last_name: lastName || null,
       role,
       avatar_url: meta.avatar_url ?? meta.picture ?? null,
+      form_level: meta.form_level ?? null,
+      school_name: meta.school_name ?? null,
+      province: meta.province ?? null,
+      school_type: meta.school_type ?? null,
+      qualifications: meta.qualifications ?? null,
+      years_experience: meta.years_experience ?? null,
+      teaching_subjects: meta.teaching_subjects ?? null,
     });
 
     if (error) {

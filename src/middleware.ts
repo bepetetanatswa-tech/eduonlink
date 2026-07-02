@@ -72,13 +72,23 @@ export async function middleware(request: NextRequest) {
   if (!isPublic(pathname)) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const profileResult = await (supabase.from("profiles") as any)
-      .select("role")
+      .select("role, onboarding_completed")
       .eq("user_id", user.id)
       .single();
-    const profile = profileResult.data as { role: string } | null;
+    const profile = profileResult.data as { role: string; onboarding_completed: boolean } | null;
 
     if (profile && !roleAllowed(profile.role, pathname)) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+
+    // Onboarding is mandatory before reaching any dashboard (except super_admin).
+    if (profile && profile.role !== "super_admin") {
+      if (!profile.onboarding_completed && !pathname.startsWith("/onboarding")) {
+        return NextResponse.redirect(new URL("/onboarding", request.url));
+      }
+      if (profile.onboarding_completed && pathname.startsWith("/onboarding")) {
+        return NextResponse.redirect(new URL("/dashboard", request.url));
+      }
     }
   }
 

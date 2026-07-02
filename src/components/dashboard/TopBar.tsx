@@ -56,6 +56,19 @@ const PAGE_TITLES: Record<string, string> = {
   "/teacher/dashboard/subscription":     "Subscription",
   "/student/dashboard/subscription":     "Subscription",
   "/parent/dashboard/subscription":      "Subscription",
+  "/student/dashboard/profile":          "My Profile",
+  "/parent/dashboard/profile":           "My Profile",
+  "/teacher/dashboard/profile":          "My Profile",
+  "/school/dashboard/profile":           "My Profile",
+  "/admin/dashboard/profile":            "My Profile",
+};
+
+const PROFILE_PATH: Record<UserRole, string> = {
+  student:      "/student/dashboard/profile",
+  teacher:      "/teacher/dashboard/profile",
+  parent:       "/parent/dashboard/profile",
+  school_admin: "/school/dashboard/profile",
+  super_admin:  "/admin/dashboard/profile",
 };
 
 interface TopBarProps {
@@ -172,12 +185,10 @@ export function TopBar({ profile, onMenuClick }: TopBarProps) {
 
               {/* Links */}
               <div style={{ padding: "6px" }}>
-                {[
-                  { label: "Profile settings", href: "#", icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" },
-                ].map((item) => (
+                {[{ label: "Profile settings", href: PROFILE_PATH[profile.role], icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" }].map((item) => (
                   <button
                     key={item.label}
-                    onClick={() => setDropdownOpen(false)}
+                    onClick={() => { setDropdownOpen(false); router.push(item.href); }}
                     style={{
                       display: "flex", alignItems: "center", gap: "8px",
                       width: "100%", padding: "8px 10px", borderRadius: "8px",

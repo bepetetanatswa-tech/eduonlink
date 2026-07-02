@@ -10,7 +10,7 @@ const DEMO_PAIRS = [
   },
   {
     q: "Generate an HBC blueprint for a water harvesting project",
-    a: "📋 SBP Blueprint Generated\n\nProject: Community Rainwater Harvesting System\nHBC Stage: Identification → Investigation\n\nObjectives:\n• Document traditional water conservation practices\n• Map water scarcity hotspots in the community\n• Design a sustainable collection system\n\nHeritage Connection: Building on ancient Zimbabwe stone-channel irrigation techniques used at Great Zimbabwe.",
+    a: "📋 SBP Blueprint Generated\n\nProject: Community Rainwater Harvesting System\nHBC Stage: Topic Selection & Rationale → Research & Data Collection\n\nObjectives:\n• Document traditional water conservation practices\n• Map water scarcity hotspots in the community\n• Design a sustainable collection system\n\nHeritage Connection: Building on ancient Zimbabwe stone-channel irrigation techniques used at Great Zimbabwe.",
   },
   {
     q: "ZIMSEC O-Level Maths tips for quadratic equations",

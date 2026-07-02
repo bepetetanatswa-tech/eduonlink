@@ -78,6 +78,12 @@ export default function BroadcastPage() {
       await (supabase.from("notifications") as any).insert(notifications);
     }
 
+    fetch("/api/admin/audit-log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "broadcast_sent", targetType: "announcement", details: { title: title.trim(), target, isEmergency, recipientCount: count } }),
+    }).catch(() => {});
+
     setSending(false);
     setSent({ count });
     setTitle(""); setMessage(""); setIsEmergency(false);

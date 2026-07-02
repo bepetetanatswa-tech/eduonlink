@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail, teacherApprovedEmail, teacherRejectedEmail } from "@/lib/email";
+import { logAdminAction } from "@/lib/auditLog";
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -11,7 +12,7 @@ export async function POST(request: NextRequest) {
 
   const admin = createAdminClient();
   const { data: reviewer } = await (admin.from("profiles") as any)
-    .select("role").eq("user_id", user.id).single();
+    .select("id, email, role").eq("user_id", user.id).single();
   if (reviewer?.role !== "super_admin") {
     return NextResponse.json({ error: "Only super admins can decide teacher applications" }, { status: 403 });
   }
@@ -36,6 +37,15 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (error || !teacher) return NextResponse.json({ error: error?.message ?? "Teacher not found" }, { status: 400 });
+
+  await logAdminAction({
+    actorId: reviewer.id,
+    actorEmail: reviewer.email,
+    action: decision === "approved" ? "teacher_approved" : "teacher_rejected",
+    targetType: "teacher",
+    targetId: teacher.id,
+    details: decision === "rejected" ? { reason: reason.trim() } : null,
+  });
 
   await sendEmail({
     to: teacher.email,

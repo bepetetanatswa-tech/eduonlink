@@ -7,6 +7,24 @@ export type FormLevel =
 
 export const SUPER_ADMIN_EMAIL = "bepetetanatswa@gmail.com";
 
+// Common disposable/temporary email providers — blocked at registration to
+// cut down on throwaway accounts. Not exhaustive (new ones appear constantly)
+// and only checked client-side today, so treat this as a speed bump against
+// casual abuse, not a hard security boundary.
+export const DISPOSABLE_EMAIL_DOMAINS = new Set([
+  "mailinator.com", "10minutemail.com", "guerrillamail.com", "guerrillamail.net",
+  "yopmail.com", "trashmail.com", "throwawaymail.com", "getnada.com",
+  "fakeinbox.com", "dispostable.com", "sharklasers.com", "maildrop.cc",
+  "temp-mail.org", "tempmail.com", "tempmail.net", "mintemail.com",
+  "mytemp.email", "moakt.com", "emailondeck.com", "mohmal.com",
+  "spamgourmet.com", "mailnesia.com", "33mail.com", "burnermail.io",
+]);
+
+export function isDisposableEmail(email: string): boolean {
+  const domain = email.split("@")[1]?.toLowerCase().trim();
+  return !!domain && DISPOSABLE_EMAIL_DOMAINS.has(domain);
+}
+
 // ── Zod schemas ──────────────────────────────────────────────────
 
 export const loginSchema = z.object({

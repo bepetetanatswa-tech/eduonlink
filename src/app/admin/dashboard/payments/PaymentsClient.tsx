@@ -25,6 +25,11 @@ export function PaymentsClient({ initialPayments }: { initialPayments: Payment[]
       .eq("id", id);
     if (!error) {
       setPayments((prev) => prev.map((p) => p.id === id ? { ...p, status } : p));
+      fetch("/api/admin/audit-log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: `payment_${status}`, targetType: "payment_verification", targetId: id }),
+      }).catch(() => {});
     }
     setUpdating(null);
   };

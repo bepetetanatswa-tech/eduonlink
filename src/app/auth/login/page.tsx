@@ -37,7 +37,27 @@ export default function LoginPage() {
     }
 
     setLoading(true);
+
+    const lockoutRes = await fetch("/api/auth/check-lockout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    }).then((r) => r.json()).catch(() => ({ locked: false }));
+
+    if (lockoutRes.locked) {
+      const minutes = Math.ceil(lockoutRes.retryAfterSeconds / 60);
+      setError(`Too many failed attempts. Please try again in ${minutes} minute${minutes === 1 ? "" : "s"}.`);
+      setLoading(false);
+      return;
+    }
+
     const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+
+    fetch("/api/auth/record-attempt", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, success: !authError }),
+    }).catch(() => {});
 
     if (authError) {
       setError(

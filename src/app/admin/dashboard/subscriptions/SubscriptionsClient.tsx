@@ -39,7 +39,14 @@ export function SubscriptionsClient({ subs: initialSubs, stats }: { subs: Sub[];
         id, plan, status, amount_paid, currency, payment_method, start_date, end_date, created_at,
         profiles!user_id(id, full_name, email, role)
       `).single();
-    if (data) setSubs((p) => p.map((s) => s.id === id ? data : s));
+    if (data) {
+      setSubs((p) => p.map((s) => s.id === id ? data : s));
+      fetch("/api/admin/audit-log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "subscription_updated", targetType: "subscription", targetId: id, details: { plan, status } }),
+      }).catch(() => {});
+    }
     setUpdating(null);
     notify("Plan updated ✓");
   };

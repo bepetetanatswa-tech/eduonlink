@@ -66,7 +66,14 @@ export function SchoolsClient({ initialSchools }: { initialSchools: School[] }) 
     if (!editing) return;
     setSaving(true);
     const { data } = await (supabase.from("schools") as any).update(editForm).eq("id", editing.id).select().single();
-    if (data) setSchools((p) => p.map((s) => s.id === editing.id ? data : s));
+    if (data) {
+      setSchools((p) => p.map((s) => s.id === editing.id ? data : s));
+      fetch("/api/admin/audit-log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "school_edited", targetType: "school", targetId: editing.id, details: editForm }),
+      }).catch(() => {});
+    }
     setSaving(false); setEditing(null);
     notify("School updated ✓");
   };
@@ -76,7 +83,17 @@ export function SchoolsClient({ initialSchools }: { initialSchools: School[] }) 
     setSaving(true);
     const { data } = await (supabase.from("schools") as any)
       .insert({ ...addForm, name: addForm.name.trim(), is_verified: true, status: "approved" }).select().single();
-    if (data) { setSchools((p) => [data, ...p]); setAddOpen(false); setAddForm({ name: "", province: PROVINCES[0], district: "", email: "", phone: "", subscription_plan: "free_school" }); notify("School added ✓"); }
+    if (data) {
+      setSchools((p) => [data, ...p]);
+      setAddOpen(false);
+      setAddForm({ name: "", province: PROVINCES[0], district: "", email: "", phone: "", subscription_plan: "free_school" });
+      notify("School added ✓");
+      fetch("/api/admin/audit-log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "school_added", targetType: "school", targetId: data.id }),
+      }).catch(() => {});
+    }
     setSaving(false);
   };
 
@@ -85,6 +102,11 @@ export function SchoolsClient({ initialSchools }: { initialSchools: School[] }) 
     await (supabase.from("schools") as any).delete().eq("id", id);
     setSchools((p) => p.filter((s) => s.id !== id));
     notify("School deleted");
+    fetch("/api/admin/audit-log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "school_deleted", targetType: "school", targetId: id }),
+    }).catch(() => {});
   };
 
   const filtered = schools.filter((s) => !search || s.name.toLowerCase().includes(search.toLowerCase()) || (s.province ?? "").toLowerCase().includes(search.toLowerCase()));

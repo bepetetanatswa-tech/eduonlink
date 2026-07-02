@@ -2,6 +2,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { logAdminAction } from "@/lib/auditLog";
 
 const UPDATABLE_FIELDS = [
   "first_name", "last_name", "date_of_birth", "gender", "phone",
@@ -91,6 +92,28 @@ export async function PATCH(request: NextRequest) {
   }
 
   const admin = createAdminClient();
+
+  // Anti-fraud detection, not a hard block: shared family phones are common
+  // (e.g. a parent and child using the same number), so we flag possible
+  // duplicate-account signals for a super_admin to review in the audit log
+  // rather than lock the user out on a false positive.
+  if (typeof update.phone === "string" && update.phone.trim()) {
+    const { data: dupes } = await (admin.from("profiles") as any)
+      .select("id, email, role")
+      .eq("phone", update.phone.trim())
+      .neq("user_id", user.id);
+    if (dupes && dupes.length > 0) {
+      await logAdminAction({
+        actorId: null,
+        actorEmail: user.email ?? "unknown",
+        action: "duplicate_phone_detected",
+        targetType: "profile",
+        targetId: user.id,
+        details: { phone: update.phone.trim(), matchingProfiles: dupes.map((d: any) => ({ id: d.id, email: d.email, role: d.role })) },
+      });
+    }
+  }
+
   const { data: updated, error } = await (admin.from("profiles") as any)
     .update(update)
     .eq("user_id", user.id)

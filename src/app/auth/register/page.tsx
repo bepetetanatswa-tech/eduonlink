@@ -13,6 +13,7 @@ import {
   ZIMSEC_SUBJECTS,
   PROVINCES,
   ROLE_META,
+  isDisposableEmail,
   type RegisterRole,
 } from "@/types/auth";
 
@@ -89,6 +90,7 @@ export default function RegisterPage() {
       if (!form.firstName.trim()) { setError("First name is required."); return; }
       if (!form.lastName.trim()) { setError("Last name is required."); return; }
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) { setError("Enter a valid email address."); return; }
+      if (isDisposableEmail(form.email)) { setError("Temporary/disposable email addresses aren't allowed. Please use a permanent email address."); return; }
       if (form.password.length < 8) { setError("Password must be at least 8 characters."); return; }
       if (!/[A-Z]/.test(form.password)) { setError("Password must contain at least one uppercase letter."); return; }
       if (!/[0-9]/.test(form.password)) { setError("Password must contain at least one number."); return; }

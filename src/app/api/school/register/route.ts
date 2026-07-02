@@ -28,27 +28,31 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "School name is required" }, { status: 400 });
   }
 
-  const { data: school, error } = await (admin.from("schools") as any)
-    .upsert(
-      {
-        admin_id: profile.id,
-        name: schoolName,
-        type: profile.school_type,
-        province: profile.province,
-        district: profile.district,
-        address: address || null,
-        phone: phone || null,
-        email: email || profile.email,
-        website: website || null,
-        logo_url: logoUrl || null,
-        subscription_plan: subscriptionPlan || "free_school",
-        status: "pending",
-        is_verified: false,
-      },
-      { onConflict: "admin_id" }
-    )
-    .select()
-    .single();
+  const schoolFields = {
+    admin_id: profile.id,
+    name: schoolName,
+    type: profile.school_type,
+    province: profile.province,
+    district: profile.district,
+    address: address || null,
+    phone: phone || null,
+    email: email || profile.email,
+    website: website || null,
+    logo_url: logoUrl || null,
+    subscription_plan: subscriptionPlan || "free_school",
+    status: "pending",
+    is_verified: false,
+  };
+
+  // Avoid relying on a DB-level unique constraint for upsert — explicit
+  // select-then-write is resilient regardless of whether that constraint
+  // actually made it onto the live table.
+  const { data: existingSchool } = await (admin.from("schools") as any)
+    .select("id").eq("admin_id", profile.id).maybeSingle();
+
+  const { data: school, error } = existingSchool
+    ? await (admin.from("schools") as any).update(schoolFields).eq("id", existingSchool.id).select().single()
+    : await (admin.from("schools") as any).insert(schoolFields).select().single();
 
   if (error || !school) {
     return NextResponse.json({ error: error?.message ?? "Could not save school" }, { status: 400 });

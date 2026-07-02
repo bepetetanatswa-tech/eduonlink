@@ -52,6 +52,33 @@ export async function deleteFromR2(key: string): Promise<void> {
   await r2Client.send(new DeleteObjectCommand({ Bucket: R2_BUCKET_NAME, Key: key }));
 }
 
+export interface AccessorProfile {
+  id: string;
+  role: string;
+  school_id: string | null;
+}
+
+// Ownership check for /api/files/[...key] — the caller must already be
+// authenticated before this runs. Categories with no single clear owner
+// (lesson videos/materials, course materials, past papers, voice notes)
+// are broadcast-style content: any logged-in user may view them. The
+// remaining categories encode a specific owner in the key path itself
+// (student, teacher or school), so only that owner or staff may read them.
+export function canAccessFileKey(key: string, profile: AccessorProfile): boolean {
+  const staff = profile.role === "teacher" || profile.role === "school_admin" || profile.role === "super_admin";
+  const [top, a, b] = key.split("/");
+
+  if (top === "assignments") {
+    if (b === "brief") return true;
+    return staff || b === profile.id; // b is the submitting student's id
+  }
+  if (top === "qualifications") return staff || a === profile.id; // a is the teacher's id
+  if (top === "hbc-projects") return staff || a === profile.id; // a is the student's id
+  if (top === "school-docs") return profile.role === "super_admin" || (profile.role === "school_admin" && profile.school_id === a);
+
+  return true; // videos, thumbnails, lesson-materials, course-materials, past-papers, voice-notes
+}
+
 export interface FileCategory {
   folder: (ids: Record<string, string>) => string;
   maxBytes: number;

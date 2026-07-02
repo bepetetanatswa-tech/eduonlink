@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { FormInput, FormSelect } from "@/components/auth/FormInput";
 import { AuthButton, AuthError, AuthSuccess } from "@/components/auth/AuthCard";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
+import { SecurityPanel } from "@/components/profile/SecurityPanel";
 import {
   FORM_LEVELS, ZIMSEC_SUBJECTS, PROVINCES,
   GENDER_OPTIONS, RELATIONSHIP_OPTIONS, CONTACT_METHOD_OPTIONS,
@@ -433,6 +434,8 @@ export function ProfileEditor() {
           )}
         </div>
       )}
+
+      <SecurityPanel />
 
       <div style={{ maxWidth: 220 }}>
         <AuthButton onClick={handleSave} loading={saving}>Save changes</AuthButton>

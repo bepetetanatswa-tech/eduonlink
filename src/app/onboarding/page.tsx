@@ -8,6 +8,7 @@ import { AuthButton, AuthError } from "@/components/auth/AuthCard";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import { SchoolLogoUpload } from "@/components/profile/SchoolLogoUpload";
 import { DocumentUpload } from "@/components/profile/DocumentUpload";
+import { gibberishReason, invalidCodeReason } from "@/lib/textQuality";
 import {
   FORM_LEVELS, ZIMSEC_SUBJECTS, PROVINCES,
   GENDER_OPTIONS, RELATIONSHIP_OPTIONS, CONTACT_METHOD_OPTIONS,
@@ -178,14 +179,17 @@ export default function OnboardingPage() {
       setError("Please select your grade/form level.");
       return;
     }
-    if (currentKey === "school" && !schoolNameLocal.trim()) {
-      setError("Please enter your school's name.");
-      return;
+    if (currentKey === "school") {
+      if (!schoolNameLocal.trim()) { setError("Please enter your school's name."); return; }
+      const schoolNameIssue = gibberishReason(schoolNameLocal, { minLength: 3 });
+      if (schoolNameIssue) { setError(`School name: ${schoolNameIssue}`); return; }
     }
     if (currentKey === "teacher") {
       if (!ztcNumber.trim()) { setError("Please enter your ZTC registration number."); return; }
       if (!qualificationDocKey) { setError("Please upload proof of your qualifications."); return; }
       if (!idDocKey) { setError("Please upload your national ID or passport."); return; }
+      const ztcIssue = invalidCodeReason(ztcNumber);
+      if (ztcIssue) { setError(`ZTC number: ${ztcIssue}`); return; }
     }
 
     setSaving(true);

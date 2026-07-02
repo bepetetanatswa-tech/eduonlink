@@ -11,9 +11,10 @@ export async function POST(request: NextRequest) {
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
     ?? request.headers.get("x-real-ip")
     ?? null;
+  const userAgent = request.headers.get("user-agent") ?? null;
 
   const admin = createAdminClient();
-  await (admin.from("login_attempts") as any).insert({ email, ip, success });
+  await (admin.from("login_attempts") as any).insert({ email, ip, success, user_agent: userAgent });
 
   return NextResponse.json({ ok: true });
 }

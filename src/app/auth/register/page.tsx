@@ -16,6 +16,7 @@ import {
   isDisposableEmail,
   type RegisterRole,
 } from "@/types/auth";
+import { gibberishReason, invalidCodeReason } from "@/lib/textQuality";
 
 type Step = 1 | 2 | 3;
 
@@ -89,6 +90,10 @@ export default function RegisterPage() {
     if (step === 2) {
       if (!form.firstName.trim()) { setError("First name is required."); return; }
       if (!form.lastName.trim()) { setError("Last name is required."); return; }
+      const firstNameIssue = gibberishReason(form.firstName);
+      if (firstNameIssue) { setError(`First name: ${firstNameIssue}`); return; }
+      const lastNameIssue = gibberishReason(form.lastName);
+      if (lastNameIssue) { setError(`Last name: ${lastNameIssue}`); return; }
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) { setError("Enter a valid email address."); return; }
       if (isDisposableEmail(form.email)) { setError("Temporary/disposable email addresses aren't allowed. Please use a permanent email address."); return; }
       if (form.password.length < 8) { setError("Password must be at least 8 characters."); return; }
@@ -112,10 +117,16 @@ export default function RegisterPage() {
       if (!form.qualifications.trim()) { setError("Please enter your qualifications."); return; }
       if (form.teachingSubjects.length === 0) { setError("Select at least one teaching subject."); return; }
       if (!form.ztcNumber.trim()) { setError("Please enter your Zimbabwe Teachers Council (ZTC) registration number."); return; }
+      const qualificationsIssue = gibberishReason(form.qualifications, { minLength: 3 });
+      if (qualificationsIssue) { setError(`Qualifications: ${qualificationsIssue}`); return; }
+      const ztcIssue = invalidCodeReason(form.ztcNumber);
+      if (ztcIssue) { setError(`ZTC number: ${ztcIssue}`); return; }
     }
     if (form.role === "school_admin") {
       if (!form.schoolName.trim()) { setError("Please enter your school name."); return; }
       if (!form.province) { setError("Please select your province."); return; }
+      const schoolNameIssue = gibberishReason(form.schoolName, { minLength: 3 });
+      if (schoolNameIssue) { setError(`School name: ${schoolNameIssue}`); return; }
     }
 
     setLoading(true);

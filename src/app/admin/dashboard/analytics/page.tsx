@@ -118,7 +118,7 @@ export default async function AnalyticsPage() {
       {/* Platform activity summary */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 }}>
         {[
-          { label: "Total Assignments", value: assignments ?? 0, link: "/admin/dashboard/users", color: "#4D7FFF" },
+          { label: "Total Assignments", value: assignments ?? 0, link: "/admin/dashboard/courses", color: "#4D7FFF" },
           { label: "Active Courses", value: courses ?? 0, link: "/admin/dashboard/courses", color: "#F5A623" },
           { label: "AI Sessions", value: aiConvos ?? 0, link: "/admin/dashboard/ai", color: "#BD93F9" },
         ].map((item) => (

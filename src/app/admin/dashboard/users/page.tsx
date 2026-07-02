@@ -9,7 +9,7 @@ export default async function UsersPage() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: users } = await (supabase.from("profiles") as any)
-    .select("id, full_name, email, role, phone, created_at")
+    .select("id, full_name, email, role, phone, created_at, suspended_at, suspension_reason")
     .order("created_at", { ascending: false })
     .limit(100);
 

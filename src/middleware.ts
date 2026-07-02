@@ -13,6 +13,7 @@ const PUBLIC_ROUTES = [
   "/auth/verify-email",
   "/auth/callback",
   "/maintenance",
+  "/suspended",
 ];
 
 const ROLE_ROUTES: Record<string, string[]> = {
@@ -73,10 +74,20 @@ export async function middleware(request: NextRequest) {
   if (!isPublic(pathname)) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const profileResult = await (supabase.from("profiles") as any)
-      .select("role, onboarding_completed, is_approved")
+      .select("role, onboarding_completed, is_approved, suspended_at")
       .eq("user_id", user.id)
       .single();
-    const profile = profileResult.data as { role: string; onboarding_completed: boolean; is_approved: boolean } | null;
+    const profile = profileResult.data as { role: string; onboarding_completed: boolean; is_approved: boolean; suspended_at: string | null } | null;
+
+    // Suspended accounts (except super_admin, who can't be suspended) are
+    // fully locked out — signed out and shown a static explanation page.
+    if (profile && profile.suspended_at && profile.role !== "super_admin") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/suspended";
+      const response = NextResponse.redirect(url);
+      await supabase.auth.signOut();
+      return response;
+    }
 
     if (profile && !roleAllowed(profile.role, pathname)) {
       return NextResponse.redirect(new URL("/dashboard", request.url));

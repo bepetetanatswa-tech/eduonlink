@@ -3,17 +3,14 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { EmptyState } from "@/components/dashboard/EmptyState";
+import { getEffectiveProfile } from "@/lib/impersonation";
 
 export default async function TeacherDashboardPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: profile } = await (supabase.from("profiles") as any)
-    .select("id, full_name, email, role")
-    .eq("user_id", user.id)
-    .single();
+  const { profile } = await getEffectiveProfile(user);
 
   if (!profile) redirect("/auth/login");
 

@@ -8,6 +8,7 @@ import { uploadToR2 } from "@/lib/uploadToR2";
 interface Course {
   id: string; title: string; description: string | null; subject: string;
   grade_level: string | null; thumbnail_emoji: string; is_published: boolean;
+  price: number;
   materials: Material[];
 }
 interface Material {
@@ -44,6 +45,7 @@ export function LessonCreator({ profileId }: { profileId: string }) {
   const [cSubject, setCSubject] = useState("Mathematics");
   const [cLevel, setCLevel] = useState("Form 1");
   const [cEmoji, setCEmoji] = useState("📚");
+  const [cPrice, setCPrice] = useState("");
 
   // Material form
   const [mTitle, setMTitle] = useState("");
@@ -55,7 +57,7 @@ export function LessonCreator({ profileId }: { profileId: string }) {
 
   const load = async () => {
     const { data } = await (supabase.from("courses") as any)
-      .select(`id,title,description,subject,grade_level,thumbnail_emoji,is_published,
+      .select(`id,title,description,subject,grade_level,thumbnail_emoji,is_published,price,
         course_materials(id,title,type,content,file_url,embed_url,order_index,duration_minutes,is_published)`)
       .eq("created_by", profileId)
       .order("created_at", { ascending: false });
@@ -73,7 +75,7 @@ export function LessonCreator({ profileId }: { profileId: string }) {
   useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openNewCourse = () => {
-    setCTitle(""); setCDesc(""); setCSubject("Mathematics"); setCLevel("Form 1"); setCEmoji("📚");
+    setCTitle(""); setCDesc(""); setCSubject("Mathematics"); setCLevel("Form 1"); setCEmoji("📚"); setCPrice("");
     setShowCourseModal(true);
   };
 
@@ -83,6 +85,7 @@ export function LessonCreator({ profileId }: { profileId: string }) {
     await (supabase.from("courses") as any).insert({
       title: cTitle.trim(), description: cDesc.trim() || null,
       subject: cSubject, grade_level: cLevel, thumbnail_emoji: cEmoji,
+      price: cPrice ? Math.max(0, parseFloat(cPrice)) : 0,
       created_by: profileId, is_published: false,
     });
     setSaving(false);
@@ -92,6 +95,11 @@ export function LessonCreator({ profileId }: { profileId: string }) {
 
   const toggleCoursePublish = async (c: Course) => {
     await (supabase.from("courses") as any).update({ is_published: !c.is_published }).eq("id", c.id);
+    load();
+  };
+
+  const updateCoursePrice = async (c: Course, price: number) => {
+    await (supabase.from("courses") as any).update({ price: Math.max(0, price) }).eq("id", c.id);
     load();
   };
 
@@ -205,7 +213,10 @@ export function LessonCreator({ profileId }: { profileId: string }) {
                   {c.is_published ? "Live" : "Draft"}
                 </span>
               </div>
-              <p style={{ fontSize: 11, color: S.dim, margin: "6px 0 0" }}>{c.materials.length} material{c.materials.length !== 1 ? "s" : ""}</p>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 6 }}>
+                <p style={{ fontSize: 11, color: S.dim, margin: 0 }}>{c.materials.length} material{c.materials.length !== 1 ? "s" : ""}</p>
+                <p style={{ fontSize: 11, fontWeight: 700, color: c.price > 0 ? "#F5A623" : S.dim, margin: 0 }}>{c.price > 0 ? `$${c.price.toFixed(2)}` : "Free"}</p>
+              </div>
             </div>
           ))}
         </div>
@@ -243,6 +254,20 @@ export function LessonCreator({ profileId }: { profileId: string }) {
                 </div>
               </div>
               {selected.description && <p style={{ fontSize: 12, color: S.muted, margin: "10px 0 0", lineHeight: 1.5 }}>{selected.description}</p>}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: S.muted }}>Price (USD)</label>
+                <input
+                  type="number" min="0" step="0.01"
+                  defaultValue={selected.price}
+                  key={selected.id}
+                  onBlur={(e) => {
+                    const v = e.target.value ? parseFloat(e.target.value) : 0;
+                    if (v !== selected.price) updateCoursePrice(selected, v);
+                  }}
+                  style={{ ...inp, width: 100, padding: "6px 10px" }}
+                />
+                <span style={{ fontSize: 11, color: S.dim }}>Leave at 0 for free</span>
+              </div>
             </div>
 
             {/* Materials list */}
@@ -319,6 +344,11 @@ export function LessonCreator({ profileId }: { profileId: string }) {
                   </button>
                 ))}
               </div>
+            </div>
+            <div>
+              <label style={{ fontSize: 11, fontWeight: 600, color: S.muted, display: "block", marginBottom: 5 }}>Price (USD, optional)</label>
+              <input type="number" min="0" step="0.01" value={cPrice} onChange={e => setCPrice(e.target.value)} placeholder="0.00 — leave blank for free" style={inp} />
+              <p style={{ fontSize: 11, color: S.dim, marginTop: 5 }}>Students see this price on the course. Payment collection isn&apos;t wired up yet — this just sets what to charge.</p>
             </div>
             <div>
               <label style={{ fontSize: 11, fontWeight: 600, color: S.muted, display: "block", marginBottom: 5 }}>Description (optional)</label>

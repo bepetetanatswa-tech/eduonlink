@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { CourseManager } from "@/components/admin/CourseManager";
+import { WithdrawalsClient } from "./WithdrawalsClient";
 
-export default async function CoursesPage() {
+export default async function WithdrawalsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
@@ -13,9 +13,9 @@ export default async function CoursesPage() {
   if (!profile || profile.role !== "super_admin") redirect("/dashboard");
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: courses } = await (supabase.from("courses") as any)
-    .select("id, title, description, subject, grade_level, is_published, order_index, thumbnail_emoji, price, created_at")
-    .order("created_at", { ascending: false });
+  const { data: withdrawals } = await (supabase.from("teacher_withdrawal_requests") as any)
+    .select("id, teacher_id, amount, payout_phone, status, rejection_reason, requested_at, processed_at, profiles!teacher_id(full_name, email)")
+    .order("requested_at", { ascending: false });
 
-  return <CourseManager initialCourses={courses ?? []} adminId={profile.id} />;
+  return <WithdrawalsClient initialWithdrawals={withdrawals ?? []} />;
 }

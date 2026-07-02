@@ -207,9 +207,9 @@ export default async function AdminOverviewPage() {
                 </div>
                 <span style={{
                   fontSize: "10px", fontWeight: 600, padding: "2px 8px", borderRadius: "6px",
-                  color: p.status === "verified" ? "#00E5A3" : p.status === "rejected" ? "#FF6B6B" : "#F5A623",
-                  background: p.status === "verified" ? "rgba(0,229,163,0.1)" : p.status === "rejected" ? "rgba(255,107,107,0.1)" : "rgba(245,166,35,0.1)",
-                  border: `1px solid ${p.status === "verified" ? "rgba(0,229,163,0.2)" : p.status === "rejected" ? "rgba(255,107,107,0.2)" : "rgba(245,166,35,0.2)"}`,
+                  color: p.status === "approved" ? "#00E5A3" : p.status === "rejected" ? "#FF6B6B" : "#F5A623",
+                  background: p.status === "approved" ? "rgba(0,229,163,0.1)" : p.status === "rejected" ? "rgba(255,107,107,0.1)" : "rgba(245,166,35,0.1)",
+                  border: `1px solid ${p.status === "approved" ? "rgba(0,229,163,0.2)" : p.status === "rejected" ? "rgba(255,107,107,0.2)" : "rgba(245,166,35,0.2)"}`,
                 }}>
                   {p.status}
                 </span>

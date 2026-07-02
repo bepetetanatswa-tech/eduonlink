@@ -17,7 +17,7 @@ export function PaymentsClient({ initialPayments }: { initialPayments: Payment[]
   const [updating, setUpdating] = useState<string | null>(null);
   const supabase = createClient();
 
-  const updateStatus = async (id: string, status: "verified" | "rejected") => {
+  const updateStatus = async (id: string, status: "approved" | "rejected") => {
     setUpdating(id);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase.from("payment_verifications") as any)
@@ -66,9 +66,9 @@ export function PaymentsClient({ initialPayments }: { initialPayments: Payment[]
                   <td style={{ padding: "12px 20px" }}>
                     <span style={{
                       fontSize: "10px", fontWeight: 600, padding: "2px 8px", borderRadius: "6px",
-                      color: p.status === "verified" ? "#00E5A3" : p.status === "rejected" ? "#FF6B6B" : "#F5A623",
-                      background: p.status === "verified" ? "rgba(0,229,163,0.1)" : p.status === "rejected" ? "rgba(255,107,107,0.1)" : "rgba(245,166,35,0.1)",
-                      border: `1px solid ${p.status === "verified" ? "rgba(0,229,163,0.2)" : p.status === "rejected" ? "rgba(255,107,107,0.2)" : "rgba(245,166,35,0.2)"}`,
+                      color: p.status === "approved" ? "#00E5A3" : p.status === "rejected" ? "#FF6B6B" : "#F5A623",
+                      background: p.status === "approved" ? "rgba(0,229,163,0.1)" : p.status === "rejected" ? "rgba(255,107,107,0.1)" : "rgba(245,166,35,0.1)",
+                      border: `1px solid ${p.status === "approved" ? "rgba(0,229,163,0.2)" : p.status === "rejected" ? "rgba(255,107,107,0.2)" : "rgba(245,166,35,0.2)"}`,
                     }}>
                       {p.status}
                     </span>
@@ -78,7 +78,7 @@ export function PaymentsClient({ initialPayments }: { initialPayments: Payment[]
                     {p.status === "pending" && (
                       <div style={{ display: "flex", gap: "6px" }}>
                         <button
-                          onClick={() => updateStatus(p.id, "verified")}
+                          onClick={() => updateStatus(p.id, "approved")}
                           disabled={updating === p.id}
                           style={{ padding: "4px 10px", borderRadius: "6px", fontSize: "11px", fontWeight: 600, background: "rgba(0,229,163,0.1)", border: "1px solid rgba(0,229,163,0.2)", color: "#00E5A3", cursor: "pointer", opacity: updating === p.id ? 0.5 : 1 }}
                         >

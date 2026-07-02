@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { CourseAccessGate } from "@/components/academic/CourseAccessGate";
 
 export default async function StudentLessonsPage() {
   const supabase = await createClient();
@@ -15,7 +16,7 @@ export default async function StudentLessonsPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: courses } = await (supabase.from("courses") as any)
     .select(`
-      id, title, description, subject, grade_level, thumbnail_emoji,
+      id, title, description, subject, grade_level, thumbnail_emoji, price,
       course_materials(id, title, type, file_url, order_index)
     `)
     .eq("is_published", true)
@@ -26,6 +27,11 @@ export default async function StudentLessonsPage() {
     .select("material_id").eq("student_id", profile.id);
 
   const completedIds = new Set((progressRows ?? []).map((r: { material_id: string }) => r.material_id));
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: purchaseRows } = await (supabase.from("course_purchases") as any)
+    .select("course_id").eq("student_id", profile.id).eq("status", "completed");
+  const purchasedCourseIds = new Set((purchaseRows ?? []).map((r: { course_id: string }) => r.course_id));
 
   const SUBJECT_COLORS: Record<string, string> = {
     Mathematics: "#4D7FFF", "English Language": "#00E5A3", Chemistry: "#FF6B6B", Physics: "#4D7FFF",
@@ -49,7 +55,7 @@ export default async function StudentLessonsPage() {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14 }}>
           {(courses ?? []).map((c: {
             id: string; title: string; description: string | null; subject: string;
-            grade_level: string | null; thumbnail_emoji: string;
+            grade_level: string | null; thumbnail_emoji: string; price: number;
             course_materials: { id: string; title: string; type: string; file_url: string | null; order_index: number }[];
           }) => {
             const mats = c.course_materials ?? [];
@@ -65,8 +71,13 @@ export default async function StudentLessonsPage() {
                       {c.thumbnail_emoji}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: 14, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", margin: "0 0 3px", lineHeight: 1.3 }}>{c.title}</p>
-                      <p style={{ fontSize: 11, color: "#6B7290", margin: 0 }}>{c.subject} · {c.grade_level}</p>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                        <p style={{ fontSize: 14, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", margin: 0, lineHeight: 1.3 }}>{c.title}</p>
+                        {c.price > 0 && (
+                          <span style={{ fontSize: 10, fontWeight: 700, color: "#F5A623", background: "rgba(245,166,35,0.1)", border: "1px solid rgba(245,166,35,0.25)", padding: "1px 7px", borderRadius: 20 }}>${c.price.toFixed(2)}</span>
+                        )}
+                      </div>
+                      <p style={{ fontSize: 11, color: "#6B7290", margin: "3px 0 0" }}>{c.subject} · {c.grade_level}</p>
                     </div>
                   </div>
                   {c.description && <p style={{ fontSize: 12, color: "#4A5170", marginTop: 10, lineHeight: 1.5 }}>{c.description}</p>}
@@ -90,21 +101,15 @@ export default async function StudentLessonsPage() {
                   {mats.length === 0 ? (
                     <p style={{ fontSize: 12, color: "#4A5170", textAlign: "center", padding: "12px 0" }}>No materials added yet</p>
                   ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                      {mats.sort((a, b) => a.order_index - b.order_index).map((m) => (
-                        <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <div style={{ width: 20, height: 20, borderRadius: "5px", background: completedIds.has(m.id) ? "rgba(0,229,163,0.15)" : "rgba(255,255,255,0.04)", border: `1px solid ${completedIds.has(m.id) ? "rgba(0,229,163,0.3)" : "rgba(255,255,255,0.08)"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, flexShrink: 0 }}>
-                            {completedIds.has(m.id) ? "✓" : ""}
-                          </div>
-                          <span style={{ fontSize: 12, color: "#8892B0", flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{m.title}</span>
-                          {m.file_url && (
-                            <a href={m.file_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: accentColor, background: `${accentColor}10`, border: `1px solid ${accentColor}20`, padding: "2px 8px", borderRadius: 5, textDecoration: "none", flexShrink: 0 }}>
-                              Open
-                            </a>
-                          )}
-                        </div>
-                      ))}
-                    </div>
+                    <CourseAccessGate
+                      courseId={c.id}
+                      courseTitle={c.title}
+                      price={c.price}
+                      hasPurchased={purchasedCourseIds.has(c.id)}
+                      materials={mats}
+                      completedIds={Array.from(completedIds) as string[]}
+                      accentColor={accentColor}
+                    />
                   )}
                 </div>
               </div>

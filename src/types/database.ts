@@ -3,7 +3,7 @@ export type SubscriptionPlan = "free" | "basic" | "premium" | "enterprise";
 export type AttendanceStatus = "present" | "absent" | "late" | "excused";
 export type EnrollmentStatus = "active" | "inactive" | "suspended";
 export type NotificationType = "info" | "warning" | "success" | "assignment" | "grade" | "announcement";
-export type PaymentStatus = "pending" | "verified" | "rejected";
+export type PaymentStatus = "pending" | "approved" | "rejected" | "refunded";
 export type SubjectLevel = "primary" | "olevel" | "alevel";
 export type CurriculumType = "zimsec" | "cambridge" | "ib";
 

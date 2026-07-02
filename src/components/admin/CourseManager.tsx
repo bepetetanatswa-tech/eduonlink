@@ -24,6 +24,7 @@ interface Course {
   is_published: boolean;
   order_index: number;
   thumbnail_emoji: string;
+  price: number;
   created_at: string;
   materials?: Material[];
 }
@@ -41,7 +42,7 @@ export function CourseManager({ initialCourses, adminId }: { initialCourses: Cou
   const [notification, setNotification] = useState<string | null>(null);
 
   // Form state
-  const [form, setForm] = useState({ title: "", description: "", subject: SUBJECTS[0], grade_level: GRADES[14], thumbnail_emoji: EMOJIS[0], is_published: false });
+  const [form, setForm] = useState({ title: "", description: "", subject: SUBJECTS[0], grade_level: GRADES[14], thumbnail_emoji: EMOJIS[0], is_published: false, price: 0 });
   const [saving, setSaving] = useState(false);
   const [formErr, setFormErr] = useState<string | null>(null);
 
@@ -59,8 +60,8 @@ export function CourseManager({ initialCourses, adminId }: { initialCourses: Cou
 
   const notify = (msg: string) => { setNotification(msg); setTimeout(() => setNotification(null), 3000); };
 
-  const openCreate = () => { setForm({ title: "", description: "", subject: SUBJECTS[0], grade_level: GRADES[14], thumbnail_emoji: EMOJIS[0], is_published: false }); setFormErr(null); setView("create"); };
-  const openEdit = (c: Course) => { setEditTarget(c); setForm({ title: c.title, description: c.description ?? "", subject: c.subject, grade_level: c.grade_level ?? GRADES[14], thumbnail_emoji: c.thumbnail_emoji ?? EMOJIS[0], is_published: c.is_published }); setFormErr(null); setView("edit"); };
+  const openCreate = () => { setForm({ title: "", description: "", subject: SUBJECTS[0], grade_level: GRADES[14], thumbnail_emoji: EMOJIS[0], is_published: false, price: 0 }); setFormErr(null); setView("create"); };
+  const openEdit = (c: Course) => { setEditTarget(c); setForm({ title: c.title, description: c.description ?? "", subject: c.subject, grade_level: c.grade_level ?? GRADES[14], thumbnail_emoji: c.thumbnail_emoji ?? EMOJIS[0], is_published: c.is_published, price: c.price ?? 0 }); setFormErr(null); setView("edit"); };
 
   const saveCourse = async () => {
     if (!form.title.trim()) { setFormErr("Title is required"); return; }
@@ -200,6 +201,11 @@ export function CourseManager({ initialCourses, adminId }: { initialCourses: Cou
             ))}
           </div>
 
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 600, color: "#6B7290", display: "block", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.06em" }}>Price (USD)</label>
+            <input type="number" min="0" step="0.01" value={form.price} onChange={(e) => setForm((p) => ({ ...p, price: e.target.value ? parseFloat(e.target.value) : 0 }))} placeholder="0.00" style={{ width: 160, padding: "10px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, fontSize: 13, color: "#CDD6F4", outline: "none", boxSizing: "border-box" }} />
+          </div>
+
           <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
             <input type="checkbox" checked={form.is_published} onChange={(e) => setForm((p) => ({ ...p, is_published: e.target.checked }))} style={{ width: 16, height: 16, accentColor: "#00E5A3" }} />
             <span style={{ fontSize: 13, color: "#CDD6F4" }}>Publish immediately (visible to students)</span>
@@ -256,6 +262,7 @@ export function CourseManager({ initialCourses, adminId }: { initialCourses: Cou
                       <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 20, color: c.is_published ? "#00E5A3" : "#4A5170", background: c.is_published ? "rgba(0,229,163,0.1)" : "rgba(255,255,255,0.04)", border: `1px solid ${c.is_published ? "rgba(0,229,163,0.2)" : "rgba(255,255,255,0.08)"}` }}>
                         {c.is_published ? "Published" : "Draft"}
                       </span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: c.price > 0 ? "#F5A623" : "#4A5170" }}>{c.price > 0 ? `$${c.price.toFixed(2)}` : "Free"}</span>
                     </div>
                     <p style={{ fontSize: 11, color: "#6B7290", margin: "3px 0 0" }}>{c.subject} · {c.grade_level}</p>
                   </div>

@@ -43,6 +43,7 @@ const NAV: Record<UserRole, NavGroup[]> = {
       group: "Operations",
       items: [
         { label: "Payments",     href: "/admin/dashboard/payments",    icon: ic("M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z") },
+        { label: "Withdrawals",  href: "/admin/dashboard/withdrawals", icon: ic("M17 9V7a5 5 0 00-10 0v2M5 9h14l1 11H4L5 9z") },
         { label: "Subscriptions",href: "/admin/dashboard/subscriptions", icon: ic("M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z") },
         { label: "Messages",     href: "/admin/dashboard/messages",    icon: ic("M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z") },
         { label: "Broadcast",    href: "/admin/dashboard/broadcast",   icon: ic("M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z") },
@@ -97,6 +98,7 @@ const NAV: Record<UserRole, NavGroup[]> = {
         { label: "Grades",       href: "/teacher/dashboard/grades",     icon: ic("M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z") },
         { label: "Timetable",    href: "/teacher/dashboard/timetable",  icon: ic("M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z") },
         { label: "HBC Projects", href: "/teacher/dashboard/hbc",          icon: ic("M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z") },
+        { label: "Earnings",     href: "/teacher/dashboard/earnings",     icon: ic("M17 9V7a5 5 0 00-10 0v2M5 9h14l1 11H4L5 9z") },
         { label: "Subscription", href: "/teacher/dashboard/subscription", icon: ic("M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z") },
       ],
     },

@@ -72,10 +72,10 @@ export async function middleware(request: NextRequest) {
   if (!isPublic(pathname)) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const profileResult = await (supabase.from("profiles") as any)
-      .select("role, onboarding_completed")
+      .select("role, onboarding_completed, is_approved")
       .eq("user_id", user.id)
       .single();
-    const profile = profileResult.data as { role: string; onboarding_completed: boolean } | null;
+    const profile = profileResult.data as { role: string; onboarding_completed: boolean; is_approved: boolean } | null;
 
     if (profile && !roleAllowed(profile.role, pathname)) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
@@ -87,6 +87,18 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL("/onboarding", request.url));
       }
       if (profile.onboarding_completed && pathname.startsWith("/onboarding")) {
+        return NextResponse.redirect(new URL("/dashboard", request.url));
+      }
+    }
+
+    // Unapproved teachers can't reach any teaching feature until a
+    // super_admin reviews their ZTC number + documents (see
+    // /api/admin/teachers/decide) — only /teacher/pending is reachable.
+    if (profile && profile.role === "teacher" && profile.onboarding_completed) {
+      if (!profile.is_approved && !pathname.startsWith("/teacher/pending")) {
+        return NextResponse.redirect(new URL("/teacher/pending", request.url));
+      }
+      if (profile.is_approved && pathname.startsWith("/teacher/pending")) {
         return NextResponse.redirect(new URL("/dashboard", request.url));
       }
     }

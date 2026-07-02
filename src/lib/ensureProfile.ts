@@ -23,7 +23,7 @@ export async function ensureProfileExists(
     const admin = createAdminClient();
 
     const { data: existing } = await (admin.from("profiles") as any)
-      .select("id, first_name, last_name, form_level, school_name, province, district, school_type, qualifications, years_experience, teaching_subjects")
+      .select("id, first_name, last_name, form_level, school_name, province, district, school_type, qualifications, years_experience, teaching_subjects, ztc_number")
       .eq("user_id", user.id)
       .maybeSingle();
 
@@ -53,6 +53,7 @@ export async function ensureProfileExists(
       qualifications: meta.qualifications ?? null,
       years_experience: meta.years_experience ?? null,
       teaching_subjects: meta.teaching_subjects ?? null,
+      ztc_number: meta.ztc_number ?? null,
     };
 
     if (existing) {

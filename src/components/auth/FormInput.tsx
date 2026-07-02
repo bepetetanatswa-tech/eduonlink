@@ -179,17 +179,18 @@ export function PasswordStrength({ password }: { password: string }) {
     { label: "8+ characters",    pass: password.length >= 8 },
     { label: "Uppercase letter", pass: /[A-Z]/.test(password) },
     { label: "Number",           pass: /[0-9]/.test(password) },
+    { label: "Special character", pass: /[^A-Za-z0-9]/.test(password) },
   ];
   const strength = checks.filter((c) => c.pass).length;
-  const colors = ["#4A5170", "#EF4444", "#F5A623", "#00E5A3"];
-  const labels = ["", "Weak", "Fair", "Strong"];
+  const colors = ["#4A5170", "#EF4444", "#F5A623", "#F5A623", "#00E5A3"];
+  const labels = ["", "Weak", "Fair", "Good", "Strong"];
 
   if (!password) return null;
 
   return (
     <div className="flex flex-col gap-2 mt-1">
       <div className="flex gap-1">
-        {[0, 1, 2].map((i) => (
+        {[0, 1, 2, 3].map((i) => (
           <div
             key={i}
             className="flex-1 h-1 rounded-full transition-all duration-300"

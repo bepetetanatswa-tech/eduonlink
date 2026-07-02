@@ -73,6 +73,7 @@ export function canAccessFileKey(key: string, profile: AccessorProfile): boolean
     return staff || b === profile.id; // b is the submitting student's id
   }
   if (top === "qualifications") return staff || a === profile.id; // a is the teacher's id
+  if (top === "teacher-ids") return profile.role === "super_admin" || a === profile.id; // national ID/passport — tighter than "qualifications": only the teacher themselves or a super_admin, not all staff
   if (top === "hbc-projects") return staff || a === profile.id; // a is the student's id
   if (top === "school-docs") return profile.role === "super_admin" || (profile.role === "school_admin" && profile.school_id === a);
 
@@ -137,6 +138,11 @@ export const FILE_CATEGORIES: Record<string, FileCategory> = {
   },
   "qualification": {
     folder: ({ teacherId }) => `qualifications/${teacherId}`,
+    maxBytes: 20 * 1024 * 1024,
+    allowedTypes: ["application/pdf", "image/jpeg", "image/png"],
+  },
+  "teacher-id": {
+    folder: ({ teacherId }) => `teacher-ids/${teacherId}`,
     maxBytes: 20 * 1024 * 1024,
     allowedTypes: ["application/pdf", "image/jpeg", "image/png"],
   },

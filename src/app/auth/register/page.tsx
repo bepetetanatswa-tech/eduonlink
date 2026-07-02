@@ -35,6 +35,7 @@ interface FormState {
   yearsExperience: string;
   qualifications: string;
   teachingSubjects: string[];
+  ztcNumber: string;
   // Step 3 — school admin
   province: string;
   schoolType: string;
@@ -48,7 +49,7 @@ const INITIAL: FormState = {
   email: "", password: "", confirmPassword: "", firstName: "", lastName: "",
   agreeToTerms: false,
   formLevel: "", schoolName: "",
-  yearsExperience: "", qualifications: "", teachingSubjects: [],
+  yearsExperience: "", qualifications: "", teachingSubjects: [], ztcNumber: "",
   province: "", schoolType: "government", district: "",
   childEmail: "",
 };
@@ -91,6 +92,7 @@ export default function RegisterPage() {
       if (form.password.length < 8) { setError("Password must be at least 8 characters."); return; }
       if (!/[A-Z]/.test(form.password)) { setError("Password must contain at least one uppercase letter."); return; }
       if (!/[0-9]/.test(form.password)) { setError("Password must contain at least one number."); return; }
+      if (!/[^A-Za-z0-9]/.test(form.password)) { setError("Password must contain at least one special character."); return; }
       if (form.password !== form.confirmPassword) { setError("Passwords do not match."); return; }
       if (!form.agreeToTerms) { setError("You must agree to the terms of service."); return; }
     }
@@ -107,6 +109,7 @@ export default function RegisterPage() {
     if (form.role === "teacher") {
       if (!form.qualifications.trim()) { setError("Please enter your qualifications."); return; }
       if (form.teachingSubjects.length === 0) { setError("Select at least one teaching subject."); return; }
+      if (!form.ztcNumber.trim()) { setError("Please enter your Zimbabwe Teachers Council (ZTC) registration number."); return; }
     }
     if (form.role === "school_admin") {
       if (!form.schoolName.trim()) { setError("Please enter your school name."); return; }
@@ -133,6 +136,7 @@ export default function RegisterPage() {
             qualifications: form.qualifications || null,
             years_experience: form.yearsExperience ? parseInt(form.yearsExperience) : null,
             teaching_subjects: form.teachingSubjects.length > 0 ? form.teachingSubjects : null,
+            ztc_number: form.ztcNumber || null,
           },
           emailRedirectTo: `${window.location.origin}/auth/callback?next=/onboarding`,
         },
@@ -416,6 +420,19 @@ export default function RegisterPage() {
             {/* Teacher */}
             {form.role === "teacher" && (
               <>
+                <div
+                  className="p-4 rounded-xl text-sm"
+                  style={{ background: "rgba(245,166,35,0.06)", border: "1px solid rgba(245,166,35,0.15)", color: "#8892B0" }}
+                >
+                  Teacher accounts are reviewed before you can access teaching features. After registering, you&apos;ll be asked to upload proof of your qualifications and ID — approval usually takes 1-2 business days.
+                </div>
+                <FormInput
+                  label="Zimbabwe Teachers Council (ZTC) number"
+                  type="text"
+                  value={form.ztcNumber}
+                  onChange={(e) => set("ztcNumber", e.target.value)}
+                  placeholder="e.g. ZTC-2019-04521"
+                />
                 <FormInput
                   label="Qualifications"
                   type="text"

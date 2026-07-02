@@ -70,3 +70,24 @@ export function teacherInviteEmail(schoolName: string, inviteUrl: string) {
     `<p>${schoolName} has invited you to join VOA as a teacher.</p><p><a href="${inviteUrl}" style="color:#4D7FFF;">Accept invite & register →</a></p>`
   );
 }
+
+export function teacherApplicationReceivedEmail() {
+  return wrapper(
+    "Application received",
+    `<p>Thanks for submitting your ZTC number and documents for verification. Your account stays pending until our team reviews them — this usually takes 1-2 business days.</p><p>We'll email you as soon as a decision is made.</p>`
+  );
+}
+
+export function teacherApprovedEmail(fullName: string) {
+  return wrapper(
+    "You're verified! 🎉",
+    `<p>Hi <strong style="color:#CDD6F4;">${fullName}</strong>, your teacher account has been verified. You now have full access to teaching features on VOA.</p>`
+  );
+}
+
+export function teacherRejectedEmail(fullName: string, reason: string) {
+  return wrapper(
+    "Application update",
+    `<p>Hi <strong style="color:#CDD6F4;">${fullName}</strong>, we were unable to verify your teacher application at this time.</p><p style="color:#FF6B6B;">Reason: ${reason}</p><p>You're welcome to update your details and resubmit from your dashboard.</p>`
+  );
+}

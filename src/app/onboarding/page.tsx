@@ -7,6 +7,7 @@ import { FormInput, FormSelect } from "@/components/auth/FormInput";
 import { AuthButton, AuthError } from "@/components/auth/AuthCard";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import { SchoolLogoUpload } from "@/components/profile/SchoolLogoUpload";
+import { DocumentUpload } from "@/components/profile/DocumentUpload";
 import {
   FORM_LEVELS, ZIMSEC_SUBJECTS, PROVINCES,
   GENDER_OPTIONS, RELATIONSHIP_OPTIONS, CONTACT_METHOD_OPTIONS,
@@ -28,6 +29,7 @@ const STEP_META: Record<string, { title: string; subtitle: string }> = {
   basics:   { title: "Tell us about yourself", subtitle: "This helps us personalise your experience." },
   address:  { title: "Where are you based?", subtitle: "Used for school matching and local content." },
   student:  { title: "Your school details", subtitle: "So we can tailor lessons to your level." },
+  teacher:  { title: "Teacher verification", subtitle: "We verify every teacher before unlocking teaching features." },
   parent:   { title: "Your family", subtitle: "Link your children's accounts and set your preferences." },
   school:   { title: "Register your school", subtitle: "A few final details, then we'll submit it for verification." },
   done:     { title: "You're all set!", subtitle: "Your profile is ready. Let's start learning." },
@@ -67,6 +69,11 @@ export default function OnboardingPage() {
   const [emergencyName, setEmergencyName] = useState("");
   const [emergencyPhone, setEmergencyPhone] = useState("");
 
+  // Teacher
+  const [ztcNumber, setZtcNumber] = useState("");
+  const [qualificationDocKey, setQualificationDocKey] = useState<string | null>(null);
+  const [idDocKey, setIdDocKey] = useState<string | null>(null);
+
   // Parent
   const [occupation, setOccupation] = useState("");
   const [contactMethod, setContactMethod] = useState("");
@@ -87,6 +94,7 @@ export default function OnboardingPage() {
 
   const steps = useMemo(() => {
     if (profile?.role === "student") return ["welcome", "basics", "address", "student", "done"];
+    if (profile?.role === "teacher") return ["welcome", "basics", "address", "teacher", "done"];
     if (profile?.role === "parent") return ["welcome", "basics", "address", "parent", "done"];
     if (profile?.role === "school_admin") return ["welcome", "basics", "address", "school", "done"];
     return ["welcome", "basics", "address", "done"];
@@ -121,6 +129,9 @@ export default function OnboardingPage() {
       setGuardianPhone(p.guardian_phone ?? "");
       setEmergencyName(p.emergency_contact_name ?? "");
       setEmergencyPhone(p.emergency_contact_phone ?? "");
+      setZtcNumber(p.ztc_number ?? "");
+      setQualificationDocKey(p.qualification_doc_key);
+      setIdDocKey(p.id_doc_key);
       setOccupation(p.occupation ?? "");
       setContactMethod(p.preferred_contact_method ?? "");
 
@@ -136,7 +147,7 @@ export default function OnboardingPage() {
         setSchoolPlan(mySchool.subscription_plan ?? "free_school");
       }
 
-      const maxStep = (p.role === "student" || p.role === "parent" || p.role === "school_admin") ? 4 : 3;
+      const maxStep = (p.role === "student" || p.role === "teacher" || p.role === "parent" || p.role === "school_admin") ? 4 : 3;
       setStep(Math.min(p.onboarding_step ?? 0, maxStep));
       setLoading(false);
     })();
@@ -171,6 +182,11 @@ export default function OnboardingPage() {
       setError("Please enter your school's name.");
       return;
     }
+    if (currentKey === "teacher") {
+      if (!ztcNumber.trim()) { setError("Please enter your ZTC registration number."); return; }
+      if (!qualificationDocKey) { setError("Please upload proof of your qualifications."); return; }
+      if (!idDocKey) { setError("Please upload your national ID or passport."); return; }
+    }
 
     setSaving(true);
     try {
@@ -203,6 +219,22 @@ export default function OnboardingPage() {
           occupation: occupation || null,
           preferred_contact_method: contactMethod || null,
         });
+      }
+
+      if (currentKey === "teacher") {
+        const res = await fetch("/api/teacher/submit-verification", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ztcNumber: ztcNumber.trim(),
+            qualificationDocKey,
+            idDocKey,
+          }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error ?? "Could not submit your application for verification.");
+        }
       }
 
       if (currentKey === "school") {
@@ -469,6 +501,39 @@ export default function OnboardingPage() {
                 </>
               )}
 
+              {currentKey === "teacher" && (
+                <>
+                  <div
+                    className="p-4 rounded-xl text-sm"
+                    style={{ background: "rgba(245,166,35,0.06)", border: "1px solid rgba(245,166,35,0.15)", color: "#8892B0" }}
+                  >
+                    Your account stays pending until our team verifies these details — you won&apos;t have access to teaching features until then.
+                  </div>
+                  <FormInput
+                    label="Zimbabwe Teachers Council (ZTC) number"
+                    value={ztcNumber}
+                    onChange={(e) => setZtcNumber(e.target.value)}
+                    placeholder="e.g. ZTC-2019-04521"
+                  />
+                  <DocumentUpload
+                    category="qualification"
+                    ids={{ teacherId: userId }}
+                    label="Proof of qualifications"
+                    hint="PDF, JPG or PNG. Max 20MB — e.g. your degree certificate or PGDE."
+                    currentKey={qualificationDocKey}
+                    onUploaded={setQualificationDocKey}
+                  />
+                  <DocumentUpload
+                    category="teacher-id"
+                    ids={{ teacherId: userId }}
+                    label="National ID or passport"
+                    hint="PDF, JPG or PNG. Max 20MB. Only you and our verification team can view this."
+                    currentKey={idDocKey}
+                    onUploaded={setIdDocKey}
+                  />
+                </>
+              )}
+
               {currentKey === "school" && (
                 <>
                   <SchoolLogoUpload userId={userId} currentUrl={schoolLogoUrl} schoolName={schoolNameLocal} onUploaded={setSchoolLogoUrl} />
@@ -510,10 +575,12 @@ export default function OnboardingPage() {
 
               {currentKey === "done" && (
                 <div className="text-center py-4">
-                  <div className="text-4xl mb-3">{profile?.role === "school_admin" ? "📋" : "🎉"}</div>
+                  <div className="text-4xl mb-3">{profile?.role === "school_admin" || profile?.role === "teacher" ? "📋" : "🎉"}</div>
                   <p style={{ color: "#8892B0", fontSize: 14 }}>
                     {profile?.role === "school_admin"
                       ? "Your school has been submitted for verification. We'll email you once it's reviewed — usually within 1-2 business days."
+                      : profile?.role === "teacher"
+                      ? "Your teacher application has been submitted for verification. We'll email you once it's reviewed — usually within 1-2 business days. Your dashboard will show your application status until then."
                       : "Your profile is complete. Welcome aboard!"}
                   </p>
                 </div>

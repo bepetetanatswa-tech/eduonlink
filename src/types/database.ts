@@ -37,6 +37,11 @@ export interface Profile {
   qualifications: string | null;
   years_experience: number | null;
   teaching_subjects: string[] | null;
+  ztc_number: string | null;
+  is_approved: boolean;
+  teacher_rejection_reason: string | null;
+  qualification_doc_key: string | null;
+  id_doc_key: string | null;
   onboarding_completed: boolean;
   onboarding_step: number;
   created_at: string;

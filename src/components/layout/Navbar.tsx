@@ -12,6 +12,7 @@ const NAV = [
   { label: "HBC Projects",href: "/#hbc" },
   { label: "For Schools", href: "/#cta" },
   { label: "About",       href: "/about" },
+  { label: "Contact",     href: "/contact" },
 ];
 
 export default function Navbar() {

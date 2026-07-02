@@ -25,7 +25,7 @@ const COL: Record<string, { label: string; href: string }[]> = {
   Company: [
     { label: "About VOA",          href: "/about" },
     { label: "Our Mission",        href: "/about#mission" },
-    { label: "Contact",            href: "mailto:vavhimiacademy@gmail.com" },
+    { label: "Contact",            href: "/contact" },
     { label: "Privacy Policy",     href: "/privacy" },
     { label: "Terms of Service",   href: "/terms" },
   ],

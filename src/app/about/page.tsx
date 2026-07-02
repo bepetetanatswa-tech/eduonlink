@@ -354,12 +354,12 @@ export default function AboutPage() {
               >
                 Create your account →
               </Link>
-              <a
-                href="mailto:vavhimiacademy@gmail.com"
+              <Link
+                href="/contact"
                 className="btn-ghost text-sm px-8 py-3.5"
               >
                 Contact us
-              </a>
+              </Link>
             </div>
           </FadeIn>
         </div>

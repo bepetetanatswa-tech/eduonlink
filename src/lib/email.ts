@@ -85,6 +85,24 @@ export function teacherApprovedEmail(fullName: string) {
   );
 }
 
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+export function contactFormEmail(input: { name: string; email: string; phone: string | null; subject: string; message: string }) {
+  const name = escapeHtml(input.name);
+  const email = escapeHtml(input.email);
+  const phone = input.phone ? escapeHtml(input.phone) : null;
+  const subject = escapeHtml(input.subject);
+  const message = escapeHtml(input.message);
+  return wrapper(
+    `New contact form message: ${subject}`,
+    `<p><strong style="color:#CDD6F4;">From:</strong> ${name} (${email})</p>
+     ${phone ? `<p><strong style="color:#CDD6F4;">Phone:</strong> ${phone}</p>` : ""}
+     <p style="margin-top:16px;white-space:pre-wrap;">${message}</p>`
+  );
+}
+
 export function teacherRejectedEmail(fullName: string, reason: string) {
   return wrapper(
     "Application update",

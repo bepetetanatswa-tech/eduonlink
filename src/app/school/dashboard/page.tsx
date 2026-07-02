@@ -19,9 +19,25 @@ export default async function SchoolDashboardPage() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: school } = await (supabase.from("schools") as any)
-    .select("id, name, province, subscription_plan, is_verified")
+    .select("id, name, province, subscription_plan, is_verified, status, rejection_reason")
     .eq("admin_id", profile.id)
     .single();
+
+  if (school && school.status !== "approved") {
+    return (
+      <div style={{ maxWidth: 560, margin: "60px auto", textAlign: "center" }}>
+        <div style={{ fontSize: 40, marginBottom: 16 }}>{school.status === "rejected" ? "⚠️" : "⏳"}</div>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", marginBottom: 8 }}>
+          {school.status === "rejected" ? "Registration not approved" : "Verification pending"}
+        </h2>
+        <p style={{ color: "#8892B0", fontSize: 14, lineHeight: 1.6, marginBottom: 16 }}>
+          {school.status === "rejected"
+            ? `${school.name} was not approved. Reason: ${school.rejection_reason ?? "No reason given."}`
+            : `${school.name} is awaiting review by the VOA team. We'll email you once a decision is made — usually within 1-2 business days.`}
+        </p>
+      </div>
+    );
+  }
 
   const schoolId = school?.id ?? null;
 

@@ -38,6 +38,7 @@ interface FormState {
   // Step 3 — school admin
   province: string;
   schoolType: string;
+  district: string;
   // Step 3 — parent
   childEmail: string;
 }
@@ -48,7 +49,7 @@ const INITIAL: FormState = {
   agreeToTerms: false,
   formLevel: "", schoolName: "",
   yearsExperience: "", qualifications: "", teachingSubjects: [],
-  province: "", schoolType: "government",
+  province: "", schoolType: "government", district: "",
   childEmail: "",
 };
 
@@ -128,6 +129,7 @@ export default function RegisterPage() {
             school_name: form.schoolName || null,
             province: form.province || null,
             school_type: form.schoolType || null,
+            district: form.district || null,
             qualifications: form.qualifications || null,
             years_experience: form.yearsExperience ? parseInt(form.yearsExperience) : null,
             teaching_subjects: form.teachingSubjects.length > 0 ? form.teachingSubjects : null,
@@ -499,6 +501,13 @@ export default function RegisterPage() {
                   <option value="" disabled>Select a province</option>
                   {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
                 </FormSelect>
+                <FormInput
+                  label="District"
+                  type="text"
+                  value={form.district}
+                  onChange={(e) => set("district", e.target.value)}
+                  placeholder="e.g. Goromonzi"
+                />
                 <FormSelect
                   label="School type"
                   value={form.schoolType}

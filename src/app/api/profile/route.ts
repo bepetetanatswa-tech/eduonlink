@@ -31,6 +31,7 @@ export async function GET() {
 
   let children: unknown[] = [];
   let availableSchools: unknown[] = [];
+  let mySchool: unknown = null;
 
   if (profile.role === "parent") {
     const { data } = await (admin.from("parent_children") as any)
@@ -47,7 +48,15 @@ export async function GET() {
     availableSchools = data ?? [];
   }
 
-  return NextResponse.json({ profile, children, availableSchools });
+  if (profile.role === "school_admin") {
+    const { data } = await (admin.from("schools") as any)
+      .select("*")
+      .eq("admin_id", profile.id)
+      .maybeSingle();
+    mySchool = data ?? null;
+  }
+
+  return NextResponse.json({ profile, children, availableSchools, mySchool });
 }
 
 export async function PATCH(request: NextRequest) {

@@ -100,6 +100,7 @@ async function ensureProfileExists(
       form_level: meta.form_level ?? null,
       school_name: meta.school_name ?? null,
       province: meta.province ?? null,
+      district: meta.district ?? null,
       school_type: meta.school_type ?? null,
       qualifications: meta.qualifications ?? null,
       years_experience: meta.years_experience ?? null,

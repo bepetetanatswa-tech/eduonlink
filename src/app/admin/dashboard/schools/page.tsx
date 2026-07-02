@@ -14,7 +14,7 @@ export default async function SchoolsPage() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: schools } = await (supabase.from("schools") as any)
-    .select("id, name, province, city, subscription_plan, is_verified, email, phone, created_at")
+    .select("id, name, province, district, type, address, website, logo_url, subscription_plan, is_verified, status, rejection_reason, email, phone, created_at")
     .order("created_at", { ascending: false });
 
   return <SchoolsClient initialSchools={schools ?? []} />;

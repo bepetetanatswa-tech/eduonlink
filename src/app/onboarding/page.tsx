@@ -6,10 +6,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FormInput, FormSelect } from "@/components/auth/FormInput";
 import { AuthButton, AuthError } from "@/components/auth/AuthCard";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
+import { SchoolLogoUpload } from "@/components/profile/SchoolLogoUpload";
 import {
   FORM_LEVELS, ZIMSEC_SUBJECTS, PROVINCES,
   GENDER_OPTIONS, RELATIONSHIP_OPTIONS, CONTACT_METHOD_OPTIONS,
 } from "@/types/auth";
+import { getPlansForRole } from "@/lib/subscription/plans";
 import type { Profile } from "@/types/database";
 
 type ChildLink = {
@@ -27,6 +29,7 @@ const STEP_META: Record<string, { title: string; subtitle: string }> = {
   address:  { title: "Where are you based?", subtitle: "Used for school matching and local content." },
   student:  { title: "Your school details", subtitle: "So we can tailor lessons to your level." },
   parent:   { title: "Your family", subtitle: "Link your children's accounts and set your preferences." },
+  school:   { title: "Register your school", subtitle: "A few final details, then we'll submit it for verification." },
   done:     { title: "You're all set!", subtitle: "Your profile is ready. Let's start learning." },
 };
 
@@ -72,9 +75,19 @@ export default function OnboardingPage() {
   const [linkingChild, setLinkingChild] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
 
+  // School admin
+  const [schoolAddress, setSchoolAddress] = useState("");
+  const [schoolPhone, setSchoolPhone] = useState("");
+  const [schoolEmail, setSchoolEmail] = useState("");
+  const [schoolWebsite, setSchoolWebsite] = useState("");
+  const [schoolLogoUrl, setSchoolLogoUrl] = useState<string | null>(null);
+  const [schoolPlan, setSchoolPlan] = useState("free_school");
+  const schoolPlans = getPlansForRole("school");
+
   const steps = useMemo(() => {
     if (profile?.role === "student") return ["welcome", "basics", "address", "student", "done"];
     if (profile?.role === "parent") return ["welcome", "basics", "address", "parent", "done"];
+    if (profile?.role === "school_admin") return ["welcome", "basics", "address", "school", "done"];
     return ["welcome", "basics", "address", "done"];
   }, [profile?.role]);
 
@@ -110,7 +123,17 @@ export default function OnboardingPage() {
       setOccupation(p.occupation ?? "");
       setContactMethod(p.preferred_contact_method ?? "");
 
-      const maxStep = (p.role === "student" || p.role === "parent") ? 4 : 3;
+      const mySchool = data.mySchool as { address: string | null; phone: string | null; email: string | null; website: string | null; logo_url: string | null; subscription_plan: string | null } | null;
+      if (mySchool) {
+        setSchoolAddress(mySchool.address ?? "");
+        setSchoolPhone(mySchool.phone ?? "");
+        setSchoolEmail(mySchool.email ?? "");
+        setSchoolWebsite(mySchool.website ?? "");
+        setSchoolLogoUrl(mySchool.logo_url);
+        setSchoolPlan(mySchool.subscription_plan ?? "free_school");
+      }
+
+      const maxStep = (p.role === "student" || p.role === "parent" || p.role === "school_admin") ? 4 : 3;
       setStep(Math.min(p.onboarding_step ?? 0, maxStep));
       setLoading(false);
     })();
@@ -173,6 +196,25 @@ export default function OnboardingPage() {
           occupation: occupation || null,
           preferred_contact_method: contactMethod || null,
         });
+      }
+
+      if (currentKey === "school") {
+        const res = await fetch("/api/school/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            address: schoolAddress || null,
+            phone: schoolPhone || null,
+            email: schoolEmail || null,
+            website: schoolWebsite || null,
+            logoUrl: schoolLogoUrl,
+            subscriptionPlan: schoolPlan,
+          }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error ?? "Could not submit your school for verification.");
+        }
       }
 
       await patch(fields);
@@ -418,10 +460,52 @@ export default function OnboardingPage() {
                 </>
               )}
 
+              {currentKey === "school" && (
+                <>
+                  <SchoolLogoUpload userId={userId} currentUrl={schoolLogoUrl} schoolName={profile?.school_name ?? ""} onUploaded={setSchoolLogoUrl} />
+                  <FormInput label="School address" value={schoolAddress} onChange={(e) => setSchoolAddress(e.target.value)} placeholder="e.g. 123 Samora Machel Ave, Harare CBD" />
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormInput label="School phone" type="tel" value={schoolPhone} onChange={(e) => setSchoolPhone(e.target.value)} placeholder="+263 7XX XXX XXX" />
+                    <FormInput label="School email" type="email" value={schoolEmail} onChange={(e) => setSchoolEmail(e.target.value)} placeholder="info@yourschool.co.zw" />
+                  </div>
+                  <FormInput label="School website (optional)" value={schoolWebsite} onChange={(e) => setSchoolWebsite(e.target.value)} placeholder="https://yourschool.co.zw" />
+
+                  <div className="h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
+
+                  <p className="text-sm font-medium" style={{ color: "#8892B0" }}>Choose a plan</p>
+                  <div className="flex flex-col gap-2">
+                    {schoolPlans.map((p) => {
+                      const active = schoolPlan === p.key;
+                      return (
+                        <button
+                          key={p.key} type="button" onClick={() => setSchoolPlan(p.key)}
+                          className="flex items-center justify-between px-4 py-3 rounded-xl text-left transition-all duration-150"
+                          style={{
+                            background: active ? "rgba(167,139,250,0.12)" : "rgba(255,255,255,0.03)",
+                            border: `1px solid ${active ? "rgba(167,139,250,0.4)" : "rgba(255,255,255,0.07)"}`,
+                          }}
+                        >
+                          <div>
+                            <p className="text-sm font-semibold" style={{ color: active ? "#C4B5FD" : "#CDD6F4" }}>{p.name}</p>
+                            <p className="text-xs" style={{ color: "#4A5170" }}>{p.features[0]}{p.features[1] ? ` · ${p.features[1]}` : ""}</p>
+                          </div>
+                          <p className="text-sm font-bold" style={{ color: active ? "#C4B5FD" : "#8892B0" }}>{p.price === 0 ? "Free" : `$${p.price}/mo`}</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs" style={{ color: "#4A5170" }}>You can change plans anytime from your subscription page. Payment is verified after your school is approved.</p>
+                </>
+              )}
+
               {currentKey === "done" && (
                 <div className="text-center py-4">
-                  <div className="text-4xl mb-3">🎉</div>
-                  <p style={{ color: "#8892B0", fontSize: 14 }}>Your profile is complete. Welcome aboard!</p>
+                  <div className="text-4xl mb-3">{profile?.role === "school_admin" ? "📋" : "🎉"}</div>
+                  <p style={{ color: "#8892B0", fontSize: 14 }}>
+                    {profile?.role === "school_admin"
+                      ? "Your school has been submitted for verification. We'll email you once it's reviewed — usually within 1-2 business days."
+                      : "Your profile is complete. Welcome aboard!"}
+                  </p>
                 </div>
               )}
             </div>

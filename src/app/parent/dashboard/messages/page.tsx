@@ -16,7 +16,6 @@ export default async function ParentMessagesPage() {
     <DirectMessages
       profileId={profile.id}
       userRole="parent"
-      profile={profile}
       allowedRoles={["teacher", "school_admin"]}
     />
   );

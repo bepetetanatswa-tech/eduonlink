@@ -16,7 +16,6 @@ export default async function StudentMessagesPage() {
     <DirectMessages
       profileId={profile.id}
       userRole="student"
-      profile={profile}
       allowedRoles={["teacher"]}
     />
   );

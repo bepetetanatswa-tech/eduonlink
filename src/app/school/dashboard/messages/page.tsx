@@ -21,7 +21,6 @@ export default async function SchoolMessagesPage() {
       <DirectMessages
         profileId={profile.id}
         userRole={profile.role}
-        profile={profile}
         allowedRoles={["teacher", "parent", "student", "school_admin", "super_admin"]}
       />
     </div>

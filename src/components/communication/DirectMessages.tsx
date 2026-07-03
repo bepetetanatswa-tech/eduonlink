@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 interface Profile { id: string; full_name: string; avatar_url: string | null; role: string; email: string }
@@ -14,7 +15,6 @@ interface DMsg {
 interface Props {
   profileId: string;
   userRole: string;
-  profile: Profile;
   allowedRoles?: string[];
 }
 
@@ -49,7 +49,7 @@ function dmChannelKey(a: string, b: string) {
   return [a, b].sort().join(":");
 }
 
-export function DirectMessages({ profileId, userRole, profile, allowedRoles }: Props) {
+export function DirectMessages({ profileId, userRole, allowedRoles }: Props) {
   const supabase = createClient();
   const S = { bg: "#07080C", card: "#0A0B10", border: "rgba(255,255,255,0.07)", accent: "#4D7FFF", text: "#CDD6F4", muted: "#8892B0", dim: "#4A5170" };
 
@@ -69,12 +69,15 @@ export function DirectMessages({ profileId, userRole, profile, allowedRoles }: P
   const [blockedMe, setBlockedMe] = useState(false);
   const [showBlockConfirm, setShowBlockConfirm] = useState(false);
   const [muted, setMuted] = useState(false);
+  const [dmRequestStatus, setDmRequestStatus] = useState<"checking" | "none" | "pending_sent" | "pending_received" | "accepted" | "declined">("accepted");
   const bottomRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = useState(false);
   const presenceChannelRef = useRef<any>(null);
   const typingTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const messageInputRef = useRef<HTMLInputElement>(null);
+  const searchParams = useSearchParams();
   const [isNearBottom, setIsNearBottom] = useState(true);
   const [newMessageCount, setNewMessageCount] = useState(0);
   const prevMessageCount = useRef(0);
@@ -102,6 +105,28 @@ export function DirectMessages({ profileId, userRole, profile, allowedRoles }: P
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileId]);
+
+  // Deep link from a push notification: /messages?with={id}&focus=1
+  useEffect(() => {
+    if (loading) return;
+    const withId = searchParams.get("with");
+    if (!withId || selected?.id === withId) return;
+    const existing = conversations.find((c) => c.other.id === withId)?.other
+      ?? contacts.find((c) => c.id === withId);
+    if (existing) {
+      openConversation(existing).then(() => {
+        if (searchParams.get("focus")) setTimeout(() => messageInputRef.current?.focus(), 200);
+      });
+    } else {
+      (supabase.from("profiles") as any).select("id,full_name,avatar_url,role,email").eq("id", withId).single()
+        .then(({ data }: any) => {
+          if (data) openConversation(data).then(() => {
+            if (searchParams.get("focus")) setTimeout(() => messageInputRef.current?.focus(), 200);
+          });
+        });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, searchParams]);
 
   useEffect(() => {
     const grew = messages.length > prevMessageCount.current;
@@ -218,6 +243,33 @@ export function DirectMessages({ profileId, userRole, profile, allowedRoles }: P
     setBlockedMe((data ?? []).some((r: any) => r.blocker_id === other.id));
   }
 
+  async function checkDmRequestStatus(other: Profile, hasHistory: boolean) {
+    if (hasHistory) { setDmRequestStatus("accepted"); return; }
+
+    if (userRole === "student" && other.role === "teacher") {
+      const { data } = await (supabase.from("dm_requests") as any)
+        .select("requester_id, status").eq("requester_id", profileId).eq("recipient_id", other.id).maybeSingle();
+      if (!data) setDmRequestStatus("none");
+      else if (data.status === "accepted") setDmRequestStatus("accepted");
+      else if (data.status === "declined") setDmRequestStatus("declined");
+      else setDmRequestStatus("pending_sent");
+    } else if (userRole === "teacher" && other.role === "student") {
+      const { data } = await (supabase.from("dm_requests") as any)
+        .select("status").eq("requester_id", other.id).eq("recipient_id", profileId).maybeSingle();
+      setDmRequestStatus(data?.status === "pending" ? "pending_received" : "accepted");
+    } else {
+      setDmRequestStatus("accepted");
+    }
+  }
+
+  async function respondToRequest(accept: boolean) {
+    if (!selected) return;
+    await (supabase.from("dm_requests") as any)
+      .update({ status: accept ? "accepted" : "declined", decided_at: new Date().toISOString() })
+      .eq("requester_id", selected.id).eq("recipient_id", profileId);
+    setDmRequestStatus(accept ? "accepted" : "declined");
+  }
+
   async function checkMuteStatus(other: Profile) {
     const { data } = await (supabase.from("muted_conversations") as any)
       .select("id").eq("user_id", profileId).eq("other_user_id", other.id).maybeSingle();
@@ -242,6 +294,7 @@ export function DirectMessages({ profileId, userRole, profile, allowedRoles }: P
     setOtherOnline(false);
     setIsNearBottom(true);
     setNewMessageCount(0);
+    setDmRequestStatus("checking");
     prevMessageCount.current = 0;
     const { data } = await (supabase.from("messages") as any)
       .select("*, sender:profiles!messages_sender_id_fkey(id,full_name,avatar_url,role,email), receiver:profiles!messages_receiver_id_fkey(id,full_name,avatar_url,role,email)")
@@ -261,10 +314,27 @@ export function DirectMessages({ profileId, userRole, profile, allowedRoles }: P
     setupPresence(other);
     checkBlockStatus(other);
     checkMuteStatus(other);
+    checkDmRequestStatus(other, (data ?? []).length > 0);
   }
 
   async function sendMessage() {
     if (!input.trim() || !selected || sending || blockedByMe || blockedMe) return;
+    if (dmRequestStatus !== "accepted" && dmRequestStatus !== "none") return;
+
+    if (dmRequestStatus === "none") {
+      setSending(true);
+      const { error } = await (supabase.from("dm_requests") as any).insert({ requester_id: profileId, recipient_id: selected.id });
+      setSending(false);
+      if (!error) {
+        setDmRequestStatus("pending_sent");
+        setInput("");
+        // Client can't insert a notification row for another user under RLS —
+        // this RPC runs SECURITY DEFINER and re-checks the pending request server-side.
+        await (supabase.rpc as any)("notify_dm_request", { p_recipient_id: selected.id });
+      }
+      return;
+    }
+
     setSending(true);
     setSendError(null);
     const text = input;
@@ -290,22 +360,14 @@ export function DirectMessages({ profileId, userRole, profile, allowedRoles }: P
       }
       return [{ other: selected, lastMsg: data, unread: 0 }, ...prev];
     });
-    const { data: recipientMuted } = await (supabase.from("muted_conversations") as any)
-      .select("id").eq("user_id", selected.id).eq("other_user_id", profileId).maybeSingle();
-    if (!recipientMuted) {
-      await (supabase.from("notifications") as any).insert({
-        user_id: selected.id,
-        title: `New message from ${profile.full_name}`,
-        message: text.slice(0, 80),
-        type: "info",
-        link: `/${userRole}/dashboard/messages`,
-      });
-    }
+    // Client can't insert a notification row for another user under RLS —
+    // this RPC runs SECURITY DEFINER and re-checks block/mute status server-side.
+    await (supabase.rpc as any)("notify_dm_message", { p_recipient_id: selected.id, p_preview: text.slice(0, 80) });
     setSending(false);
   }
 
   async function uploadFile(file: File) {
-    if (!file || !selected || blockedByMe || blockedMe) return;
+    if (!file || !selected || blockedByMe || blockedMe || dmRequestStatus !== "accepted") return;
     setUploading(true);
     const ext = file.name.split(".").pop();
     const path = `dm/${dmChannelKey(profileId, selected.id)}/${Date.now()}.${ext}`;
@@ -473,24 +535,44 @@ export function DirectMessages({ profileId, userRole, profile, allowedRoles }: P
           {blockedByMe ? "You have blocked this user." : "You cannot message this user."}
         </p>
       )}
+      {dmRequestStatus === "pending_sent" && (
+        <p style={{ margin: "0 14px 8px", fontSize: 12, color: "#F5A623", textAlign: "center" }}>
+          Message request sent — waiting for {selected.full_name.split(" ")[0]} to accept.
+        </p>
+      )}
+      {dmRequestStatus === "declined" && (
+        <p style={{ margin: "0 14px 8px", fontSize: 12, color: "#FF6B6B", textAlign: "center" }}>
+          This request was declined. You can&apos;t message {selected.full_name.split(" ")[0]} right now.
+        </p>
+      )}
+      {dmRequestStatus === "pending_received" && (
+        <div style={{ margin: "0 14px 10px", padding: "10px 14px", background: "rgba(77,127,255,0.06)", border: `1px solid ${S.accent}30`, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+          <span style={{ fontSize: 12, color: S.text }}>{selected.full_name} wants to message you</span>
+          <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+            <button onClick={() => respondToRequest(true)} style={{ padding: "5px 12px", borderRadius: 7, background: "#00E5A3", border: "none", color: "#0E1117", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Accept</button>
+            <button onClick={() => respondToRequest(false)} style={{ padding: "5px 12px", borderRadius: 7, background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.3)", color: "#FF6B6B", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Decline</button>
+          </div>
+        </div>
+      )}
       <div style={{ padding: "10px 14px", borderTop: `1px solid ${S.border}`, background: S.card, display: "flex", gap: 8, flexShrink: 0 }}>
         <input type="file" ref={fileInputRef} style={{ display: "none" }} accept="image/*,.pdf,.doc,.docx,.txt" onChange={e => { if (e.target.files?.[0]) uploadFile(e.target.files[0]); e.target.value = ""; }} />
         <button
           onClick={() => fileInputRef.current?.click()}
-          disabled={isBlocked || uploading}
-          style={{ width: 36, height: 36, borderRadius: 10, border: `1px solid ${S.border}`, background: "rgba(255,255,255,0.04)", color: uploading ? S.accent : S.muted, cursor: isBlocked ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
+          disabled={isBlocked || uploading || dmRequestStatus !== "accepted"}
+          style={{ width: 36, height: 36, borderRadius: 10, border: `1px solid ${S.border}`, background: "rgba(255,255,255,0.04)", color: uploading ? S.accent : S.muted, cursor: (isBlocked || dmRequestStatus !== "accepted") ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
         >
           {uploading ? <span style={{ fontSize: 11 }}>…</span> : <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>}
         </button>
         <input
+          ref={messageInputRef}
           value={input}
           onChange={e => handleInputChange(e.target.value)}
           onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-          placeholder={isBlocked ? "Messaging unavailable" : `Message ${selected.full_name.split(" ")[0]}…`}
-          disabled={isBlocked}
+          placeholder={isBlocked ? "Messaging unavailable" : dmRequestStatus === "checking" ? "…" : dmRequestStatus === "none" ? `Send a message request to ${selected.full_name.split(" ")[0]}…` : dmRequestStatus !== "accepted" ? "Messaging unavailable" : `Message ${selected.full_name.split(" ")[0]}…`}
+          disabled={isBlocked || (dmRequestStatus !== "accepted" && dmRequestStatus !== "none")}
           style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}`, borderRadius: 10, padding: "9px 14px", fontSize: 13, color: S.text, outline: "none" }}
         />
-        <button onClick={sendMessage} disabled={!input.trim() || sending || isBlocked}
+        <button onClick={sendMessage} disabled={!input.trim() || sending || isBlocked || (dmRequestStatus !== "accepted" && dmRequestStatus !== "none")}
           style={{ width: 36, height: 36, borderRadius: 10, background: (!input.trim() || isBlocked) ? "rgba(77,127,255,0.2)" : S.accent, border: "none", color: "#fff", cursor: isBlocked ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
         </button>

@@ -79,6 +79,7 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
   const [sending, setSending] = useState(false);
   const [showMute, setShowMute] = useState<string | null>(null);
   const [isMuted, setIsMuted] = useState(false);
+  const [notifMuted, setNotifMuted] = useState(false);
   const [recording, setRecording] = useState(false);
   const [recordSeconds, setRecordSeconds] = useState(0);
   const [forwarding, setForwarding] = useState<ChatMessage | null>(null);
@@ -114,6 +115,7 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
   useEffect(() => {
     loadMessages();
     checkMuted();
+    checkNotifMuted();
     setupRealtime();
     return () => cleanup();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -157,6 +159,29 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
     if (data) {
       if (!data.expires_at || new Date(data.expires_at) > new Date()) setIsMuted(true);
     }
+  }
+
+  async function checkNotifMuted() {
+    const { data } = await (supabase.from("muted_classes") as any)
+      .select("id").eq("user_id", profileId).eq("class_id", classId).maybeSingle();
+    setNotifMuted(!!data);
+  }
+
+  async function toggleNotifMute() {
+    if (notifMuted) {
+      await (supabase.from("muted_classes") as any).delete().eq("user_id", profileId).eq("class_id", classId);
+      setNotifMuted(false);
+    } else {
+      await (supabase.from("muted_classes") as any).insert({ user_id: profileId, class_id: classId });
+      setNotifMuted(true);
+    }
+  }
+
+  async function notifyClassMembers(preview: string) {
+    // Notification rows must target other users, which client-side inserts can't
+    // do under RLS (insert policy requires user_id = the caller's own profile).
+    // This RPC runs SECURITY DEFINER and re-validates class membership server-side.
+    await (supabase.rpc as any)("notify_class_message", { p_class_id: classId, p_preview: preview });
   }
 
   function setupRealtime() {
@@ -248,6 +273,7 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
       message_type: "text",
       parent_id: replyTo?.id ?? null,
     });
+    notifyClassMembers(text.slice(0, 80));
     setSending(false);
   }
 
@@ -269,6 +295,7 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
         attachment_name: file.name,
         parent_id: replyTo?.id ?? null,
       });
+      notifyClassMembers(type === "image" ? "📷 Photo" : `📎 ${file.name}`);
       setReplyTo(null);
     }
     setUploading(false);
@@ -332,6 +359,7 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
         attachment_name: "voice-note.webm",
         parent_id: replyTo?.id ?? null,
       });
+      notifyClassMembers("🎤 Voice message");
       setReplyTo(null);
     } catch {
       // best-effort, matches uploadFile's existing lack of error UI
@@ -434,6 +462,9 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
           </button>
           <button onClick={openInfoPanel} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${S.border}`, background: showInfo ? `${S.accent}20` : "transparent", color: showInfo ? S.accent : S.muted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          </button>
+          <button onClick={toggleNotifMute} title={notifMuted ? "Unmute notifications" : "Mute notifications"} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${S.border}`, background: notifMuted ? "rgba(245,166,35,0.15)" : "transparent", color: notifMuted ? "#F5A623" : S.muted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>
+            {notifMuted ? "🔕" : "🔔"}
           </button>
         </div>
       </div>

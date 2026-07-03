@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
+import { PushPermissionPrompt } from "@/components/push/PushPermissionPrompt";
 import type { UserRole } from "@/types/database";
 
 interface Props {
@@ -43,6 +44,8 @@ export function DashboardShell({ profile, children }: Props) {
           {children}
         </main>
       </div>
+
+      <PushPermissionPrompt />
     </div>
   );
 }

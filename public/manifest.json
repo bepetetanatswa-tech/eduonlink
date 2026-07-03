@@ -1,6 +1,6 @@
 {
-  "name": "VOA — Vavhimi Online Academy",
-  "short_name": "VOA",
+  "name": "Educonnect",
+  "short_name": "Educonnect",
   "description": "AI-powered ZIMSEC learning for every student in Zimbabwe",
   "start_url": "/",
   "display": "standalone",

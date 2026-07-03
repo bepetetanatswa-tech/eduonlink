@@ -1,116 +1,98 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { AIMonitorClient } from "./AIMonitorClient";
+
+// Gemini 1.5 Flash blended rate ($0.075/1M input + $0.30/1M output tokens,
+// averaged) — tokens_used only stores a combined total, not the
+// input/output split, and the app has a multi-provider fallback
+// (src/lib/ai/providers.ts) so a request may not have been served by
+// Gemini at all. This is a rough estimate, not a real billing figure.
+const ESTIMATED_COST_PER_1K_TOKENS = 0.00015;
 
 export default async function AIMonitorPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: convos } = await (supabase.from("ai_conversations") as any)
+  const { data: rawConvos } = await (supabase.from("ai_conversations") as any)
     .select(`
-      id, student_id, subject, title, created_at, updated_at,
-      profiles!student_id(full_name, email)
+      id, student_id, subject, title, messages, created_at, updated_at, flagged, flag_reason,
+      profiles!student_id(full_name, email, school_id)
     `)
     .order("created_at", { ascending: false })
-    .limit(50);
+    .limit(100);
+
+  // profiles.school_id isn't a formal FK to schools (no constraint exists),
+  // so PostgREST can't embed it directly — resolve school names separately.
+  const schoolIds = Array.from(new Set((rawConvos ?? []).map((c: any) => c.profiles?.school_id).filter(Boolean)));
+  const { data: schoolRows } = schoolIds.length
+    ? await (supabase.from("schools") as any).select("id, name").in("id", schoolIds)
+    : { data: [] };
+  const schoolNameById = new Map((schoolRows ?? []).map((s: { id: string; name: string }) => [s.id, s.name]));
+
+  const convos = (rawConvos ?? []).map((c: any) => ({
+    ...c,
+    profiles: c.profiles ? { ...c.profiles, schools: c.profiles.school_id ? { name: schoolNameById.get(c.profiles.school_id) ?? null } : null } : null,
+  }));
 
   const today = new Date().toISOString().split("T")[0];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: usageRows } = await (supabase.from("ai_usage") as any)
     .select("user_id, questions_used")
     .eq("date", today)
     .order("questions_used", { ascending: false })
     .limit(20);
 
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+  const { data: recentUsage } = await (supabase.from("ai_usage") as any)
+    .select("tokens_used")
+    .gte("date", thirtyDaysAgo);
+
+  const { data: settingRow } = await (supabase.from("platform_settings") as any)
+    .select("value").eq("key", "free_ai_daily_limit").maybeSingle();
+
   const totalConvos = (convos ?? []).length;
-  const totalQuestionsToday = (usageRows ?? []).reduce(
-    (sum: number, r: { questions_used: number }) => sum + (r.questions_used ?? 0), 0
-  );
+  const totalQuestionsToday = (usageRows ?? []).reduce((sum: number, r: { questions_used: number }) => sum + (r.questions_used ?? 0), 0);
   const activeUsersToday = (usageRows ?? []).length;
+  const tokens30d = (recentUsage ?? []).reduce((sum: number, r: { tokens_used: number }) => sum + (r.tokens_used ?? 0), 0);
+  const estimatedCost30d = (tokens30d / 1000) * ESTIMATED_COST_PER_1K_TOKENS;
+  const dailyLimit = Number(settingRow?.value) || 10;
+
+  // Most common opening questions — group first user-role message per
+  // conversation by normalized text, count frequency.
+  const openingCounts = new Map<string, number>();
+  for (const c of convos ?? []) {
+    const msgs = Array.isArray(c.messages) ? c.messages : [];
+    const firstUserMsg = msgs.find((m: any) => m.role === "user");
+    if (!firstUserMsg?.content) continue;
+    const normalized = String(firstUserMsg.content).trim().toLowerCase().slice(0, 120);
+    if (!normalized) continue;
+    openingCounts.set(normalized, (openingCounts.get(normalized) ?? 0) + 1);
+  }
+  const topQuestions = Array.from(openingCounts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([text, count]) => ({ text, count }));
+
+  // Usage per school
+  const schoolCounts = new Map<string, number>();
+  for (const c of convos ?? []) {
+    const schoolName = c.profiles?.schools?.name ?? "No school linked";
+    schoolCounts.set(schoolName, (schoolCounts.get(schoolName) ?? 0) + 1);
+  }
+  const bySchool = Array.from(schoolCounts.entries()).sort((a, b) => b[1] - a[1]);
 
   return (
-    <div style={{ maxWidth: 900, display: "flex", flexDirection: "column", gap: 24 }}>
-      <div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", margin: 0 }}>AI Monitor</h2>
-        <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>Sir Taks usage across all users</p>
-      </div>
-
-      {/* Stats row */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 12 }}>
-        {[
-          { label: "Total Conversations", value: totalConvos, color: "#4D7FFF" },
-          { label: "Questions Today", value: totalQuestionsToday, color: "#00E5A3" },
-          { label: "Active Users Today", value: activeUsersToday, color: "#BD93F9" },
-        ].map((s) => (
-          <div key={s.label} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14, padding: "16px 18px" }}>
-            <p style={{ fontSize: 22, fontWeight: 700, color: s.color, margin: "0 0 4px", fontFamily: "'Space Grotesk', sans-serif" }}>{s.value}</p>
-            <p style={{ fontSize: 11, color: "#4A5170", margin: 0 }}>{s.label}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Today's usage by user */}
-      {(usageRows ?? []).length > 0 && (
-        <div>
-          <h3 style={{ fontSize: 13, fontWeight: 600, color: "#6B7290", margin: "0 0 10px", textTransform: "uppercase", letterSpacing: "0.06em" }}>Today&apos;s Usage</h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {(usageRows ?? []).map((r: { user_id: string; questions_used: number }) => (
-              <div key={r.user_id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 10 }}>
-                <div style={{ width: 30, height: 30, borderRadius: "8px", background: "rgba(77,127,255,0.1)", border: "1px solid rgba(77,127,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: "#4D7FFF", fontWeight: 700 }}>
-                  {r.questions_used}
-                </div>
-                <p style={{ fontSize: 12, color: "#8892B0", fontFamily: "monospace", margin: 0 }}>{r.user_id}</p>
-                <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
-                  <div style={{ width: 60, height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 2, overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: `${Math.min((r.questions_used / 10) * 100, 100)}%`, background: r.questions_used >= 10 ? "#F5A623" : "#00E5A3" }} />
-                  </div>
-                  <span style={{ fontSize: 10, color: "#4A5170" }}>{r.questions_used}/10</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Conversations */}
-      <div>
-        <h3 style={{ fontSize: 13, fontWeight: 600, color: "#6B7290", margin: "0 0 10px", textTransform: "uppercase", letterSpacing: "0.06em" }}>Recent Conversations</h3>
-        {totalConvos === 0 ? (
-          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14, padding: "36px", textAlign: "center", color: "#4A5170", fontSize: 13 }}>
-            No AI conversations yet — they&apos;ll appear here once students start using Sir Taks
-          </div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {(convos ?? []).map((c: {
-              id: string;
-              student_id: string;
-              subject: string | null;
-              title: string | null;
-              created_at: string;
-              profiles: { full_name: string; email: string } | null;
-            }) => (
-              <div key={c.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: "12px 16px", display: "flex", alignItems: "center", gap: 14 }}>
-                <div style={{ width: 36, height: 36, borderRadius: "9px", background: "rgba(189,147,249,0.1)", border: "1px solid rgba(189,147,249,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: "#BD93F9", flexShrink: 0, fontFamily: "'Space Grotesk', sans-serif" }}>
-                  {c.profiles?.full_name?.charAt(0).toUpperCase() ?? "?"}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: "#CDD6F4", margin: "0 0 2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {c.profiles?.full_name ?? "Unknown Student"}
-                  </p>
-                  <p style={{ fontSize: 11, color: "#4A5170", margin: 0 }}>
-                    {c.subject ?? "General"}{c.title ? ` · ${c.title}` : ""}
-                  </p>
-                </div>
-                <div style={{ flexShrink: 0, textAlign: "right" }}>
-                  <p style={{ fontSize: 11, color: "#4A5170", margin: 0 }}>{new Date(c.created_at).toLocaleDateString()}</p>
-                  <p style={{ fontSize: 10, color: "#2A2D3E", margin: "2px 0 0" }}>{new Date(c.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+    <AIMonitorClient
+      convos={convos ?? []}
+      usageRows={usageRows ?? []}
+      totalConvos={totalConvos}
+      totalQuestionsToday={totalQuestionsToday}
+      activeUsersToday={activeUsersToday}
+      estimatedCost30d={estimatedCost30d}
+      dailyLimit={dailyLimit}
+      topQuestions={topQuestions}
+      bySchool={bySchool}
+    />
   );
 }

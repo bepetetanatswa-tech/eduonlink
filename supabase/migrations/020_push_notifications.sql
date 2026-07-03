@@ -56,7 +56,7 @@ BEGIN
   BEGIN
     SELECT decrypted_secret INTO secret FROM vault.decrypted_secrets WHERE name = 'push_webhook_secret' LIMIT 1;
     PERFORM net.http_post(
-      url := 'https://educonnect-vavhimi.vercel.app/api/push/send',
+      url := 'https://edu-production.vercel.app/api/push/send',
       headers := jsonb_build_object(
         'Content-Type', 'application/json',
         'x-push-secret', secret

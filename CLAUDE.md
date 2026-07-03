@@ -31,3 +31,9 @@ Do not say "complete" unless every check above actually passed. If something fai
 
 ## Supabase Setup Rule
 For every stage, create the buckets and tables needed in Supabase and wire them up with the app. Do not leave Supabase schema as a manual step — write the migration SQL and apply it.
+
+## Branding
+The product name is **Educonnect** (renamed from "Vavhimi Online Academy" / "VOA" in July 2026). In every stage to come:
+- Never reintroduce "VOA" or "Vavhimi Online Academy" as the product name in new code, copy, emails, metadata, or UI — always use "Educonnect".
+- The registered company remains **Vavhimi Threads (Pvt) Ltd** — keep that as the legal entity reference where relevant (footer, terms, privacy, logo subtitle), it is not being renamed.
+- If you find a leftover "VOA"/"Vavhimi Online Academy" reference while working on something else, fix it as part of that work.

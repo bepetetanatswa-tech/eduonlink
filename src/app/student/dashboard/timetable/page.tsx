@@ -9,7 +9,7 @@ export default async function StudentTimetablePage() {
   if (!user) redirect("/auth/login");
   const { data: profile } = await (supabase.from("profiles") as any).select("id,role,school_id").eq("user_id", user.id).single();
   if (!profile || profile.role !== "student") redirect("/dashboard");
-  const { data: member } = await (supabase.from("school_members") as any).select("school_id").eq("profile_id", profile.id).maybeSingle();
+  const { data: member } = await (supabase.from("school_members") as any).select("school_id").eq("user_id", profile.id).maybeSingle();
   const { data: enrollment } = await (supabase.from("class_enrollments") as any).select("class_id").eq("student_id", profile.id).eq("status", "active").limit(1).maybeSingle();
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>

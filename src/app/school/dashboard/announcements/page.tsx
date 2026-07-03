@@ -14,7 +14,7 @@ export default async function SchoolAnnouncementsPage() {
   if (!profile || profile.role !== "school_admin") redirect("/dashboard");
 
   const { data: member } = await (supabase.from("school_members") as any)
-    .select("school_id,schools(id,name)").eq("profile_id", profile.id).maybeSingle();
+    .select("school_id,schools(id,name)").eq("user_id", profile.id).maybeSingle();
   const schoolId = member?.school_id ?? null;
 
   const { data: classesRaw } = await (supabase.from("classes") as any)

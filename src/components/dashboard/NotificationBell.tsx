@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Notification } from "@/types/database";
 
@@ -24,6 +25,7 @@ export function NotificationBell({ profileId }: { profileId: string }) {
   const [open, setOpen] = useState(false);
   const supabase = createClient();
   const ref = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     supabase
@@ -64,6 +66,16 @@ export function NotificationBell({ profileId }: { profileId: string }) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase.from("notifications") as any).update({ read: true }).in("id", ids);
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
+
+  const handleNotificationClick = async (n: Notification) => {
+    if (!n.read) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase.from("notifications") as any).update({ read: true }).eq("id", n.id);
+      setNotifications((prev) => prev.map((x) => x.id === n.id ? { ...x, read: true } : x));
+    }
+    setOpen(false);
+    if (n.link) router.push(n.link);
   };
 
   return (
@@ -125,12 +137,16 @@ export function NotificationBell({ profileId }: { profileId: string }) {
             notifications.map((n) => (
               <div
                 key={n.id}
+                onClick={() => handleNotificationClick(n)}
                 style={{
                   padding: "12px 16px",
                   borderBottom: "1px solid rgba(255,255,255,0.04)",
                   background: n.read ? "transparent" : "rgba(77,127,255,0.04)",
-                  cursor: "default",
+                  cursor: n.link ? "pointer" : "default",
+                  transition: "background 0.15s",
                 }}
+                onMouseEnter={(e) => { if (n.link) (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.05)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = n.read ? "transparent" : "rgba(77,127,255,0.04)"; }}
               >
                 <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
                   <div style={{

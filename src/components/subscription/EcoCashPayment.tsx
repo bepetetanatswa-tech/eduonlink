@@ -25,7 +25,7 @@ export function EcoCashPayment({ plan, creditPack, username, onSuccess, onBack }
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
 
-  const ref = `VOA-${username.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8)}`;
+  const ref = `EDU-${username.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8)}`;
 
   const handleSubmit = async () => {
     setError("");

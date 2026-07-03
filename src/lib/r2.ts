@@ -86,7 +86,7 @@ export interface FileCategory {
   allowedTypes: string[];
 }
 
-// Folder conventions per VOA Stage 10 storage split. Categories without an
+// Folder conventions per Educonnect Stage 10 storage split. Categories without an
 // existing upload UI yet (past-paper, voice-note, qualification, school-doc,
 // hbc-project) are wired here so future features can call uploadToR2()
 // immediately without touching this file again.

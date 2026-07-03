@@ -69,7 +69,7 @@ export default async function AnalyticsPage() {
       <div style={{ maxWidth: 1000, display: "flex", flexDirection: "column", gap: 24 }}>
         <div>
           <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", margin: 0 }}>Platform Analytics</h2>
-          <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>Live metrics across the VOA platform</p>
+          <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>Live metrics across the Educonnect platform</p>
         </div>
         <div style={{ background: "rgba(255,107,107,0.05)", border: "1px solid rgba(255,107,107,0.2)", borderRadius: 14, padding: "36px", textAlign: "center", color: "#FF6B6B", fontSize: 13 }}>
           Couldn&apos;t load analytics right now — the data source may be temporarily unavailable. Try refreshing the page.
@@ -104,7 +104,7 @@ export default async function AnalyticsPage() {
     <div style={{ maxWidth: 1000, display: "flex", flexDirection: "column", gap: 24 }}>
       <div>
         <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", margin: 0 }}>Platform Analytics</h2>
-        <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>Live metrics across the VOA platform</p>
+        <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>Live metrics across the Educonnect platform</p>
       </div>
 
       {/* Key stats */}

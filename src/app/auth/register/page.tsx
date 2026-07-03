@@ -63,7 +63,7 @@ const STEP_TITLES: Record<Step, string> = {
 };
 
 const STEP_SUBS: Record<Step, string> = {
-  1: "How will you use VOA?",
+  1: "How will you use Educonnect?",
   2: "Set up your sign-in details",
   3: "A few more details to personalise your experience",
 };
@@ -505,7 +505,7 @@ export default function RegisterPage() {
                   value={form.childEmail}
                   onChange={(e) => set("childEmail", e.target.value)}
                   placeholder="child@example.com"
-                  hint="Your child must already have a VOA student account"
+                  hint="Your child must already have a Educonnect student account"
                   icon={
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />

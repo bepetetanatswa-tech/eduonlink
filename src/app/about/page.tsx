@@ -9,13 +9,13 @@ const VALUES = [
   {
     icon: "✦",
     title: "AI for Every Student",
-    body: "World-class AI tutoring should not be a privilege. VOA puts a personal AI teacher — Sir Taks — in the hands of every Zimbabwean student, whether they are in Harare or a rural Manicaland village.",
+    body: "World-class AI tutoring should not be a privilege. Educonnect puts a personal AI teacher — Sir Taks — in the hands of every Zimbabwean student, whether they are in Harare or a rural Manicaland village.",
     accent: "#00E5A3",
   },
   {
     icon: "📚",
     title: "Rooted in Zimbabwe",
-    body: "We are not a foreign platform retrofitted for Zimbabwe. VOA was built from the ground up around the ZIMSEC curriculum, HBC projects, and the realities of Zimbabwean classrooms.",
+    body: "We are not a foreign platform retrofitted for Zimbabwe. Educonnect was built from the ground up around the ZIMSEC curriculum, HBC projects, and the realities of Zimbabwean classrooms.",
     accent: "#4D7FFF",
   },
   {
@@ -27,7 +27,7 @@ const VALUES = [
   {
     icon: "🏫",
     title: "Built for Schools",
-    body: "VOA is designed to be deployed institution-wide. From student learning to teacher lesson planning, parent progress reports, and school admin dashboards — one platform, every stakeholder.",
+    body: "Educonnect is designed to be deployed institution-wide. From student learning to teacher lesson planning, parent progress reports, and school admin dashboards — one platform, every stakeholder.",
     accent: "#A78BFA",
   },
 ];
@@ -36,14 +36,14 @@ const TEAM = [
   {
     name: "Tanatswa Bepete",
     role: "Founder & CEO",
-    bio: "Tanatswa built VOA to solve the education gap he witnessed firsthand. Sir Taks AI — the platform's tutor — is named after him. He believes every Zimbabwean child deserves a world-class education, regardless of postcode or income.",
+    bio: "Tanatswa built Educonnect to solve the education gap he witnessed firsthand. Sir Taks AI — the platform's tutor — is named after him. He believes every Zimbabwean child deserves a world-class education, regardless of postcode or income.",
     accent: "#4D7FFF",
     initial: "T",
   },
 ];
 
 const TIMELINE = [
-  { year: "2024", event: "VOA founded. Mission: bring AI-powered ZIMSEC tutoring to every Zimbabwean student." },
+  { year: "2024", event: "Educonnect founded. Mission: bring AI-powered ZIMSEC tutoring to every Zimbabwean student." },
   { year: "Early 2025", event: "Sir Taks AI tutor developed using Google Gemini. Full ZIMSEC O-Level and A-Level curriculum mapped." },
   { year: "Mid 2025", event: "HBC Project Blueprint generator launched. School admin and teacher portals built." },
   { year: "2025 →", event: "Public launch. Opening access to students, teachers, parents, and schools across Zimbabwe." },
@@ -109,7 +109,7 @@ export default function AboutPage() {
             className="text-lg leading-relaxed max-w-2xl mx-auto"
             style={{ color: "#6B7290" }}
           >
-            VOA — Vavhimi Online Academy — is an AI-powered education platform built specifically
+            Educonnect is an AI-powered education platform built specifically
             for Zimbabwe. Not adapted. Not translated. Built for ZIMSEC, the HBC curriculum, and
             the students who will define Zimbabwe&apos;s next chapter.
           </motion.p>
@@ -143,7 +143,7 @@ export default function AboutPage() {
               >
                 &ldquo;Every Zimbabwean student — regardless of where they live,
                 what school they attend, or what their family earns — deserves
-                a world-class education. VOA is how we make that happen.&rdquo;
+                a world-class education. Educonnect is how we make that happen.&rdquo;
               </blockquote>
               <p className="text-sm font-semibold" style={{ color: "#4D7FFF" }}>
                 — Tanatswa Bepete, Founder
@@ -175,7 +175,7 @@ export default function AboutPage() {
               <p className="text-sm leading-relaxed" style={{ color: "#6B7290" }}>
                 AI cannot solve every problem in education. But it can ensure that every student,
                 no matter where they are, has a patient, knowledgeable tutor available at 3am the
-                night before an exam. That is what VOA does.
+                night before an exam. That is what Educonnect does.
               </p>
             </FadeIn>
 
@@ -321,7 +321,7 @@ export default function AboutPage() {
                 style={{ background: "rgba(77,127,255,0.04)", border: "1px solid rgba(77,127,255,0.1)" }}
               >
                 <p className="text-sm mb-3" style={{ color: "#6B7290" }}>
-                  VOA is growing. We are looking for educators, engineers, and people who believe
+                  Educonnect is growing. We are looking for educators, engineers, and people who believe
                   in what we are building.
                 </p>
                 <a
@@ -345,7 +345,7 @@ export default function AboutPage() {
               Ready to be part of it?
             </h2>
             <p className="text-base mb-8" style={{ color: "#6B7290" }}>
-              Join VOA as a student, teacher, parent, or school. It is free to start.
+              Join Educonnect as a student, teacher, parent, or school. It is free to start.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link

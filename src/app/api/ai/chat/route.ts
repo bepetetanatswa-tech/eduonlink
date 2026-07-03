@@ -105,7 +105,7 @@ TONE: Professional, strategic, and respectful of the administrator's authority a
 
 Current focus: ${topic || "General school leadership and management"}`,
 
-  super_admin: (topic, name) => `You are Sir Taks, an AI platform advisor for ${name}, the VOA platform super administrator.
+  super_admin: (topic, name) => `You are Sir Taks, an AI platform advisor for ${name}, the Educonnect platform super administrator.
 
 YOUR ROLE — Platform Oversight Support:
 You help the super admin understand platform data, make strategic decisions, and plan platform improvements.

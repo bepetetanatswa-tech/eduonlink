@@ -75,7 +75,7 @@ export default function HbcSection() {
             owned by you.
           </h2>
           <p className="text-sm leading-relaxed" style={{ color: "#6B7290" }}>
-            Zimbabwe&apos;s HBC project is unlike anything in global education. VOA is the only platform
+            Zimbabwe&apos;s HBC project is unlike anything in global education. Educonnect is the only platform
             with built-in AI support for all 6 official stages — from community identification to final presentation.
           </p>
         </motion.div>
@@ -166,7 +166,7 @@ export default function HbcSection() {
         >
           <div>
             <p className="font-mono text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "#F5A623" }}>
-              New in VOA
+              New in Educonnect
             </p>
             <h4 className="font-display font-bold text-white text-xl mb-1">SBP Blueprint Generator</h4>
             <p className="text-sm" style={{ color: "#6B7290" }}>

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 const SESSION_KEY = "voa_voice_greeted";
 const MUTE_KEY = "voa_voice_muted";
-const GREETING = "Welcome to Vavhimi Online Academy. Zimbabwe's future learns here.";
+const GREETING = "Welcome to Educonnect. Zimbabwe's future learns here.";
 
 export default function VoiceGreeting() {
   const played = useRef(false);

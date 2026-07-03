@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
 
   if (!child) {
     return NextResponse.json(
-      { error: "No student account found with that email. Ask them to register on VOA first." },
+      { error: "No student account found with that email. Ask them to register on Educonnect first." },
       { status: 404 }
     );
   }

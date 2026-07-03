@@ -109,9 +109,9 @@ const ROLE_CONFIG: Record<UserRole, {
   },
   super_admin: {
     title: "Sir Taks — Platform Advisor",
-    subtitle: "Strategic AI support for VOA platform management",
+    subtitle: "Strategic AI support for Educonnect platform management",
     welcomeLabel: "Start Session",
-    welcomeBody: "I help you analyse platform metrics, plan growth strategy, and think through product decisions for VOA.",
+    welcomeBody: "I help you analyse platform metrics, plan growth strategy, and think through product decisions for Educonnect.",
     disclaimer: "Strategic frameworks only — always validate with real platform data.",
     topics: [
       { name: "Platform Strategy", icon: "🚀", color: "#4D7FFF" },

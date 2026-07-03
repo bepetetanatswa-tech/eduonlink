@@ -1,8 +1,8 @@
 {
-  "name": "vavhimi-online-academy",
+  "name": "educonnect",
   "version": "0.1.0",
   "private": true,
-  "description": "Vavhimi Online Academy - Production Platform",
+  "description": "Educonnect - Production Platform (by Vavhimi Threads)",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 
   const result = await sendEmail({
     to: CONTACT_INBOX,
-    subject: `[VOA Contact] ${subject.trim()}`,
+    subject: `[Educonnect Contact] ${subject.trim()}`,
     html: contactFormEmail({
       name: name.trim(),
       email: email.trim(),

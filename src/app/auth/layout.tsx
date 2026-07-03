@@ -4,7 +4,7 @@ import { VoaLogoMark } from "@/components/logo/VoaLogoMark";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: { template: "%s — VOA", default: "VOA Auth" },
+  title: { template: "%s — Educonnect", default: "Educonnect Auth" },
 };
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
@@ -59,7 +59,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           {/* Logo */}
           <a href="/" className="flex items-center gap-3">
             <VoaLogoMark size={36} />
-            <span className="font-display font-bold text-white text-lg">VOA</span>
+            <span className="font-display font-bold text-white text-lg">Educonnect</span>
           </a>
 
           {/* Center copy */}
@@ -130,7 +130,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                 <span className="font-display font-bold text-xs" style={{ background: "linear-gradient(135deg, #4D7FFF, #00E5A3)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>V</span>
               </div>
             </div>
-            <span className="font-display font-bold text-white">VOA</span>
+            <span className="font-display font-bold text-white">Educonnect</span>
           </a>
         </div>
 

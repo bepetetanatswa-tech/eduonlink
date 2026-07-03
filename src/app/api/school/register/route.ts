@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
 
   await sendEmail({
     to: profile.email,
-    subject: "VOA — Registration received",
+    subject: "Educonnect — Registration received",
     html: schoolSubmittedEmail(school.name),
   });
 

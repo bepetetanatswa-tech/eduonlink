@@ -10,7 +10,7 @@ export default function SuspendedPage() {
         <div className="text-5xl mb-4">🚫</div>
         <h1 className="font-display font-bold text-white text-xl mb-3">Account suspended</h1>
         <p className="text-sm leading-relaxed mb-6" style={{ color: "#8892B0" }}>
-          Your VOA account has been suspended by an administrator. If you believe this is a mistake, please contact us.
+          Your Educonnect account has been suspended by an administrator. If you believe this is a mistake, please contact us.
         </p>
         <a
           href="mailto:vavhimiacademy@gmail.com"

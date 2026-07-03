@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 const ROLES = [
   { icon: "🎓", title: "Students",      sub: "Learn smarter. Ace ZIMSEC. Get AI help 24/7.",           accent: "#4D7FFF", cta: "Start Free" },
   { icon: "👨‍🏫", title: "Teachers",     sub: "Teach, earn, grow. Your expertise, amplified.",           accent: "#F5A623", cta: "Join as Educator" },
-  { icon: "🏫", title: "Schools",       sub: "Deploy VOA to your entire institution in one click.",      accent: "#4D7FFF", cta: "Partner With Us" },
+  { icon: "🏫", title: "Schools",       sub: "Deploy Educonnect to your entire institution in one click.",      accent: "#4D7FFF", cta: "Partner With Us" },
   { icon: "👨‍👩‍👧", title: "Parents",    sub: "Track your child's progress. Stay in the loop.",           accent: "#00E5A3", cta: "Monitor Progress" },
 ];
 
@@ -24,7 +24,7 @@ export default function CTASection() {
           className="mb-4"
         >
           <p className="font-mono text-xs font-medium tracking-[0.15em] uppercase mb-4" style={{ color: "#4A5170" }}>
-            Join VOA
+            Join Educonnect
           </p>
           <h2 className="font-display font-bold text-white mb-12" style={{ fontSize: "clamp(30px, 5vw, 52px)", lineHeight: 1.1 }}>
             Who are you?

@@ -45,7 +45,7 @@ function VerifyEmailContent() {
         {/* Steps */}
         <div className="w-full flex flex-col gap-2">
           {[
-            { n: "1", text: "Open the email from VOA" },
+            { n: "1", text: "Open the email from Educonnect" },
             { n: "2", text: "Click \"Verify my account\"" },
             { n: "3", text: "Start your learning journey 🎓" },
           ].map((s) => (

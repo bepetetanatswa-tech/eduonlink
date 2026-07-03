@@ -105,7 +105,7 @@ export default function AiSection() {
                 {[
                   { icon: "🎯", label: "Subject-specific tutoring",     sub: "Every ZIMSEC subject, every form level" },
                   { icon: "📋", label: "SBP Blueprint Generator",       sub: "Full HBC project blueprints in seconds" },
-                  { icon: "✅", label: "AI Exam Marking",               sub: "Scores your answers against ZIMSEC rubrics" },
+                  { icon: "✅", label: "Past Exam Questions",           sub: "Step-by-step walkthroughs after you attempt them first" },
                   { icon: "💬", label: "Explains in Shona & Ndebele",   sub: "If you ask — Sir Taks adapts" },
                 ].map((c) => (
                   <div
@@ -259,7 +259,7 @@ export default function AiSection() {
 
             {/* Powered-by note */}
             <p className="text-center text-xs mt-3" style={{ color: "#4A5170" }}>
-              Powered by Google Gemini 1.5 Pro · ZIMSEC-trained prompts
+              Powered by Google Gemini · ZIMSEC-trained prompts
             </p>
           </motion.div>
         </div>

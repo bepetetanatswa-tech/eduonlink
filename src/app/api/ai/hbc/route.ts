@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { resolveAiQuota, recordAiUsage } from "@/lib/ai/usageLimit";
+import { streamWithFallback } from "@/lib/ai/providers";
 
 const STAGE_DEFS: Record<number, { name: string; focus: string }> = {
   1: { name: "Topic Selection & Rationale", focus: "Is the topic clearly defined? Is the heritage connection to Zimbabwe explicit? Is the rationale personal and convincing?" },
@@ -55,10 +55,6 @@ export async function POST(req: Request) {
       projectId: string;
     };
 
-    if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === "placeholder_set_in_vercel") {
-      return Response.json({ error: "AI service not configured" }, { status: 503 });
-    }
-
     const stageDef = STAGE_DEFS[stageNumber];
     if (!stageDef) return Response.json({ error: "Invalid stage" }, { status: 400 });
 
@@ -85,12 +81,12 @@ export async function POST(req: Request) {
       return Response.json({ error: "limit_reached", used: quota.used, limit: quota.limit }, { status: 429 });
     }
 
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    let prompt: string;
+    let systemPrompt: string;
 
     if (mode === "blueprint") {
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro", systemInstruction: BLUEPRINT_SYSTEM });
-
-      const prompt = `Generate a PLANNING BLUEPRINT for Stage ${stageNumber}: ${stageDef.name}
+      systemPrompt = BLUEPRINT_SYSTEM;
+      prompt = `Generate a PLANNING BLUEPRINT for Stage ${stageNumber}: ${stageDef.name}
 
 Project details:
 - Title/Topic: ${projectTitle}
@@ -107,22 +103,12 @@ Create a practical planning blueprint with:
 5. Checklist of what the final stage submission must include
 
 Remember: This is Zimbabwe ZIMSEC context — suggest Zimbabwean sources, examples, and research methods.`;
-
-      const result = await model.generateContent(prompt);
-      const usage = result.response.usageMetadata;
-      const tokensUsed = usage ? (usage.promptTokenCount ?? 0) + (usage.candidatesTokenCount ?? 0) : 0;
-      await recordAiUsage(admin, profile.id, quota.usageRow, tokensUsed);
-      return Response.json({ result: result.response.text(), mode: "blueprint" });
-    }
-
-    // Feedback mode
-    if (!stageContent?.trim()) {
-      return Response.json({ error: "No content to review" }, { status: 400 });
-    }
-
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro", systemInstruction: FEEDBACK_SYSTEM });
-
-    const prompt = `Project: "${projectTitle}" | Subject: ${subject}
+    } else {
+      if (!stageContent?.trim()) {
+        return Response.json({ error: "No content to review" }, { status: 400 });
+      }
+      systemPrompt = FEEDBACK_SYSTEM;
+      prompt = `Project: "${projectTitle}" | Subject: ${subject}
 Stage ${stageNumber} — ${stageDef.name}
 Rubric focus: ${stageDef.focus}
 
@@ -132,12 +118,23 @@ ${stageContent}
 ---
 
 Review this submission. Guide and question — do NOT rewrite or give away the answers.`;
+    }
 
-    const result = await model.generateContent(prompt);
-    const usage = result.response.usageMetadata;
-    const tokensUsed = usage ? (usage.promptTokenCount ?? 0) + (usage.candidatesTokenCount ?? 0) : 0;
+    let providerResult;
+    try {
+      providerResult = await streamWithFallback(systemPrompt, [], prompt);
+    } catch (err: any) {
+      return Response.json({ error: err?.message ?? "All AI providers failed" }, { status: 503 });
+    }
+
+    let result = "";
+    for await (const chunk of providerResult.stream) result += chunk;
+
+    const usage = await providerResult.getUsage();
+    const tokensUsed = usage ? usage.promptTokens + usage.completionTokens : 0;
     await recordAiUsage(admin, profile.id, quota.usageRow, tokensUsed);
-    return Response.json({ result: result.response.text(), mode: "feedback" });
+
+    return Response.json({ result, mode });
   } catch (err) {
     console.error("[AI HBC]", err);
     return Response.json({ error: "AI service error" }, { status: 500 });

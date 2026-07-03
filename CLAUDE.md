@@ -1,4 +1,3 @@
-
 # VOA Production — Claude Instructions
 
 ## Working Style
@@ -37,3 +36,9 @@ The product name is **Educonnect** (renamed from "Vavhimi Online Academy" / "VOA
 - Never reintroduce "VOA" or "Vavhimi Online Academy" as the product name in new code, copy, emails, metadata, or UI — always use "Educonnect".
 - The registered company remains **Vavhimi Threads (Pvt) Ltd** — keep that as the legal entity reference where relevant (footer, terms, privacy, logo subtitle), it is not being renamed.
 - If you find a leftover "VOA"/"Vavhimi Online Academy" reference while working on something else, fix it as part of that work.
+
+## Storage Architecture
+Storage is deliberately split between two systems — check which one a new upload feature belongs to before defaulting to either one:
+- **Cloudflare R2** (`src/lib/r2.ts`, `FILE_CATEGORIES`, `/api/uploads/presign`, `/api/files/[...key]`) is for categorized/large files: lesson videos, lesson materials, course materials, assignment briefs/submissions, HBC project files, past papers, teacher qualifications/IDs, school docs, and voice notes. New file-upload features should add a `FILE_CATEGORIES` entry and use the presign → direct-PUT → `/api/files/{key}` pattern, not invent a new flow.
+- **Supabase Storage** (`chat-attachments` bucket) is for images/files sent inline in class chat and direct messages — small, chat-embedded media uploaded directly via the Supabase client SDK.
+- Before building a new upload path, check `FILE_CATEGORIES` first — several categories (e.g. `voice-note`) were already reserved for features that hadn't been wired up yet. Don't default new uploads to Supabase Storage just because it's the simpler client-side SDK call if an R2 category already exists or should exist for that content type.

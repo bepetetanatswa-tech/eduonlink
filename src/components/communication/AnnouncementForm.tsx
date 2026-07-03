@@ -42,12 +42,28 @@ export function AnnouncementForm({ profileId, userRole, schoolId, classes = [], 
 
   async function uploadFile(file: File) {
     setUploading(true);
-    const path = `announcements/${profileId}/${Date.now()}_${file.name}`;
-    const { error } = await supabase.storage.from("chat-attachments").upload(path, file);
-    if (!error) {
-      const { data: { publicUrl } } = supabase.storage.from("chat-attachments").getPublicUrl(path);
-      setFileUrl(publicUrl);
+    try {
+      const presignRes = await fetch("/api/uploads/presign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          category: "announcement-attachment",
+          filename: file.name,
+          contentType: file.type,
+          fileSize: file.size,
+          ids: { authorId: profileId },
+        }),
+      });
+      if (!presignRes.ok) throw new Error("presign failed");
+      const { uploadUrl, fileUrl: key } = await presignRes.json();
+
+      const putRes = await fetch(uploadUrl, { method: "PUT", headers: { "Content-Type": file.type }, body: file });
+      if (!putRes.ok) throw new Error("upload failed");
+
+      setFileUrl(key);
       setFileName(file.name);
+    } catch {
+      // best-effort — button just goes back to "Attach file" on failure
     }
     setUploading(false);
   }

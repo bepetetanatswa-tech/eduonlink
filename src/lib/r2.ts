@@ -151,4 +151,9 @@ export const FILE_CATEGORIES: Record<string, FileCategory> = {
     maxBytes: 20 * 1024 * 1024,
     allowedTypes: ["application/pdf", "image/jpeg", "image/png"],
   },
+  "announcement-attachment": {
+    folder: ({ authorId }) => `announcements/${authorId}`,
+    maxBytes: 20 * 1024 * 1024,
+    allowedTypes: ["application/pdf", "image/jpeg", "image/png", "image/webp"],
+  },
 };

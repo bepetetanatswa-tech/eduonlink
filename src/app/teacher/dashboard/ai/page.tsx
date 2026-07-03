@@ -18,7 +18,6 @@ export default async function TeacherAIPage() {
       profileId={profile.id}
       userName={profile.full_name || "Teacher"}
       userRole="teacher"
-      plan="unlimited"
     />
   );
 }

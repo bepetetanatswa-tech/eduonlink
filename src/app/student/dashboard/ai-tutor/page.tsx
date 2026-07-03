@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { resolveAiQuota } from "@/lib/ai/usageLimit";
 import { SirTaksChat } from "@/components/ai/SirTaksChat";
 
 export default async function AITutorPage() {
@@ -15,22 +17,15 @@ export default async function AITutorPage() {
 
   if (!profile || profile.role !== "student") redirect("/dashboard");
 
-  const today = new Date().toISOString().split("T")[0];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: usage } = await (supabase.from("ai_usage") as any)
-    .select("questions_used").eq("user_id", profile.id).eq("date", today).maybeSingle();
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: sub } = await (supabase.from("subscriptions") as any)
-    .select("plan, status").eq("user_id", profile.id).in("status", ["active", "trial"]).maybeSingle();
+  const quota = await resolveAiQuota(createAdminClient(), profile.id, "student");
 
   return (
     <SirTaksChat
       profileId={profile.id}
       userName={profile.full_name || "Student"}
       userRole="student"
-      initialQuestionsUsed={usage?.questions_used ?? 0}
-      plan={sub?.plan ?? "free"}
+      initialQuestionsUsed={quota.used}
+      dailyLimit={quota.limit}
     />
   );
 }

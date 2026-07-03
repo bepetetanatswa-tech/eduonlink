@@ -11,9 +11,16 @@ export interface AIMessage {
   content: string;
 }
 
+export interface TokenUsage {
+  promptTokens: number;
+  completionTokens: number;
+}
+
 export interface ProviderStream {
   stream: AsyncIterable<string>;
   provider: string;
+  /** Resolves after the stream has fully drained. Null if the provider doesn't report usage. */
+  getUsage: () => Promise<TokenUsage | null>;
 }
 
 // ── Gemini ─────────────────────────────────────────────────────────────────
@@ -54,6 +61,15 @@ async function tryGemini(
         if (text) yield text;
       }
     })(),
+    getUsage: async () => {
+      const finalResponse = await result.response;
+      const usage = finalResponse.usageMetadata;
+      if (!usage) return null;
+      return {
+        promptTokens: usage.promptTokenCount ?? 0,
+        completionTokens: usage.candidatesTokenCount ?? 0,
+      };
+    },
   };
 }
 
@@ -91,6 +107,9 @@ async function tryGroq(
         if (text) yield text;
       }
     })(),
+    // Groq's streaming API can report usage via stream_options, but that's not
+    // wired up yet — Gemini is the only provider actually configured today.
+    getUsage: async () => null,
   };
 }
 
@@ -128,6 +147,9 @@ async function tryOpenAI(
         if (text) yield text;
       }
     })(),
+    // OpenAI's streaming API can report usage via stream_options, but that's
+    // not wired up yet — Gemini is the only provider actually configured today.
+    getUsage: async () => null,
   };
 }
 
@@ -169,6 +191,9 @@ async function tryAnthropic(
         }
       }
     })(),
+    // Anthropic's finalMessage().usage would give real counts, but that's not
+    // wired up yet — Gemini is the only provider actually configured today.
+    getUsage: async () => null,
   };
 }
 

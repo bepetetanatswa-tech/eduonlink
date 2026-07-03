@@ -1,4 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { resolveAiQuota, recordAiUsage } from "@/lib/ai/usageLimit";
 
 const STAGE_DEFS: Record<number, { name: string; focus: string }> = {
   1: { name: "Topic Selection & Rationale", focus: "Is the topic clearly defined? Is the heritage connection to Zimbabwe explicit? Is the rationale personal and convincing?" },
@@ -41,13 +45,14 @@ Format clearly with headers. Use [YOUR ANSWER HERE] placeholders wherever the st
 
 export async function POST(req: Request) {
   try {
-    const { mode, stageNumber, stageContent, projectTitle, subject, projectType } = await req.json() as {
+    const { mode, stageNumber, stageContent, projectTitle, subject, projectType, projectId } = await req.json() as {
       mode: "feedback" | "blueprint";
       stageNumber: number;
       stageContent?: string;
       projectTitle: string;
       subject: string;
       projectType?: string;
+      projectId: string;
     };
 
     if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === "placeholder_set_in_vercel") {
@@ -56,6 +61,29 @@ export async function POST(req: Request) {
 
     const stageDef = STAGE_DEFS[stageNumber];
     if (!stageDef) return Response.json({ error: "Invalid stage" }, { status: 400 });
+
+    if (!projectId) return Response.json({ error: "projectId is required" }, { status: 400 });
+
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return Response.json({ error: "Not authenticated" }, { status: 401 });
+
+    const admin = createAdminClient();
+
+    const { data: profile } = await (admin.from("profiles") as any)
+      .select("id, role").eq("user_id", user.id).single();
+    if (!profile) return Response.json({ error: "Profile not found" }, { status: 404 });
+
+    const { data: project } = await (admin.from("hbc_projects") as any)
+      .select("id, student_id").eq("id", projectId).single();
+    if (!project || project.student_id !== profile.id) {
+      return Response.json({ error: "Project not found" }, { status: 403 });
+    }
+
+    const quota = await resolveAiQuota(admin, profile.id, profile.role ?? "student");
+    if (quota.limit !== null && quota.used >= quota.limit) {
+      return Response.json({ error: "limit_reached", used: quota.used, limit: quota.limit }, { status: 429 });
+    }
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
@@ -81,6 +109,9 @@ Create a practical planning blueprint with:
 Remember: This is Zimbabwe ZIMSEC context — suggest Zimbabwean sources, examples, and research methods.`;
 
       const result = await model.generateContent(prompt);
+      const usage = result.response.usageMetadata;
+      const tokensUsed = usage ? (usage.promptTokenCount ?? 0) + (usage.candidatesTokenCount ?? 0) : 0;
+      await recordAiUsage(admin, profile.id, quota.usageRow, tokensUsed);
       return Response.json({ result: result.response.text(), mode: "blueprint" });
     }
 
@@ -103,6 +134,9 @@ ${stageContent}
 Review this submission. Guide and question — do NOT rewrite or give away the answers.`;
 
     const result = await model.generateContent(prompt);
+    const usage = result.response.usageMetadata;
+    const tokensUsed = usage ? (usage.promptTokenCount ?? 0) + (usage.candidatesTokenCount ?? 0) : 0;
+    await recordAiUsage(admin, profile.id, quota.usageRow, tokensUsed);
     return Response.json({ result: result.response.text(), mode: "feedback" });
   } catch (err) {
     console.error("[AI HBC]", err);

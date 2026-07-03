@@ -34,12 +34,12 @@ export const PLANS: PlanDefinition[] = [
     name: "Student Free",
     price: 0,
     role: "student",
-    features: ["2 lessons/month", "3 AI questions/day", "View timetable"],
+    features: ["2 lessons/month", "5 AI questions/day", "View timetable"],
     lockedFeatures: [
-      "Unlimited lessons", "Unlimited AI tutor", "Assignments & submissions",
+      "Unlimited lessons", "20 AI questions/day", "Assignments & submissions",
       "Grade book access", "Live classes", "PDF downloads", "ZIMSEC exam prep", "Mock exams",
     ],
-    limits: { aiPerDay: 3, lessonsPerMonth: 2, liveClasses: false, pdfDownload: false, assignments: false, gradesView: false, mockExams: 0, examPrep: false },
+    limits: { aiPerDay: 5, lessonsPerMonth: 2, liveClasses: false, pdfDownload: false, assignments: false, gradesView: false, mockExams: 0, examPrep: false },
   },
   {
     key: "student_pro",
@@ -48,11 +48,11 @@ export const PLANS: PlanDefinition[] = [
     role: "student",
     badge: "Most Popular",
     features: [
-      "Unlimited lessons", "Unlimited AI tutor", "All assignments",
+      "Unlimited lessons", "20 AI questions/day", "All assignments",
       "Full grade book", "Live classes", "PDF downloads", "Full exam prep", "3 mock exams/month", "Priority support",
     ],
     lockedFeatures: [],
-    limits: { aiPerDay: -1, lessonsPerMonth: -1, liveClasses: true, pdfDownload: true, assignments: true, gradesView: true, mockExams: 3, examPrep: true, prioritySupport: true },
+    limits: { aiPerDay: 20, lessonsPerMonth: -1, liveClasses: true, pdfDownload: true, assignments: true, gradesView: true, mockExams: 3, examPrep: true, prioritySupport: true },
   },
   {
     key: "free_teacher",

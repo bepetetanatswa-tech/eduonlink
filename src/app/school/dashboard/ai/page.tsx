@@ -18,7 +18,6 @@ export default async function SchoolAIPage() {
       profileId={profile.id}
       userName={profile.full_name || "Administrator"}
       userRole="school_admin"
-      plan="unlimited"
     />
   );
 }

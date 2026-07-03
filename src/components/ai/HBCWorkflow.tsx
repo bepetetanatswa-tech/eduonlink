@@ -40,6 +40,11 @@ const STAGE_DEFS = [
   { num: 6, name: "Evaluation & Reflection", icon: "🪞", desc: "Honestly assess your project: what worked, what you learned, and how you would improve it." },
 ];
 
+function friendlyAiError(data: { error?: string; limit?: number }, fallback: string) {
+  if (data.error === "limit_reached") return `You've reached your ${data.limit ?? "daily"} AI questions for today. Come back tomorrow, or ask your teacher about upgrading.`;
+  return data.error ?? fallback;
+}
+
 function renderAIText(text: string) {
   return text.split("\n").map((line, i) => {
     const parts = line.split(/(\*\*[^*]+\*\*)/g);
@@ -166,13 +171,14 @@ export function HBCWorkflow({ project, stages: initialStages }: Props) {
           stageNumber: currentStageDef.num,
           projectTitle: project.title,
           subject: project.subject,
+          projectId: project.id,
         }),
       });
       const data = await res.json();
       if (data.result) {
         setStages((prev) => prev.map((s, i) => i === activeStage ? { ...s, ai_feedback: `[BLUEPRINT]\n${data.result}` } : s));
       } else {
-        notify("error", data.error ?? "Could not generate blueprint. Check AI configuration.");
+        notify("error", friendlyAiError(data, "Could not generate blueprint. Check AI configuration."));
       }
     } catch {
       notify("error", "Connection error. Try again.");
@@ -196,6 +202,7 @@ export function HBCWorkflow({ project, stages: initialStages }: Props) {
           stageContent: currentStage.content,
           projectTitle: project.title,
           subject: project.subject,
+          projectId: project.id,
         }),
       });
       const data = await res.json();
@@ -206,7 +213,7 @@ export function HBCWorkflow({ project, stages: initialStages }: Props) {
         }
         setStages((prev) => prev.map((s, i) => i === activeStage ? { ...s, ai_feedback: data.result } : s));
       } else {
-        notify("error", data.error ?? "Feedback unavailable. Check AI configuration.");
+        notify("error", friendlyAiError(data, "Feedback unavailable. Check AI configuration."));
       }
     } catch {
       notify("error", "Connection error. Try again.");

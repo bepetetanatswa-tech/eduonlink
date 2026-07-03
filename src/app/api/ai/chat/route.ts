@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { streamWithFallback } from "@/lib/ai/providers";
+import { resolveAiQuota, recordAiUsage } from "@/lib/ai/usageLimit";
 
 type UserRole = "student" | "teacher" | "parent" | "school_admin" | "super_admin";
 
@@ -134,14 +136,12 @@ export async function POST(req: Request) {
     const body = await req.json() as {
       messages: { role: string; content: string }[];
       topic: string;
-      profileId: string;
-      role: UserRole;
     };
 
-    const { messages, topic, profileId, role } = body;
+    const { messages, topic } = body;
 
-    if (!profileId || !messages?.length) {
-      return jsonError("Missing profileId or messages", 400, "bad_request");
+    if (!messages?.length) {
+      return jsonError("Missing messages", 400, "bad_request");
     }
 
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -153,29 +153,27 @@ export async function POST(req: Request) {
       );
     }
 
+    // Verify the session ourselves — never trust a client-supplied profileId/role.
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return jsonError("Not authenticated", 401, "not_authenticated");
+
     const admin = createAdminClient();
-    const today = new Date().toISOString().split("T")[0];
 
-    // Get usage row (non-fatal)
-    const { data: usageRow, error: usageErr } = await (admin.from("ai_usage") as any)
-      .select("id, questions_used")
-      .eq("user_id", profileId)
-      .eq("date", today)
-      .maybeSingle();
-    if (usageErr) console.warn("[AI Chat] ai_usage fetch:", usageErr.message);
+    const { data: profile } = await (admin.from("profiles") as any)
+      .select("id, full_name, role")
+      .eq("user_id", user.id)
+      .single();
+    if (!profile) return jsonError("Profile not found", 404, "profile_not_found");
 
-    const questionsUsed: number = usageRow?.questions_used ?? 0;
+    const profileId: string = profile.id;
+    const userRole: UserRole = profile.role ?? "student";
+    const userName: string = profile.full_name ?? "there";
 
-    // Get subscription
-    const { data: sub } = await (admin.from("subscriptions") as any)
-      .select("plan, status")
-      .eq("user_id", profileId)
-      .in("status", ["active", "trial"])
-      .maybeSingle();
-
-    const plan: string = sub?.plan ?? "free";
-    const isLimited = plan === "free" && role === "student";
-    const dailyLimit = 10;
+    const quota = await resolveAiQuota(admin, profileId, userRole);
+    const isLimited = quota.limit !== null;
+    const dailyLimit = quota.limit ?? 0;
+    const questionsUsed = quota.used;
 
     if (isLimited && questionsUsed >= dailyLimit) {
       return new Response(
@@ -184,14 +182,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Get user name
-    const { data: profile } = await (admin.from("profiles") as any)
-      .select("full_name")
-      .eq("id", profileId)
-      .single();
-    const userName: string = profile?.full_name ?? "there";
-
-    const userRole: UserRole = role ?? "student";
     const systemPrompt = SYSTEM_PROMPTS[userRole]?.(topic, userName) ?? SYSTEM_PROMPTS.student(topic, userName);
 
     const history = messages.slice(0, -1).map((m) => ({
@@ -207,7 +197,7 @@ export async function POST(req: Request) {
       return jsonError(err?.message ?? "All AI providers failed", 503, "all_providers_failed");
     }
 
-    const { stream: aiStream, provider } = providerResult;
+    const { stream: aiStream, provider, getUsage } = providerResult;
 
     const stream = new ReadableStream({
       async start(controller) {
@@ -219,19 +209,12 @@ export async function POST(req: Request) {
           console.error(`[AI Chat] Stream error (${provider}):`, streamErr?.message ?? streamErr);
         } finally {
           controller.close();
-          if (isLimited) {
-            try {
-              if (usageRow) {
-                await (admin.from("ai_usage") as any)
-                  .update({ questions_used: questionsUsed + 1 })
-                  .eq("id", usageRow.id);
-              } else {
-                await (admin.from("ai_usage") as any)
-                  .insert({ user_id: profileId, date: today, questions_used: 1, tokens_used: 0 });
-              }
-            } catch (trackErr) {
-              console.warn("[AI Chat] Usage tracking failed:", trackErr);
-            }
+          try {
+            const usage = await getUsage();
+            const tokensUsed = usage ? usage.promptTokens + usage.completionTokens : 0;
+            await recordAiUsage(admin, profileId, quota.usageRow, tokensUsed);
+          } catch (trackErr) {
+            console.warn("[AI Chat] Usage tracking failed:", trackErr);
           }
         }
       },

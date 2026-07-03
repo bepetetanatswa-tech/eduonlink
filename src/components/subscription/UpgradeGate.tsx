@@ -6,7 +6,7 @@ const S = { border: "rgba(255,255,255,0.07)", text: "#CDD6F4", muted: "#8892B0",
 const FEATURES: Record<string, { name: string; requiredPlan: string; emoji: string }> = {
   live_classes:      { name: "Live Classes",        requiredPlan: "Student Pro ($5/mo)",         emoji: "📡" },
   pdf_download:      { name: "PDF Downloads",        requiredPlan: "Student Pro ($5/mo)",         emoji: "📄" },
-  unlimited_ai:      { name: "Unlimited AI Tutor",   requiredPlan: "Student Pro ($5/mo)",         emoji: "🤖" },
+  unlimited_ai:      { name: "20 AI Questions/Day",  requiredPlan: "Student Pro ($5/mo)",         emoji: "🤖" },
   assignments:       { name: "Assignments",           requiredPlan: "Student Pro ($5/mo)",         emoji: "📋" },
   grades_view:       { name: "Grade Book",            requiredPlan: "Student Pro ($5/mo)",         emoji: "📊" },
   exam_prep:         { name: "Exam Preparation",      requiredPlan: "Student Pro ($5/mo)",         emoji: "📝" },

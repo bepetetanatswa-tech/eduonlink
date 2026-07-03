@@ -18,7 +18,6 @@ export default async function AdminSirTaksPage() {
       profileId={profile.id}
       userName={profile.full_name || "Admin"}
       userRole="super_admin"
-      plan="unlimited"
     />
   );
 }

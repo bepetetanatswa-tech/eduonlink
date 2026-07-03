@@ -18,7 +18,6 @@ export default async function ParentAIPage() {
       profileId={profile.id}
       userName={profile.full_name || "Parent"}
       userRole="parent"
-      plan="unlimited"
     />
   );
 }

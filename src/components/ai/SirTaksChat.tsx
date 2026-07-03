@@ -13,7 +13,8 @@ interface Props {
   userName: string;
   userRole: UserRole;
   initialQuestionsUsed?: number;
-  plan?: string;
+  /** Resolved server-side (see src/lib/ai/usageLimit.ts). null = unlimited. */
+  dailyLimit?: number | null;
 }
 
 const ROLE_CONFIG: Record<UserRole, {
@@ -123,8 +124,6 @@ const ROLE_CONFIG: Record<UserRole, {
   },
 };
 
-const DAILY_LIMIT = 10;
-
 function renderContent(text: string) {
   return text.split("\n").map((line, i) => {
     const parts = line.split(/(\*\*[^*]+\*\*|`[^`]+`)/g);
@@ -141,7 +140,7 @@ function renderContent(text: string) {
   });
 }
 
-export function SirTaksChat({ profileId, userName, userRole, initialQuestionsUsed = 0, plan = "free" }: Props) {
+export function SirTaksChat({ profileId, userName, userRole, initialQuestionsUsed = 0, dailyLimit = null }: Props) {
   const cfg = ROLE_CONFIG[userRole] ?? ROLE_CONFIG.student;
   const [phase, setPhase] = useState<"select" | "chat">("select");
   const [topic, setTopic] = useState("");
@@ -150,7 +149,6 @@ export function SirTaksChat({ profileId, userName, userRole, initialQuestionsUse
   const [streaming, setStreaming] = useState(false);
   const [streamText, setStreamText] = useState("");
   const [questionsUsed, setQuestionsUsed] = useState(initialQuestionsUsed);
-  const [dailyLimit] = useState<number | null>(plan === "free" && userRole === "student" ? DAILY_LIMIT : null);
   const [convId, setConvId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -202,8 +200,6 @@ export function SirTaksChat({ profileId, userName, userRole, initialQuestionsUse
         body: JSON.stringify({
           messages: apiMessages,
           topic,
-          profileId,
-          role: userRole,
         }),
       });
 

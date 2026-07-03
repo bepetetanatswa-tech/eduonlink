@@ -22,6 +22,7 @@ export default function BroadcastPage() {
   const [isEmergency, setIsEmergency] = useState(false);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState<{ count: number } | null>(null);
+  const [sendErr, setSendErr] = useState<string | null>(null);
   const [recent, setRecent] = useState<RecentAnn[]>([]);
   const [profileId, setProfileId] = useState<string | null>(null);
   const supabase = createClient();
@@ -48,9 +49,10 @@ export default function BroadcastPage() {
     e.preventDefault();
     if (!title.trim() || !message.trim() || !profileId) return;
     setSending(true);
+    setSendErr(null);
 
     // Save as announcement
-    await (supabase.from("announcements") as any).insert({
+    const { error: annErr } = await (supabase.from("announcements") as any).insert({
       author_id: profileId,
       title: title.trim(),
       content: message.trim(),
@@ -58,6 +60,12 @@ export default function BroadcastPage() {
       is_emergency: isEmergency,
       is_pinned: isEmergency,
     });
+
+    if (annErr) {
+      setSendErr(`Broadcast failed: ${annErr.message}`);
+      setSending(false);
+      return;
+    }
 
     // Send notifications to targets
     let query = (supabase.from("profiles") as any).select("id");
@@ -104,6 +112,11 @@ export default function BroadcastPage() {
       {sent && (
         <div style={{ padding: "12px 16px", borderRadius: 12, background: "rgba(0,229,163,0.1)", border: "1px solid rgba(0,229,163,0.25)", color: "#00E5A3", fontSize: 13, fontWeight: 500 }}>
           ✓ Broadcast sent to {sent.count} users
+        </div>
+      )}
+      {sendErr && (
+        <div style={{ padding: "12px 16px", borderRadius: 12, background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.25)", color: "#FF6B6B", fontSize: 13, fontWeight: 500 }}>
+          ⚠️ {sendErr}
         </div>
       )}
 

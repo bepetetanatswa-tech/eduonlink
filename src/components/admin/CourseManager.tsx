@@ -86,15 +86,17 @@ export function CourseManager({ initialCourses, adminId }: { initialCourses: Cou
   };
 
   const togglePublish = async (c: Course) => {
-    const { data } = await (supabase.from("courses") as any)
+    const { data, error } = await (supabase.from("courses") as any)
       .update({ is_published: !c.is_published }).eq("id", c.id).select().single();
-    if (data) setCourses((p) => p.map((x) => x.id === c.id ? data : x));
-    notify(data?.is_published ? "Published ✓" : "Unpublished");
+    if (error || !data) { notify(`Could not update course: ${error?.message ?? "unknown error"}`); return; }
+    setCourses((p) => p.map((x) => x.id === c.id ? data : x));
+    notify(data.is_published ? "Published ✓" : "Unpublished");
   };
 
   const deleteCourse = async (id: string) => {
     if (!confirm("Delete this course and all its materials?")) return;
-    await (supabase.from("courses") as any).delete().eq("id", id);
+    const { error } = await (supabase.from("courses") as any).delete().eq("id", id);
+    if (error) { notify(`Could not delete course: ${error.message}`); return; }
     setCourses((p) => p.filter((c) => c.id !== id));
     notify("Course deleted");
   };
@@ -146,7 +148,8 @@ export function CourseManager({ initialCourses, adminId }: { initialCourses: Cou
 
   const deleteMaterial = async (courseId: string, matId: string, fileUrl: string | null) => {
     if (fileUrl) await deleteR2File(fileUrl);
-    await (supabase.from("course_materials") as any).delete().eq("id", matId);
+    const { error } = await (supabase.from("course_materials") as any).delete().eq("id", matId);
+    if (error) { notify(`Could not remove material: ${error.message}`); return; }
     setCoursesMaterials((p) => ({ ...p, [courseId]: (p[courseId] ?? []).filter((m) => m.id !== matId) }));
     notify("Material removed");
   };

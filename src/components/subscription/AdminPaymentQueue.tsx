@@ -24,6 +24,12 @@ export function AdminPaymentQueue({ statusFilter = "pending", onCountChange }: {
   const [processing, setProcessing] = useState<string | null>(null);
   const [rejectModal, setRejectModal] = useState<{ pv: PV; reason: string } | null>(null);
   const [blacklistModal, setBlacklistModal] = useState<string | null>(null);
+  const [notification, setNotification] = useState<{ type: "success" | "error"; msg: string } | null>(null);
+
+  const notify = (type: "success" | "error", msg: string) => {
+    setNotification({ type, msg });
+    setTimeout(() => setNotification(null), 4000);
+  };
 
   useEffect(() => { load(); }, [statusFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -45,11 +51,17 @@ export function AdminPaymentQueue({ statusFilter = "pending", onCountChange }: {
     const { data: { user } } = await supabase.auth.getUser();
     const { data: adminProfile } = await (supabase.from("profiles") as any).select("id").eq("user_id", user?.id).single();
 
-    await (supabase.from("payment_verifications") as any).update({
+    const { error: statusErr } = await (supabase.from("payment_verifications") as any).update({
       status: "approved",
       verified_by: adminProfile?.id ?? null,
       verified_at: new Date().toISOString(),
     }).eq("id", pv.id);
+
+    if (statusErr) {
+      notify("error", `Could not mark payment approved: ${statusErr.message}`);
+      setProcessing(null);
+      return;
+    }
 
     if (pv.purchase_type === "credits" && pv.credit_type && pv.credit_amount) {
       // Top up credits
@@ -61,7 +73,14 @@ export function AdminPaymentQueue({ statusFilter = "pending", onCountChange }: {
 
       const { data: existing } = await (supabase.from("user_credits") as any).select(col).eq("user_id", pv.user_id).maybeSingle();
       const current = existing?.[col] ?? 0;
-      await (supabase.from("user_credits") as any).upsert({ user_id: pv.user_id, [col]: current + pv.credit_amount }, { onConflict: "user_id" });
+      const { error: creditErr } = await (supabase.from("user_credits") as any).upsert({ user_id: pv.user_id, [col]: current + pv.credit_amount }, { onConflict: "user_id" });
+
+      if (creditErr) {
+        notify("error", `Payment marked approved, but crediting the account failed: ${creditErr.message}. Fix manually.`);
+        setProcessing(null);
+        load();
+        return;
+      }
 
       await (supabase.from("notifications") as any).insert({
         user_id: pv.user_id,
@@ -76,7 +95,7 @@ export function AdminPaymentQueue({ statusFilter = "pending", onCountChange }: {
       end.setMonth(end.getMonth() + 1);
       const planName = getPlan(pv.plan_key ?? "free_student").name;
 
-      await (supabase.from("subscriptions") as any).insert({
+      const { error: subErr } = await (supabase.from("subscriptions") as any).insert({
         user_id: pv.user_id,
         plan_key: pv.plan_key,
         plan_price: pv.amount,
@@ -87,6 +106,13 @@ export function AdminPaymentQueue({ statusFilter = "pending", onCountChange }: {
         payment_id: pv.id,
       });
 
+      if (subErr) {
+        notify("error", `Payment marked approved, but activating the subscription failed: ${subErr.message}. Fix manually.`);
+        setProcessing(null);
+        load();
+        return;
+      }
+
       await (supabase.from("notifications") as any).insert({
         user_id: pv.user_id,
         title: `Payment approved! Your ${planName} is now active 🎉`,
@@ -95,38 +121,72 @@ export function AdminPaymentQueue({ statusFilter = "pending", onCountChange }: {
       });
     }
 
+    notify("success", "Payment approved ✓");
     setProcessing(null);
     load();
   };
 
   const reject = async (pv: PV, reason: string) => {
     setProcessing(pv.id);
-    await (supabase.from("payment_verifications") as any).update({ status: "rejected", rejection_reason: reason }).eq("id", pv.id);
+    const { error } = await (supabase.from("payment_verifications") as any).update({ status: "rejected", rejection_reason: reason }).eq("id", pv.id);
+    if (error) {
+      notify("error", `Could not reject payment: ${error.message}`);
+      setProcessing(null);
+      return;
+    }
     await (supabase.from("notifications") as any).insert({
       user_id: pv.user_id,
       title: "Payment verification failed",
       body: `Your payment of $${pv.amount} was not approved. Reason: ${reason}. Please contact support if you believe this is an error.`,
       type: "error",
     });
+    notify("success", "Payment rejected");
     setRejectModal(null);
     setProcessing(null);
     load();
   };
 
   const doBlacklist = async (phone: string) => {
-    await (supabase.from("blacklisted_phones") as any).upsert({ phone_number: phone, reason: "Blacklisted by admin" }, { onConflict: "phone_number" });
+    const { error } = await (supabase.from("blacklisted_phones") as any).upsert({ phone_number: phone, reason: "Blacklisted by admin" }, { onConflict: "phone_number" });
+    if (error) {
+      notify("error", `Could not blacklist number: ${error.message}`);
+      return;
+    }
+    notify("success", "Number blacklisted");
     setBlacklistModal(null);
   };
 
   if (loading) return <div style={{ color: S.dim, fontSize: 13, padding: "16px 0" }}>Loading…</div>;
   if (payments.length === 0) return (
-    <div style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${S.border}`, borderRadius: 12, padding: "32px", textAlign: "center" }}>
-      <p style={{ fontSize: 14, color: S.dim, margin: 0 }}>No {statusFilter} payments</p>
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {notification && (
+        <div style={{
+          padding: "10px 16px", borderRadius: 10,
+          background: notification.type === "success" ? "rgba(0,229,163,0.08)" : "rgba(255,107,107,0.08)",
+          border: `1px solid ${notification.type === "success" ? "rgba(0,229,163,0.2)" : "rgba(255,107,107,0.2)"}`,
+          color: notification.type === "success" ? "#00E5A3" : "#FF6B6B", fontSize: 13,
+        }}>
+          {notification.type === "success" ? "✓" : "⚠️"} {notification.msg}
+        </div>
+      )}
+      <div style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${S.border}`, borderRadius: 12, padding: "32px", textAlign: "center" }}>
+        <p style={{ fontSize: 14, color: S.dim, margin: 0 }}>No {statusFilter} payments</p>
+      </div>
     </div>
   );
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {notification && (
+        <div style={{
+          padding: "10px 16px", borderRadius: 10,
+          background: notification.type === "success" ? "rgba(0,229,163,0.08)" : "rgba(255,107,107,0.08)",
+          border: `1px solid ${notification.type === "success" ? "rgba(0,229,163,0.2)" : "rgba(255,107,107,0.2)"}`,
+          color: notification.type === "success" ? "#00E5A3" : "#FF6B6B", fontSize: 13,
+        }}>
+          {notification.type === "success" ? "✓" : "⚠️"} {notification.msg}
+        </div>
+      )}
       {payments.map(pv => {
         const planLabel = pv.purchase_type === "credits" ? (pv.credit_pack_key ?? "Credits") : getPlan(pv.plan_key ?? "free_student").name;
         const isPending = pv.status === "pending";

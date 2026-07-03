@@ -34,20 +34,19 @@ export function SubscriptionsClient({ subs: initialSubs, stats }: { subs: Sub[];
 
   const updatePlan = async (id: string, plan: string, status: string) => {
     setUpdating(id);
-    const { data } = await (supabase.from("subscriptions") as any)
+    const { data, error } = await (supabase.from("subscriptions") as any)
       .update({ plan, status, updated_at: new Date().toISOString() }).eq("id", id).select(`
         id, plan, status, amount_paid, currency, payment_method, start_date, end_date, created_at,
         profiles!user_id(id, full_name, email, role)
       `).single();
-    if (data) {
-      setSubs((p) => p.map((s) => s.id === id ? data : s));
-      fetch("/api/admin/audit-log", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "subscription_updated", targetType: "subscription", targetId: id, details: { plan, status } }),
-      }).catch(() => {});
-    }
     setUpdating(null);
+    if (error || !data) { notify(`Could not update plan: ${error?.message ?? "unknown error"}`); return; }
+    setSubs((p) => p.map((s) => s.id === id ? data : s));
+    fetch("/api/admin/audit-log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "subscription_updated", targetType: "subscription", targetId: id, details: { plan, status } }),
+    }).catch(() => {});
     notify("Plan updated ✓");
   };
 

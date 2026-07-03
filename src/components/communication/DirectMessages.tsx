@@ -53,6 +53,7 @@ export function DirectMessages({ profileId, userRole, profile, allowedRoles }: P
   const [contacts, setContacts] = useState<Profile[]>([]);
   const [showNewDm, setShowNewDm] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [sendError, setSendError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -155,25 +156,31 @@ export function DirectMessages({ profileId, userRole, profile, allowedRoles }: P
   async function sendMessage() {
     if (!input.trim() || !selected || sending) return;
     setSending(true);
+    setSendError(null);
     const text = input;
-    setInput("");
-    const { data } = await (supabase.from("messages") as any)
+    const { data, error } = await (supabase.from("messages") as any)
       .insert({ sender_id: profileId, receiver_id: selected.id, content: text, class_id: null })
       .select("*, sender:profiles!messages_sender_id_fkey(id,full_name,avatar_url,role,email), receiver:profiles!messages_receiver_id_fkey(id,full_name,avatar_url,role,email)")
       .single();
-    if (data) {
-      setMessages(prev => [...prev, data]);
-      setConversations(prev => {
-        const idx = prev.findIndex(c => c.other.id === selected.id);
-        if (idx >= 0) {
-          const updated = [...prev];
-          updated[idx] = { ...updated[idx], lastMsg: data };
-          return updated;
-        }
-        return [{ other: selected, lastMsg: data, unread: 0 }, ...prev];
-      });
+
+    if (error || !data) {
+      setSendError("Message failed to send. Try again.");
+      setSending(false);
+      return;
     }
-    // Notify receiver
+
+    setInput("");
+    setMessages(prev => [...prev, data]);
+    setConversations(prev => {
+      const idx = prev.findIndex(c => c.other.id === selected.id);
+      if (idx >= 0) {
+        const updated = [...prev];
+        updated[idx] = { ...updated[idx], lastMsg: data };
+        return updated;
+      }
+      return [{ other: selected, lastMsg: data, unread: 0 }, ...prev];
+    });
+    // Notify receiver (best-effort — the message itself already sent successfully)
     await (supabase.from("notifications") as any).insert({
       user_id: selected.id,
       title: `New message from ${profile.full_name}`,
@@ -256,6 +263,9 @@ export function DirectMessages({ profileId, userRole, profile, allowedRoles }: P
         <div ref={bottomRef} />
       </div>
       {/* Input */}
+      {sendError && (
+        <p style={{ margin: "0 14px", fontSize: 12, color: "#FF6B6B" }}>{sendError}</p>
+      )}
       <div style={{ padding: "10px 14px", borderTop: `1px solid ${S.border}`, background: S.card, display: "flex", gap: 8, flexShrink: 0 }}>
         <input
           value={input}

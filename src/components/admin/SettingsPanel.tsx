@@ -44,16 +44,26 @@ export function SettingsPanel({ initialSettings, adminId }: Props) {
     initialSettings.forEach((s) => { map[s.key] = s.value; });
     return map;
   });
+  const [savedValues, setSavedValues] = useState<Record<string, unknown>>(() => {
+    const map: Record<string, unknown> = {};
+    initialSettings.forEach((s) => { map[s.key] = s.value; });
+    return map;
+  });
   const [saving, setSaving] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
   const supabase = createClient();
 
+  const [saveError, setSaveError] = useState<string | null>(null);
+
   const save = async (key: string, value: unknown) => {
     setSaving(key);
-    await (supabase.from("platform_settings") as any)
+    setSaveError(null);
+    const { error } = await (supabase.from("platform_settings") as any)
       .upsert({ key, value, updated_at: new Date().toISOString(), updated_by: adminId });
-    setSettings((p) => ({ ...p, [key]: value }));
     setSaving(null);
+    if (error) { setSaveError(`Could not save ${SETTING_META[key]?.label ?? key}: ${error.message}`); return; }
+    setSettings((p) => ({ ...p, [key]: value }));
+    setSavedValues((p) => ({ ...p, [key]: value }));
     setSaved(key);
     setTimeout(() => setSaved(null), 2000);
   };
@@ -64,6 +74,12 @@ export function SettingsPanel({ initialSettings, adminId }: Props) {
         <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", margin: 0 }}>Platform Settings</h2>
         <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>Global configuration — changes take effect immediately</p>
       </div>
+
+      {saveError && (
+        <div style={{ padding: "10px 16px", borderRadius: 10, background: "rgba(255,107,107,0.08)", border: "1px solid rgba(255,107,107,0.2)", color: "#FF6B6B", fontSize: 13 }}>
+          ⚠️ {saveError}
+        </div>
+      )}
 
       {/* Maintenance Mode Banner */}
       {settings["maintenance_mode"] === true && (
@@ -104,24 +120,40 @@ export function SettingsPanel({ initialSettings, adminId }: Props) {
                         <Toggle on={val === true} danger={meta.danger} onChange={(v) => save(key, v)} />
                       )}
                       {meta.type === "number" && (
-                        <input
-                          type="number"
-                          min={1}
-                          max={100}
-                          value={typeof val === "number" ? val : 10}
-                          onChange={(e) => setSettings((p) => ({ ...p, [key]: parseInt(e.target.value) || 10 }))}
-                          onBlur={(e) => save(key, parseInt(e.target.value) || 10)}
-                          style={{ width: 64, padding: "6px 10px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, fontSize: 13, color: "#CDD6F4", textAlign: "center", outline: "none" }}
-                        />
+                        <>
+                          <input
+                            type="number"
+                            min={1}
+                            max={100}
+                            value={typeof val === "number" ? val : 10}
+                            onChange={(e) => setSettings((p) => ({ ...p, [key]: parseInt(e.target.value) || 10 }))}
+                            style={{ width: 64, padding: "6px 10px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, fontSize: 13, color: "#CDD6F4", textAlign: "center", outline: "none" }}
+                          />
+                          <button
+                            onClick={() => save(key, typeof val === "number" ? val : 10)}
+                            disabled={isSaving || val === savedValues[key]}
+                            style={{ padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: isSaving ? "not-allowed" : "pointer", background: "rgba(77,127,255,0.12)", border: "1px solid rgba(77,127,255,0.3)", color: "#4D7FFF", opacity: (isSaving || val === savedValues[key]) ? 0.5 : 1 }}
+                          >
+                            Save
+                          </button>
+                        </>
                       )}
                       {meta.type === "text" && (
-                        <input
-                          type="text"
-                          value={typeof val === "string" ? val : ""}
-                          onChange={(e) => setSettings((p) => ({ ...p, [key]: e.target.value }))}
-                          onBlur={(e) => save(key, e.target.value)}
-                          style={{ width: 240, padding: "7px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: 12, color: "#CDD6F4", outline: "none" }}
-                        />
+                        <>
+                          <input
+                            type="text"
+                            value={typeof val === "string" ? val : ""}
+                            onChange={(e) => setSettings((p) => ({ ...p, [key]: e.target.value }))}
+                            style={{ width: 240, padding: "7px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: 12, color: "#CDD6F4", outline: "none" }}
+                          />
+                          <button
+                            onClick={() => save(key, typeof val === "string" ? val : "")}
+                            disabled={isSaving || val === savedValues[key]}
+                            style={{ padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: isSaving ? "not-allowed" : "pointer", background: "rgba(77,127,255,0.12)", border: "1px solid rgba(77,127,255,0.3)", color: "#4D7FFF", opacity: (isSaving || val === savedValues[key]) ? 0.5 : 1 }}
+                          >
+                            Save
+                          </button>
+                        </>
                       )}
                     </div>
                   </div>

@@ -65,16 +65,16 @@ export function SchoolsClient({ initialSchools }: { initialSchools: School[] }) 
   const saveEdit = async () => {
     if (!editing) return;
     setSaving(true);
-    const { data } = await (supabase.from("schools") as any).update(editForm).eq("id", editing.id).select().single();
-    if (data) {
-      setSchools((p) => p.map((s) => s.id === editing.id ? data : s));
-      fetch("/api/admin/audit-log", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "school_edited", targetType: "school", targetId: editing.id, details: editForm }),
-      }).catch(() => {});
-    }
-    setSaving(false); setEditing(null);
+    const { data, error } = await (supabase.from("schools") as any).update(editForm).eq("id", editing.id).select().single();
+    setSaving(false);
+    if (error || !data) { notify(`Could not update school: ${error?.message ?? "unknown error"}`); return; }
+    setSchools((p) => p.map((s) => s.id === editing.id ? data : s));
+    fetch("/api/admin/audit-log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "school_edited", targetType: "school", targetId: editing.id, details: editForm }),
+    }).catch(() => {});
+    setEditing(null);
     notify("School updated ✓");
   };
 
@@ -99,7 +99,8 @@ export function SchoolsClient({ initialSchools }: { initialSchools: School[] }) 
 
   const deleteSchool = async (id: string) => {
     if (!confirm("Delete this school? This cannot be undone.")) return;
-    await (supabase.from("schools") as any).delete().eq("id", id);
+    const { error } = await (supabase.from("schools") as any).delete().eq("id", id);
+    if (error) { notify(`Could not delete school: ${error.message}`); return; }
     setSchools((p) => p.filter((s) => s.id !== id));
     notify("School deleted");
     fetch("/api/admin/audit-log", {

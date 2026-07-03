@@ -68,11 +68,29 @@ export function DirectMessages({ profileId, userRole, profile, allowedRoles }: P
   const [blockedByMe, setBlockedByMe] = useState(false);
   const [blockedMe, setBlockedMe] = useState(false);
   const [showBlockConfirm, setShowBlockConfirm] = useState(false);
+  const [muted, setMuted] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = useState(false);
   const presenceChannelRef = useRef<any>(null);
   const typingTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isNearBottom, setIsNearBottom] = useState(true);
+  const [newMessageCount, setNewMessageCount] = useState(0);
+  const prevMessageCount = useRef(0);
+
+  const scrollToBottom = (smooth = true) => {
+    bottomRef.current?.scrollIntoView({ behavior: smooth ? "smooth" : "auto" });
+    setNewMessageCount(0);
+  };
+
+  function handleScroll() {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+    setIsNearBottom(nearBottom);
+    if (nearBottom) setNewMessageCount(0);
+  }
 
   useEffect(() => {
     setIsMobile(window.innerWidth < 768);
@@ -85,7 +103,15 @@ export function DirectMessages({ profileId, userRole, profile, allowedRoles }: P
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileId]);
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+  useEffect(() => {
+    const grew = messages.length > prevMessageCount.current;
+    if (grew) {
+      if (isNearBottom) scrollToBottom();
+      else setNewMessageCount((n) => n + (messages.length - prevMessageCount.current));
+    }
+    prevMessageCount.current = messages.length;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages]);
 
   async function loadConversations() {
     setLoading(true);
@@ -192,11 +218,31 @@ export function DirectMessages({ profileId, userRole, profile, allowedRoles }: P
     setBlockedMe((data ?? []).some((r: any) => r.blocker_id === other.id));
   }
 
+  async function checkMuteStatus(other: Profile) {
+    const { data } = await (supabase.from("muted_conversations") as any)
+      .select("id").eq("user_id", profileId).eq("other_user_id", other.id).maybeSingle();
+    setMuted(!!data);
+  }
+
+  async function toggleMute() {
+    if (!selected) return;
+    if (muted) {
+      await (supabase.from("muted_conversations") as any).delete().eq("user_id", profileId).eq("other_user_id", selected.id);
+      setMuted(false);
+    } else {
+      await (supabase.from("muted_conversations") as any).insert({ user_id: profileId, other_user_id: selected.id });
+      setMuted(true);
+    }
+  }
+
   async function openConversation(other: Profile) {
     setSelected(other);
     setShowNewDm(false);
     setOtherTyping(false);
     setOtherOnline(false);
+    setIsNearBottom(true);
+    setNewMessageCount(0);
+    prevMessageCount.current = 0;
     const { data } = await (supabase.from("messages") as any)
       .select("*, sender:profiles!messages_sender_id_fkey(id,full_name,avatar_url,role,email), receiver:profiles!messages_receiver_id_fkey(id,full_name,avatar_url,role,email)")
       .is("class_id", null)
@@ -214,6 +260,7 @@ export function DirectMessages({ profileId, userRole, profile, allowedRoles }: P
     setConversations(prev => prev.map(c => c.other.id === other.id ? { ...c, unread: 0 } : c));
     setupPresence(other);
     checkBlockStatus(other);
+    checkMuteStatus(other);
   }
 
   async function sendMessage() {
@@ -243,13 +290,17 @@ export function DirectMessages({ profileId, userRole, profile, allowedRoles }: P
       }
       return [{ other: selected, lastMsg: data, unread: 0 }, ...prev];
     });
-    await (supabase.from("notifications") as any).insert({
-      user_id: selected.id,
-      title: `New message from ${profile.full_name}`,
-      message: text.slice(0, 80),
-      type: "info",
-      link: `/${userRole}/dashboard/messages`,
-    });
+    const { data: recipientMuted } = await (supabase.from("muted_conversations") as any)
+      .select("id").eq("user_id", selected.id).eq("other_user_id", profileId).maybeSingle();
+    if (!recipientMuted) {
+      await (supabase.from("notifications") as any).insert({
+        user_id: selected.id,
+        title: `New message from ${profile.full_name}`,
+        message: text.slice(0, 80),
+        type: "info",
+        link: `/${userRole}/dashboard/messages`,
+      });
+    }
     setSending(false);
   }
 
@@ -356,12 +407,16 @@ export function DirectMessages({ profileId, userRole, profile, allowedRoles }: P
             {otherTyping ? "typing…" : otherOnline ? "Online" : selected.role.replace("_", " ")}
           </p>
         </div>
+        <button onClick={toggleMute} title={muted ? "Unmute notifications" : "Mute notifications"} style={{ background: "none", border: `1px solid ${S.border}`, borderRadius: 8, color: muted ? "#F5A623" : S.muted, cursor: "pointer", fontSize: 13, padding: "6px 8px", display: "flex", alignItems: "center" }}>
+          {muted ? "🔕" : "🔔"}
+        </button>
         <button onClick={() => setShowBlockConfirm(true)} style={{ background: "none", border: `1px solid ${S.border}`, borderRadius: 8, color: blockedByMe ? "#00E5A3" : S.muted, cursor: "pointer", fontSize: 11, padding: "6px 10px" }}>
           {blockedByMe ? "Unblock" : "Block"}
         </button>
       </div>
       {/* Messages */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: 6 }}>
+      <div style={{ flex: 1, position: "relative", minHeight: 0 }}>
+      <div ref={messagesContainerRef} onScroll={handleScroll} style={{ height: "100%", overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: 6 }}>
         {messages.length === 0 && <p style={{ textAlign: "center", fontSize: 13, color: S.dim, marginTop: 40 }}>Start the conversation</p>}
         {messages.map(m => {
           const isOwn = m.sender_id === profileId;
@@ -398,6 +453,16 @@ export function DirectMessages({ profileId, userRole, profile, allowedRoles }: P
           </div>
         )}
         <div ref={bottomRef} />
+      </div>
+
+      {!isNearBottom && (
+        <button
+          onClick={() => scrollToBottom()}
+          style={{ position: "absolute", bottom: 16, left: "50%", transform: "translateX(-50%)", padding: "7px 16px", borderRadius: 20, background: S.accent, border: "none", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, boxShadow: "0 4px 16px rgba(0,0,0,0.4)", zIndex: 10 }}
+        >
+          {newMessageCount > 0 ? `${newMessageCount} new message${newMessageCount > 1 ? "s" : ""}` : "Jump to latest"} ↓
+        </button>
+      )}
       </div>
       {/* Input */}
       {sendError && (

@@ -20,12 +20,38 @@ const TYPE_COLOR: Record<string, string> = {
   assignment: "#BD93F9", grade: "#FF9A3C", announcement: "#4D7FFF",
 };
 
+const TYPE_LABELS: Record<string, string> = {
+  info: "General", success: "Success", warning: "Warnings",
+  assignment: "Assignments", grade: "Grades", message: "Messages", announcement: "Announcements",
+};
+
 export function NotificationBell({ profileId }: { profileId: string }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
+  const [showPrefs, setShowPrefs] = useState(false);
+  const [disabledTypes, setDisabledTypes] = useState<Set<string>>(new Set());
   const supabase = createClient();
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  const loadPrefs = async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data } = await (supabase.from("disabled_push_types") as any).select("type").eq("user_id", profileId);
+    setDisabledTypes(new Set((data ?? []).map((r: { type: string }) => r.type)));
+  };
+
+  const togglePrefType = async (type: string) => {
+    const isDisabled = disabledTypes.has(type);
+    if (isDisabled) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase.from("disabled_push_types") as any).delete().eq("user_id", profileId).eq("type", type);
+      setDisabledTypes((prev) => { const next = new Set(prev); next.delete(type); return next; });
+    } else {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase.from("disabled_push_types") as any).insert({ user_id: profileId, type });
+      setDisabledTypes((prev) => new Set(prev).add(type));
+    }
+  };
 
   useEffect(() => {
     supabase
@@ -122,14 +148,43 @@ export function NotificationBell({ profileId }: { profileId: string }) {
             padding: "14px 16px 10px", borderBottom: "1px solid rgba(255,255,255,0.06)",
           }}>
             <span style={{ fontSize: "13px", fontWeight: 600, color: "#CDD6F4" }}>Notifications</span>
-            {unread > 0 && (
-              <button onClick={markAllRead} style={{ fontSize: "11px", color: "#4D7FFF", cursor: "pointer", background: "none", border: "none" }}>
-                Mark all read
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              {unread > 0 && !showPrefs && (
+                <button onClick={markAllRead} style={{ fontSize: "11px", color: "#4D7FFF", cursor: "pointer", background: "none", border: "none" }}>
+                  Mark all read
+                </button>
+              )}
+              <button
+                onClick={() => { if (!showPrefs) loadPrefs(); setShowPrefs((p) => !p); }}
+                title="Notification preferences"
+                style={{ fontSize: "13px", color: showPrefs ? "#4D7FFF" : "#6B7290", cursor: "pointer", background: "none", border: "none" }}
+              >
+                ⚙
               </button>
-            )}
+            </div>
           </div>
 
-          {notifications.length === 0 ? (
+          {showPrefs ? (
+            <div style={{ padding: "12px 16px" }}>
+              <p style={{ fontSize: "11px", color: "#4A5170", margin: "0 0 10px" }}>Turn off push notifications for specific types. In-app notifications are unaffected.</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {Object.entries(TYPE_LABELS).map(([type, label]) => {
+                  const enabled = !disabledTypes.has(type);
+                  return (
+                    <div key={type} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: "12px", color: "#CDD6F4" }}>{label}</span>
+                      <button
+                        onClick={() => togglePrefType(type)}
+                        style={{ width: 34, height: 18, borderRadius: 10, background: enabled ? "rgba(0,229,163,0.2)" : "rgba(255,255,255,0.06)", border: `1px solid ${enabled ? "#00E5A3" : "rgba(255,255,255,0.1)"}`, cursor: "pointer", position: "relative", flexShrink: 0 }}
+                      >
+                        <div style={{ position: "absolute", top: 1, left: enabled ? 17 : 1, width: 14, height: 14, borderRadius: "50%", background: enabled ? "#00E5A3" : "#6B7290", transition: "left 0.15s" }} />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : notifications.length === 0 ? (
             <p style={{ padding: "24px", textAlign: "center", fontSize: "13px", color: "#4A5170" }}>
               No notifications yet
             </p>

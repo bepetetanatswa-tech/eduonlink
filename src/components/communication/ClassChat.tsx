@@ -84,16 +84,32 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
   const [forwarding, setForwarding] = useState<ChatMessage | null>(null);
   const [myClasses, setMyClasses] = useState<{ id: string; name: string }[] | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const presenceChannelRef = useRef<any>(null);
   const typingTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordChunksRef = useRef<Blob[]>([]);
   const recordTimerRef = useRef<ReturnType<typeof setInterval>>();
+  const [isNearBottom, setIsNearBottom] = useState(true);
+  const [newMessageCount, setNewMessageCount] = useState(0);
+  const prevMessageCount = useRef(0);
+  const [showInfo, setShowInfo] = useState(false);
+  const [infoTab, setInfoTab] = useState<"members" | "media" | "files" | "links">("members");
+  const [members, setMembers] = useState<{ id: string; full_name: string; avatar_url: string | null; role: string }[] | null>(null);
 
-  const scrollToBottom = useCallback(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToBottom = useCallback((smooth = true) => {
+    bottomRef.current?.scrollIntoView({ behavior: smooth ? "smooth" : "auto" });
+    setNewMessageCount(0);
   }, []);
+
+  function handleScroll() {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+    setIsNearBottom(nearBottom);
+    if (nearBottom) setNewMessageCount(0);
+  }
 
   useEffect(() => {
     loadMessages();
@@ -103,7 +119,18 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classId]);
 
-  useEffect(() => { scrollToBottom(); }, [messages, scrollToBottom]);
+  useEffect(() => {
+    const grew = messages.length > prevMessageCount.current;
+    if (grew) {
+      if (isNearBottom) {
+        scrollToBottom();
+      } else {
+        setNewMessageCount((n) => n + (messages.length - prevMessageCount.current));
+      }
+    }
+    prevMessageCount.current = messages.length;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages]);
 
   async function loadMessages() {
     const { data } = await (supabase.from("messages") as any)
@@ -312,6 +339,19 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
     setUploading(false);
   }
 
+  async function openInfoPanel() {
+    setShowInfo(true);
+    if (members === null) {
+      const { data: enrolled } = await (supabase.from("class_enrollments") as any)
+        .select("profiles(id,full_name,avatar_url,role)").eq("class_id", classId).eq("status", "active");
+      const { data: cls } = await (supabase.from("classes") as any)
+        .select("profiles!classes_teacher_id_fkey(id,full_name,avatar_url,role)").eq("id", classId).single();
+      const list = (enrolled ?? []).map((r: any) => r.profiles).filter(Boolean);
+      if (cls?.profiles) list.unshift(cls.profiles);
+      setMembers(list);
+    }
+  }
+
   async function openForward(msg: ChatMessage) {
     setForwarding(msg);
     setShowEmoji(null);
@@ -392,6 +432,9 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
           <button onClick={() => setShowSearch(!showSearch)} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${S.border}`, background: showSearch ? `${S.accent}20` : "transparent", color: showSearch ? S.accent : S.muted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" /></svg>
           </button>
+          <button onClick={openInfoPanel} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${S.border}`, background: showInfo ? `${S.accent}20` : "transparent", color: showInfo ? S.accent : S.muted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          </button>
         </div>
       </div>
 
@@ -420,7 +463,8 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
       )}
 
       {/* Messages */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px", display: "flex", flexDirection: "column", gap: 2 }}>
+      <div style={{ flex: 1, position: "relative", minHeight: 0 }}>
+      <div ref={messagesContainerRef} onScroll={handleScroll} style={{ height: "100%", overflowY: "auto", padding: "12px 16px", display: "flex", flexDirection: "column", gap: 2 }}>
         {displayed.length === 0 && (
           <div style={{ textAlign: "center", padding: "40px 0" }}>
             <p style={{ fontSize: 14, color: S.dim }}>No messages yet. Say hello!</p>
@@ -556,6 +600,17 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
         <div ref={bottomRef} />
       </div>
 
+      {/* Jump to latest / new messages banner */}
+      {!isNearBottom && (
+        <button
+          onClick={() => scrollToBottom()}
+          style={{ position: "absolute", bottom: 16, left: "50%", transform: "translateX(-50%)", padding: "7px 16px", borderRadius: 20, background: S.accent, border: "none", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, boxShadow: "0 4px 16px rgba(0,0,0,0.4)", zIndex: 10 }}
+        >
+          {newMessageCount > 0 ? `${newMessageCount} new message${newMessageCount > 1 ? "s" : ""}` : "Jump to latest"} ↓
+        </button>
+      )}
+      </div>
+
       {/* Mute confirm */}
       {showMute && (
         <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}>
@@ -564,6 +619,80 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
             <div style={{ display: "flex", gap: 8 }}>
               <button onClick={() => muteUser(showMute)} style={{ flex: 1, padding: "8px", borderRadius: 8, background: "#FF9A3C", border: "none", color: "#fff", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>Mute</button>
               <button onClick={() => setShowMute(null)} style={{ flex: 1, padding: "8px", borderRadius: 8, background: "rgba(255,255,255,0.06)", border: `1px solid ${S.border}`, color: S.text, cursor: "pointer", fontSize: 13 }}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Chat info panel */}
+      {showInfo && (
+        <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}>
+          <div style={{ background: "#0E1117", border: `1px solid ${S.border}`, borderRadius: 14, padding: 20, width: 340, maxHeight: 480, display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <span style={{ fontSize: 14, fontWeight: 600, color: S.text }}>{className}</span>
+              <button onClick={() => setShowInfo(false)} style={{ background: "none", border: "none", color: S.dim, cursor: "pointer", fontSize: 16 }}>✕</button>
+            </div>
+            <div style={{ display: "flex", gap: 4, marginBottom: 12, borderBottom: `1px solid ${S.border}`, paddingBottom: 8 }}>
+              {(["members", "media", "files", "links"] as const).map((t) => (
+                <button key={t} onClick={() => setInfoTab(t)} style={{ padding: "5px 10px", borderRadius: 8, fontSize: 11, fontWeight: 600, textTransform: "capitalize", cursor: "pointer", background: infoTab === t ? `${S.accent}20` : "transparent", color: infoTab === t ? S.accent : S.muted, border: "none" }}>
+                  {t}
+                </button>
+              ))}
+            </div>
+            <div style={{ overflowY: "auto", flex: 1 }}>
+              {infoTab === "members" && (
+                members === null ? <p style={{ fontSize: 12, color: S.dim, textAlign: "center", padding: "12px 0" }}>Loading…</p> :
+                members.length === 0 ? <p style={{ fontSize: 12, color: S.dim, textAlign: "center", padding: "12px 0" }}>No members yet</p> :
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {members.map((m, i) => (
+                    <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <Avatar name={m.full_name} url={m.avatar_url} size={32} />
+                      <div>
+                        <p style={{ fontSize: 13, color: S.text, margin: 0, fontWeight: 600 }}>{m.full_name}</p>
+                        <p style={{ fontSize: 10, color: S.dim, margin: 0, textTransform: "capitalize" }}>{i === 0 && m.role === "teacher" ? "Teacher" : m.role.replace("_", " ")}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {infoTab === "media" && (() => {
+                const media = messages.filter((m) => m.message_type === "image" && m.file_url);
+                return media.length === 0 ? <p style={{ fontSize: 12, color: S.dim, textAlign: "center", padding: "12px 0" }}>No shared media yet</p> : (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
+                    {media.map((m) => (
+                      <a key={m.id} href={m.file_url!} target="_blank" rel="noreferrer">
+                        <img src={m.file_url!} alt="" style={{ width: "100%", aspectRatio: "1", objectFit: "cover", borderRadius: 8 }} />
+                      </a>
+                    ))}
+                  </div>
+                );
+              })()}
+              {infoTab === "files" && (() => {
+                const files = messages.filter((m) => m.message_type === "file" && m.file_url);
+                return files.length === 0 ? <p style={{ fontSize: 12, color: S.dim, textAlign: "center", padding: "12px 0" }}>No shared files yet</p> : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {files.map((m) => (
+                      <a key={m.id} href={m.file_url!} target="_blank" rel="noreferrer" style={{ display: "flex", gap: 8, alignItems: "center", color: S.accent, textDecoration: "none", fontSize: 12, padding: "6px 8px", borderRadius: 8, background: "rgba(255,255,255,0.03)" }}>
+                        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                        {m.attachment_name}
+                      </a>
+                    ))}
+                  </div>
+                );
+              })()}
+              {infoTab === "links" && (() => {
+                const links = messages.filter((m) => m.message_type === "text" && extractFirstUrl(m.content));
+                return links.length === 0 ? <p style={{ fontSize: 12, color: S.dim, textAlign: "center", padding: "12px 0" }}>No shared links yet</p> : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {links.map((m) => (
+                      <div key={m.id}>
+                        <p style={{ fontSize: 11, color: S.dim, margin: "0 0 3px" }}>{m.sender?.full_name}</p>
+                        <LinkPreviewCard url={extractFirstUrl(m.content)!} />
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>

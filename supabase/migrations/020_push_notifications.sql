@@ -27,6 +27,11 @@ CREATE POLICY "push_subs: insert own" ON public.user_push_subscriptions FOR INSE
 CREATE POLICY "push_subs: delete own" ON public.user_push_subscriptions FOR DELETE
   USING (user_id = get_my_profile_id());
 
+-- RLS alone isn't enough — Postgres also requires explicit table-level grants
+-- before RLS policies even get evaluated for a role, including service_role.
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_push_subscriptions TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_push_subscriptions TO service_role;
+
 -- Shared secret lives in Vault, not embedded in the function body (which would
 -- otherwise be readable indefinitely via pg_proc by anyone with DB access).
 -- IMPORTANT: do not commit a real secret value here. Run this once by hand in

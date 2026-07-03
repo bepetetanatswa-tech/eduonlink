@@ -12,6 +12,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/admin/dashboard/users":          "User Management",
   "/admin/dashboard/schools":        "School Management",
   "/admin/dashboard/ai":             "AI Monitoring",
+  "/admin/dashboard/hbc":            "HBC Projects",
   "/admin/dashboard/analytics":      "Analytics",
   "/admin/dashboard/payments":       "Payments",
   "/admin/dashboard/subscriptions":  "Subscriptions",

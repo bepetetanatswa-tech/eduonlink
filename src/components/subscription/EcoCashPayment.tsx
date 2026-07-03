@@ -56,7 +56,7 @@ export function EcoCashPayment({ plan, creditPack, username, onSuccess, onBack }
     const { data: profile } = await (supabase.from("profiles") as any).select("id").eq("user_id", user.id).single();
 
     const payload: Record<string, unknown> = {
-      user_id: user.id,
+      user_id: profile?.id ?? null,
       profile_id: profile?.id ?? null,
       transaction_id: form.transactionId.trim(),
       phone_number: form.phone.trim(),

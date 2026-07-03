@@ -22,9 +22,13 @@ export function SubscriptionDashboard({ onUpgrade }: { onUpgrade: () => void }) 
   const load = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
+    // subscriptions/payment_verifications.user_id references profiles(id);
+    // user_credits.user_id references auth.users(id) — the two tables use
+    // different id conventions, so both must be resolved separately.
+    const { data: profile } = await (supabase.from("profiles") as any).select("id").eq("user_id", user.id).single();
     const [{ data: subs }, { data: pays }, { data: creds }] = await Promise.all([
-      (supabase.from("subscriptions") as any).select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
-      (supabase.from("payment_verifications") as any).select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(15),
+      (supabase.from("subscriptions") as any).select("*").eq("user_id", profile?.id ?? "").order("created_at", { ascending: false }).limit(1),
+      (supabase.from("payment_verifications") as any).select("*").eq("user_id", profile?.id ?? "").order("created_at", { ascending: false }).limit(15),
       (supabase.from("user_credits") as any).select("*").eq("user_id", user.id).maybeSingle(),
     ]);
     setSub(subs?.[0] ?? null);

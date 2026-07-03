@@ -51,7 +51,7 @@ export function CoursePurchase({ courseId, courseTitle, price, onClose }: Props)
     const { data: profile } = await (supabase.from("profiles") as any).select("id").eq("user_id", user.id).single();
 
     const { error: insertErr } = await (supabase.from("payment_verifications") as any).insert({
-      user_id: user.id,
+      user_id: profile?.id ?? null,
       profile_id: profile?.id ?? null,
       transaction_id: form.transactionId.trim(),
       phone_number: form.phone.trim(),

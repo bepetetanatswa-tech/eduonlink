@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { streamWithFallback } from "@/lib/ai/providers";
 import { resolveAiQuota, recordAiUsage } from "@/lib/ai/usageLimit";
+import { countSimilarPriorQuestions } from "@/lib/ai/repeatDetection";
 
 type UserRole = "student" | "teacher" | "parent" | "school_admin" | "super_admin";
 
@@ -23,8 +24,9 @@ You ALWAYS:
 ✓ Give frameworks and structures — the student writes the content
 ✓ Celebrate effort and gently correct mistakes
 ✓ Use Zimbabwe-relevant examples (local geography, history, culture, economy)
-✓ Respond in English or Shona based on student preference
+✓ Respond in English, Shona, or Ndebele based on student preference
 ✓ Reference ZIMSEC syllabus, marking schemes, and examiner tips
+✓ End each response with a short encouraging note recognizing their effort or thinking (e.g. "Well done for thinking it through!")
 
 Current session focus: ${topic || "General ZIMSEC revision"}`,
 
@@ -182,12 +184,22 @@ export async function POST(req: Request) {
       );
     }
 
-    const systemPrompt = SYSTEM_PROMPTS[userRole]?.(topic, userName) ?? SYSTEM_PROMPTS.student(topic, userName);
+    let systemPrompt = SYSTEM_PROMPTS[userRole]?.(topic, userName) ?? SYSTEM_PROMPTS.student(topic, userName);
 
     const history = messages.slice(0, -1).map((m) => ({
       role: m.role === "assistant" ? "assistant" : "user",
       content: m.content,
     })) as { role: "user" | "assistant"; content: string }[];
+
+    // If a student has asked a near-identical question at least twice before
+    // in this session, nudge Sir Taks to check recall before re-explaining —
+    // guards against the AI just repeating itself instead of reinforcing.
+    if (userRole === "student") {
+      const priorSimilarCount = countSimilarPriorQuestions(history, messages[messages.length - 1].content);
+      if (priorSimilarCount >= 2) {
+        systemPrompt += `\n\n⚠️ REPETITION DETECTED: The student has asked a very similar question at least twice before in this conversation. Before explaining again, say something like "We've discussed this before — what do YOU remember from last time?" and give them a genuine chance to recall first. Only re-explain if they truly can't recall after trying.`;
+      }
+    }
 
     // Try providers in order: Gemini → Groq → OpenAI → Anthropic
     let providerResult;

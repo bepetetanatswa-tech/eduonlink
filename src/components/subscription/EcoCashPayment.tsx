@@ -84,9 +84,9 @@ export function EcoCashPayment({ plan, creditPack, username, onSuccess, onBack }
     }
 
     await (supabase.from("notifications") as any).insert({
-      user_id: user.id,
+      user_id: profile?.id ?? null,
       title: "Payment submitted — awaiting approval",
-      body: `Your ${itemName} payment of $${price} is under review. You will be notified once approved (usually within a few hours).`,
+      message: `Your ${itemName} payment of $${price} is under review. You will be notified once approved (usually within a few hours).`,
       type: "info",
     });
 

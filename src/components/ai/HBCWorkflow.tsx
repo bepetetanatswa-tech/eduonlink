@@ -165,7 +165,7 @@ export function HBCWorkflow({ project, stages: initialStages, profileId }: Props
           await (supabase.from("notifications") as any).insert({
             user_id: profileId,
             title: "🏅 Independent Thinker badge earned!",
-            body: `You completed "${project.title}" with minimal AI help — that's real independent thinking.`,
+            message: `You completed "${project.title}" with minimal AI help — that's real independent thinking.`,
             type: "success",
           });
         }

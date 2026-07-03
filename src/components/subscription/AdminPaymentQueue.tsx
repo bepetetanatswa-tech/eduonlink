@@ -12,7 +12,7 @@ interface PV {
   amount: number; plan_key: string | null; credit_pack_key: string | null; credit_type: string | null;
   credit_amount: number | null; status: string; screenshot_url: string | null; purchase_type: string | null;
   rejection_reason: string | null; created_at: string;
-  profile?: { id: string; full_name: string; email: string; role: string } | null;
+  profile?: { id: string; user_id: string; full_name: string; email: string; role: string } | null;
 }
 
 const REJECTION_PRESETS = ["Wrong amount sent", "Fake transaction ID", "Transaction not found on EcoCash", "Reference code missing", "Duplicate submission", "Phone number blacklisted"];
@@ -36,7 +36,7 @@ export function AdminPaymentQueue({ statusFilter = "pending", onCountChange }: {
   const load = async () => {
     setLoading(true);
     const { data } = await (supabase.from("payment_verifications") as any)
-      .select("*, profile:profiles!payment_verifications_profile_id_fkey(id,full_name,email,role)")
+      .select("*, profile:profiles!payment_verifications_profile_id_fkey(id,user_id,full_name,email,role)")
       .eq("status", statusFilter)
       .order("created_at", { ascending: false })
       .limit(200);
@@ -71,9 +71,11 @@ export function AdminPaymentQueue({ statusFilter = "pending", onCountChange }: {
         : pv.credit_type === "certificates" ? "certificates"
         : "school_seats";
 
-      const { data: existing } = await (supabase.from("user_credits") as any).select(col).eq("user_id", pv.user_id).maybeSingle();
+      // user_credits.user_id references auth.users(id), unlike payment_verifications.user_id (profiles.id)
+      const authUserId = pv.profile?.user_id;
+      const { data: existing } = await (supabase.from("user_credits") as any).select(col).eq("user_id", authUserId).maybeSingle();
       const current = existing?.[col] ?? 0;
-      const { error: creditErr } = await (supabase.from("user_credits") as any).upsert({ user_id: pv.user_id, [col]: current + pv.credit_amount }, { onConflict: "user_id" });
+      const { error: creditErr } = await (supabase.from("user_credits") as any).upsert({ user_id: authUserId, [col]: current + pv.credit_amount }, { onConflict: "user_id" });
 
       if (creditErr) {
         notify("error", `Payment marked approved, but crediting the account failed: ${creditErr.message}. Fix manually.`);
@@ -85,7 +87,7 @@ export function AdminPaymentQueue({ statusFilter = "pending", onCountChange }: {
       await (supabase.from("notifications") as any).insert({
         user_id: pv.user_id,
         title: "Credits added to your account! 🎉",
-        body: `${pv.credit_amount} ${pv.credit_type?.replace(/_/g, " ")} credits have been added to your account.`,
+        message: `${pv.credit_amount} ${pv.credit_type?.replace(/_/g, " ")} credits have been added to your account.`,
         type: "success",
       });
     } else {
@@ -116,7 +118,7 @@ export function AdminPaymentQueue({ statusFilter = "pending", onCountChange }: {
       await (supabase.from("notifications") as any).insert({
         user_id: pv.user_id,
         title: `Payment approved! Your ${planName} is now active 🎉`,
-        body: `Welcome to Educonnect Pro! Your subscription runs until ${end.toLocaleDateString()}. Enjoy full access!`,
+        message: `Welcome to Educonnect Pro! Your subscription runs until ${end.toLocaleDateString()}. Enjoy full access!`,
         type: "success",
       });
     }
@@ -137,7 +139,7 @@ export function AdminPaymentQueue({ statusFilter = "pending", onCountChange }: {
     await (supabase.from("notifications") as any).insert({
       user_id: pv.user_id,
       title: "Payment verification failed",
-      body: `Your payment of $${pv.amount} was not approved. Reason: ${reason}. Please contact support if you believe this is an error.`,
+      message: `Your payment of $${pv.amount} was not approved. Reason: ${reason}. Please contact support if you believe this is an error.`,
       type: "error",
     });
     notify("success", "Payment rejected");

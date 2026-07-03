@@ -213,7 +213,7 @@ export async function POST(req: Request) {
               .map((t: { user_id: string }) => ({
                 user_id: t.user_id,
                 title: "Possible AI over-reliance",
-                body: `${userName} has asked Sir Taks a very similar question repeatedly on "${topic}" — may need extra support with this topic.`,
+                message: `${userName} has asked Sir Taks a very similar question repeatedly on "${topic}" — may need extra support with this topic.`,
                 type: "warning",
                 link: "/teacher/dashboard/ai-usage",
               }));

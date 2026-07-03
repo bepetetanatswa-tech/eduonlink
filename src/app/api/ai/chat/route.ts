@@ -198,6 +198,28 @@ export async function POST(req: Request) {
       const priorSimilarCount = countSimilarPriorQuestions(history, messages[messages.length - 1].content);
       if (priorSimilarCount >= 2) {
         systemPrompt += `\n\n⚠️ REPETITION DETECTED: The student has asked a very similar question at least twice before in this conversation. Before explaining again, say something like "We've discussed this before — what do YOU remember from last time?" and give them a genuine chance to recall first. Only re-explain if they truly can't recall after trying.`;
+
+        // Best-effort dependency alert to the student's teacher(s) — only on
+        // the first repetition in a session, not every subsequent message.
+        if (priorSimilarCount === 2) {
+          (async () => {
+            const { data: membership } = await (admin.from("school_members") as any)
+              .select("school_id").eq("user_id", profileId).maybeSingle();
+            if (!membership?.school_id) return;
+            const { data: teachers } = await (admin.from("school_members") as any)
+              .select("user_id").eq("school_id", membership.school_id).eq("role", "teacher");
+            const notifs = (teachers ?? [])
+              .filter((t: { user_id: string }) => t.user_id !== profileId)
+              .map((t: { user_id: string }) => ({
+                user_id: t.user_id,
+                title: "Possible AI over-reliance",
+                body: `${userName} has asked Sir Taks a very similar question repeatedly on "${topic}" — may need extra support with this topic.`,
+                type: "warning",
+                link: "/teacher/dashboard/ai-usage",
+              }));
+            if (notifs.length) await (admin.from("notifications") as any).insert(notifs);
+          })().catch((err) => console.warn("[AI Chat] dependency alert failed:", err));
+        }
       }
     }
 

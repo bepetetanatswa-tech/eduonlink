@@ -61,7 +61,7 @@ function renderAIText(text: string) {
   });
 }
 
-export function HBCWorkflow({ project, stages: initialStages }: Props) {
+export function HBCWorkflow({ project, stages: initialStages, profileId }: Props) {
   const [stages, setStages] = useState<Stage[]>(() => {
     // Ensure all 6 stages exist in state
     return STAGE_DEFS.map((def) => {
@@ -152,6 +152,24 @@ export function HBCWorkflow({ project, stages: initialStages }: Props) {
       await (supabase.from("hbc_projects") as any)
         .update({ stage: Math.min(def.num + 1, 6), status: def.num === 6 ? "submitted" : "in_progress", updated_at: now })
         .eq("id", project.id);
+    }
+
+    // Award "Independent Thinker" badge if the whole project was completed
+    // with minimal AI blueprint/feedback requests (guided-learning spec).
+    if (def.num === 6) {
+      const aiRequestCount = stages.filter((s) => s.ai_feedback).length;
+      if (aiRequestCount <= 1) {
+        const { error: badgeErr } = await (supabase.from("student_badges") as any)
+          .insert({ student_id: profileId, badge_key: "independent_thinker", context: { project_id: project.id } });
+        if (!badgeErr) {
+          await (supabase.from("notifications") as any).insert({
+            user_id: profileId,
+            title: "🏅 Independent Thinker badge earned!",
+            body: `You completed "${project.title}" with minimal AI help — that's real independent thinking.`,
+            type: "success",
+          });
+        }
+      }
     }
 
     setStages((prev) => prev.map((s, i) => i === activeStage ? { ...s, id: stageId ?? s.id, submitted_at: now } : s));

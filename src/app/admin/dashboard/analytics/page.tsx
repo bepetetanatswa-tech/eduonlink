@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { StatCard } from "@/components/dashboard/StatCard";
+import { ActivityLinks } from "./ActivityLinks";
 
 function BarChart({ data, color = "#4D7FFF" }: { data: { label: string; value: number }[]; color?: string }) {
   if (data.length === 0) return null;
@@ -147,24 +147,13 @@ export default async function AnalyticsPage() {
       </div>
 
       {/* Platform activity summary */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 }}>
-        {[
+      <ActivityLinks
+        items={[
           { label: "Total Assignments", value: assignments, link: "/admin/dashboard/courses", color: "#4D7FFF" },
           { label: "Active Courses", value: courses, link: "/admin/dashboard/courses", color: "#F5A623" },
           { label: "AI Sessions", value: aiConvos, link: "/admin/dashboard/ai", color: "#BD93F9" },
-        ].map((item) => (
-          <Link key={item.label} href={item.link} style={{ textDecoration: "none" }}>
-            <div
-              style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14, padding: "16px 18px", transition: "border-color 0.15s" }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = `${item.color}30`; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.06)"; }}
-            >
-              <p style={{ fontSize: 24, fontWeight: 700, color: item.color, margin: "0 0 4px", fontFamily: "'Space Grotesk', sans-serif" }}>{item.value}</p>
-              <p style={{ fontSize: 12, color: "#4A5170", margin: 0 }}>{item.label}</p>
-            </div>
-          </Link>
-        ))}
-      </div>
+        ]}
+      />
     </div>
   );
 }

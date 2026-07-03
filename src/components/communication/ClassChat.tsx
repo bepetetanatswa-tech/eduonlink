@@ -3,6 +3,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { LinkPreviewCard, extractFirstUrl } from "./LinkPreviewCard";
 
 interface Sender { id: string; full_name: string; avatar_url: string | null; role: string }
 interface Reaction { emoji: string; user_id: string }
@@ -52,6 +53,17 @@ function fmt(iso: string) {
   return d.toLocaleDateString([], { day: "numeric", month: "short" }) + " " + d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
+function dayLabel(iso: string) {
+  const d = new Date(iso);
+  const now = new Date();
+  const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+  if (d.toDateString() === now.toDateString()) return "Today";
+  if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
+  const daysAgo = Math.floor((now.getTime() - d.getTime()) / 86400000);
+  if (daysAgo < 7) return d.toLocaleDateString([], { weekday: "long" });
+  return d.toLocaleDateString([], { weekday: "long", day: "numeric", month: "long" });
+}
+
 export function ClassChat({ classId, profileId, userName, className, isTeacher = false }: Props) {
   const supabase = createClient();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -67,10 +79,17 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
   const [sending, setSending] = useState(false);
   const [showMute, setShowMute] = useState<string | null>(null);
   const [isMuted, setIsMuted] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [recordSeconds, setRecordSeconds] = useState(0);
+  const [forwarding, setForwarding] = useState<ChatMessage | null>(null);
+  const [myClasses, setMyClasses] = useState<{ id: string; name: string }[] | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const presenceChannelRef = useRef<any>(null);
   const typingTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordChunksRef = useRef<Blob[]>([]);
+  const recordTimerRef = useRef<ReturnType<typeof setInterval>>();
 
   const scrollToBottom = useCallback(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -228,6 +247,96 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
     setUploading(false);
   }
 
+  async function startRecording() {
+    if (isMuted || recording) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      recordChunksRef.current = [];
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) recordChunksRef.current.push(e.data); };
+      recorder.onstop = () => {
+        stream.getTracks().forEach((t) => t.stop());
+        clearInterval(recordTimerRef.current);
+        const seconds = recordSeconds;
+        setRecording(false);
+        setRecordSeconds(0);
+        if (seconds < 1) return; // too short — treat as cancelled
+        const blob = new Blob(recordChunksRef.current, { type: "audio/webm" });
+        uploadVoiceNote(blob, seconds);
+      };
+      mediaRecorderRef.current = recorder;
+      recorder.start();
+      setRecording(true);
+      setRecordSeconds(0);
+      recordTimerRef.current = setInterval(() => setRecordSeconds((s) => s + 1), 1000);
+    } catch {
+      // permission denied or no mic — silently no-op, button just won't record
+    }
+  }
+
+  function stopRecording(cancel = false) {
+    if (!mediaRecorderRef.current || mediaRecorderRef.current.state === "inactive") return;
+    if (cancel) recordChunksRef.current = [];
+    mediaRecorderRef.current.stop();
+  }
+
+  async function uploadVoiceNote(blob: Blob, seconds: number) {
+    setUploading(true);
+    try {
+      const filename = `voice-${Date.now()}.webm`;
+      const presignRes = await fetch("/api/uploads/presign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category: "voice-note", filename, contentType: "audio/webm", fileSize: blob.size, ids: { classId } }),
+      });
+      if (!presignRes.ok) throw new Error("presign failed");
+      const { uploadUrl, fileUrl } = await presignRes.json();
+
+      const putRes = await fetch(uploadUrl, { method: "PUT", headers: { "Content-Type": "audio/webm" }, body: blob });
+      if (!putRes.ok) throw new Error("upload failed");
+
+      const mins = Math.floor(seconds / 60), secs = seconds % 60;
+      await (supabase.from("messages") as any).insert({
+        sender_id: profileId,
+        class_id: classId,
+        content: `${mins}:${secs.toString().padStart(2, "0")}`,
+        message_type: "voice",
+        file_url: fileUrl,
+        attachment_name: "voice-note.webm",
+        parent_id: replyTo?.id ?? null,
+      });
+      setReplyTo(null);
+    } catch {
+      // best-effort, matches uploadFile's existing lack of error UI
+    }
+    setUploading(false);
+  }
+
+  async function openForward(msg: ChatMessage) {
+    setForwarding(msg);
+    setShowEmoji(null);
+    if (myClasses === null) {
+      const { data } = isTeacher
+        ? await (supabase.from("classes") as any).select("id,name").eq("teacher_id", profileId).order("name")
+        : await (supabase.from("class_enrollments") as any).select("classes(id,name)").eq("student_id", profileId).eq("status", "active");
+      const list = isTeacher ? (data ?? []) : (data ?? []).map((r: any) => r.classes).filter(Boolean);
+      setMyClasses(list.filter((c: { id: string }) => c.id !== classId));
+    }
+  }
+
+  async function forwardTo(targetClassId: string) {
+    if (!forwarding) return;
+    await (supabase.from("messages") as any).insert({
+      sender_id: profileId,
+      class_id: targetClassId,
+      content: forwarding.content,
+      message_type: forwarding.message_type,
+      file_url: forwarding.file_url,
+      attachment_name: forwarding.attachment_name,
+    });
+    setForwarding(null);
+  }
+
   async function toggleReaction(messageId: string, emoji: string) {
     const msg = messages.find(m => m.id === messageId);
     const already = msg?.reactions.find(r => r.emoji === emoji && r.user_id === profileId);
@@ -321,15 +430,23 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
           const isOwn = msg.sender_id === profileId;
           const showAvatar = !isOwn && (i === 0 || displayed[i - 1].sender_id !== msg.sender_id);
           const showName = !isOwn && showAvatar;
+          const showDateDivider = i === 0 || new Date(displayed[i - 1].created_at).toDateString() !== new Date(msg.created_at).toDateString();
           const grouped = msg.reactions.reduce<{ emoji: string; count: number; users: string[] }[]>((acc, r) => {
             const ex = acc.find(a => a.emoji === r.emoji);
             if (ex) { ex.count++; ex.users.push(r.user_id); }
             else acc.push({ emoji: r.emoji, count: 1, users: [r.user_id] });
             return acc;
           }, []);
+          const url = msg.message_type === "text" ? extractFirstUrl(msg.content) : null;
 
           return (
-            <div key={msg.id} style={{ display: "flex", flexDirection: isOwn ? "row-reverse" : "row", gap: 8, alignItems: "flex-end", marginBottom: 4, position: "relative" }}
+            <div key={msg.id}>
+            {showDateDivider && (
+              <div style={{ display: "flex", justifyContent: "center", margin: "12px 0" }}>
+                <span style={{ fontSize: 11, color: S.dim, background: "rgba(255,255,255,0.05)", padding: "3px 12px", borderRadius: 20 }}>{dayLabel(msg.created_at)}</span>
+              </div>
+            )}
+            <div style={{ display: "flex", flexDirection: isOwn ? "row-reverse" : "row", gap: 8, alignItems: "flex-end", marginBottom: 4, position: "relative" }}
               onMouseLeave={() => setShowEmoji(null)}>
               {/* Avatar */}
               {!isOwn && (
@@ -372,8 +489,16 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
                       {msg.attachment_name}
                     </a>
                   )}
+                  {msg.message_type === "voice" && msg.file_url && (
+                    <div style={{ marginBottom: 4 }}>
+                      <audio controls src={msg.file_url} style={{ height: 32, maxWidth: 220 }} />
+                    </div>
+                  )}
                   {(msg.message_type === "text" || msg.message_type === "video_link") && (
-                    <p style={{ fontSize: 13, color: S.text, lineHeight: 1.5, margin: 0, wordBreak: "break-word" }}>{msg.content}</p>
+                    <>
+                      <p style={{ fontSize: 13, color: S.text, lineHeight: 1.5, margin: 0, wordBreak: "break-word" }}>{msg.content}</p>
+                      {url && <LinkPreviewCard url={url} />}
+                    </>
                   )}
                   <p style={{ fontSize: 10, color: isOwn ? "rgba(205,214,244,0.5)" : S.dim, marginTop: 4, textAlign: "right" }}>{fmt(msg.created_at)}{msg.is_pinned && " 📌"}</p>
 
@@ -388,6 +513,7 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
                         </button>
                       ))}
                       <button onClick={() => setReplyTo(msg)} style={{ background: "none", border: "none", cursor: "pointer", padding: "3px", color: S.muted, fontSize: 11 }} title="Reply">↩</button>
+                      <button onClick={() => openForward(msg)} style={{ background: "none", border: "none", cursor: "pointer", padding: "3px", color: S.muted, fontSize: 11 }} title="Forward">➦</button>
                       {isOwn && <button onClick={() => deleteMessage(msg.id)} style={{ background: "none", border: "none", cursor: "pointer", padding: "3px", color: "#FF6B6B", fontSize: 11 }} title="Delete">✕</button>}
                       {isTeacher && !isOwn && (
                         <>
@@ -411,6 +537,7 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
                   </div>
                 )}
               </div>
+            </div>
             </div>
           );
         })}
@@ -442,6 +569,31 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
         </div>
       )}
 
+      {/* Forward message */}
+      {forwarding && (
+        <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}>
+          <div style={{ background: "#0E1117", border: `1px solid ${S.border}`, borderRadius: 14, padding: 20, width: 300, maxHeight: 400, display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <span style={{ fontSize: 14, fontWeight: 600, color: S.text }}>Forward to…</span>
+              <button onClick={() => setForwarding(null)} style={{ background: "none", border: "none", color: S.dim, cursor: "pointer", fontSize: 16 }}>✕</button>
+            </div>
+            <div style={{ overflowY: "auto", display: "flex", flexDirection: "column", gap: 6 }}>
+              {myClasses === null ? (
+                <p style={{ fontSize: 12, color: S.dim, textAlign: "center", padding: "12px 0" }}>Loading…</p>
+              ) : myClasses.length === 0 ? (
+                <p style={{ fontSize: 12, color: S.dim, textAlign: "center", padding: "12px 0" }}>No other classes available</p>
+              ) : (
+                myClasses.map((c) => (
+                  <button key={c.id} onClick={() => forwardTo(c.id)} style={{ textAlign: "left", padding: "10px 12px", borderRadius: 10, border: `1px solid ${S.border}`, background: "rgba(255,255,255,0.02)", color: S.text, fontSize: 13, cursor: "pointer" }}>
+                    {c.name}
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Input */}
       <div style={{ padding: "10px 14px", borderTop: `1px solid ${S.border}`, background: "#0A0B10", flexShrink: 0 }}>
         {isMuted && (
@@ -468,12 +620,25 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
           >
             {uploading ? <span style={{ fontSize: 11 }}>…</span> : <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>}
           </button>
+          <button
+            onMouseDown={startRecording}
+            onMouseUp={() => stopRecording(false)}
+            onMouseLeave={() => { if (recording) stopRecording(true); }}
+            onTouchStart={(e) => { e.preventDefault(); startRecording(); }}
+            onTouchEnd={(e) => { e.preventDefault(); stopRecording(false); }}
+            disabled={isMuted || uploading}
+            title="Hold to record a voice note"
+            style={{ width: 36, height: 36, borderRadius: 10, border: `1px solid ${recording ? "#FF6B6B" : S.border}`, background: recording ? "rgba(255,107,107,0.15)" : "rgba(255,255,255,0.04)", color: recording ? "#FF6B6B" : S.muted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, position: "relative" }}
+          >
+            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" /></svg>
+            {recording && <span style={{ position: "absolute", bottom: -16, fontSize: 9, color: "#FF6B6B", whiteSpace: "nowrap" }}>{recordSeconds}s</span>}
+          </button>
           <input
             value={input}
             onChange={e => handleInputChange(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-            placeholder={isMuted ? "You are muted" : "Type a message…"}
-            disabled={isMuted}
+            placeholder={isMuted ? "You are muted" : recording ? "Recording…" : "Type a message…"}
+            disabled={isMuted || recording}
             style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}`, borderRadius: 10, padding: "9px 14px", fontSize: 13, color: S.text, outline: "none", resize: "none" }}
           />
           <button

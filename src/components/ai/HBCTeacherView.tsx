@@ -159,6 +159,13 @@ export function HBCTeacherView({ teacherId, projects, hasSchool }: { teacherId: 
                             <p style={{ fontSize: 11, color: "#4A5170", margin: "0 0 10px", fontStyle: "italic" }}>Not yet submitted by student</p>
                           )}
 
+                          {s.ai_feedback && (
+                            <div style={{ marginBottom: 10, padding: "10px 12px", background: "rgba(189,147,249,0.06)", border: "1px solid rgba(189,147,249,0.15)", borderRadius: 8 }}>
+                              <p style={{ fontSize: 10, fontWeight: 700, color: "#BD93F9", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.05em" }}>🎓 Sir Taks Blueprint/Feedback</p>
+                              <p style={{ fontSize: 12, color: "#8892B0", margin: 0, lineHeight: 1.6, whiteSpace: "pre-wrap", maxHeight: 120, overflowY: "auto" }}>{s.ai_feedback.replace("[BLUEPRINT]\n", "")}</p>
+                            </div>
+                          )}
+
                           <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
                             <div style={{ flex: 1 }}>
                               <label style={{ fontSize: 10, color: "#4A5170", display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>Your Comment</label>

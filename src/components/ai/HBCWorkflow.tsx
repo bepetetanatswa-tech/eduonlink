@@ -177,27 +177,40 @@ export function HBCWorkflow({ project, stages: initialStages, profileId }: Props
     setSaving(false);
   };
 
+  async function streamHbc(body: Record<string, unknown>, fallbackErr: string): Promise<string | null> {
+    const res = await fetch("/api/ai/hbc", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok || !res.body) {
+      const data = await res.json().catch(() => ({}));
+      notify("error", friendlyAiError(data, fallbackErr));
+      return null;
+    }
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let accumulated = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      accumulated += decoder.decode(value, { stream: true });
+      setStages((prev) => prev.map((s, i) => i === activeStage ? { ...s, ai_feedback: body.mode === "blueprint" ? `[BLUEPRINT]\n${accumulated}` : accumulated } : s));
+    }
+    return accumulated;
+  }
+
   const getBlueprint = async () => {
     setAiLoading("blueprint");
     setStages((prev) => prev.map((s, i) => i === activeStage ? { ...s, ai_feedback: null } : s));
     try {
-      const res = await fetch("/api/ai/hbc", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mode: "blueprint",
-          stageNumber: currentStageDef.num,
-          projectTitle: project.title,
-          subject: project.subject,
-          projectId: project.id,
-        }),
-      });
-      const data = await res.json();
-      if (data.result) {
-        setStages((prev) => prev.map((s, i) => i === activeStage ? { ...s, ai_feedback: `[BLUEPRINT]\n${data.result}` } : s));
-      } else {
-        notify("error", friendlyAiError(data, "Could not generate blueprint. Check AI configuration."));
-      }
+      await streamHbc({
+        mode: "blueprint",
+        stageNumber: currentStageDef.num,
+        projectTitle: project.title,
+        subject: project.subject,
+        projectId: project.id,
+      }, "Could not generate blueprint. Check AI configuration.");
     } catch {
       notify("error", "Connection error. Try again.");
     }
@@ -211,27 +224,19 @@ export function HBCWorkflow({ project, stages: initialStages, profileId }: Props
     }
     setAiLoading("feedback");
     try {
-      const res = await fetch("/api/ai/hbc", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mode: "feedback",
-          stageNumber: currentStageDef.num,
-          stageContent: currentStage.content,
-          projectTitle: project.title,
-          subject: project.subject,
-          projectId: project.id,
-        }),
-      });
-      const data = await res.json();
-      if (data.result) {
+      const result = await streamHbc({
+        mode: "feedback",
+        stageNumber: currentStageDef.num,
+        stageContent: currentStage.content,
+        projectTitle: project.title,
+        subject: project.subject,
+        projectId: project.id,
+      }, "Feedback unavailable. Check AI configuration.");
+      if (result) {
         const stageToUpdate = stages[activeStage];
         if (stageToUpdate.id) {
-          await (supabase.from("hbc_stages") as any).update({ ai_feedback: data.result }).eq("id", stageToUpdate.id);
+          await (supabase.from("hbc_stages") as any).update({ ai_feedback: result }).eq("id", stageToUpdate.id);
         }
-        setStages((prev) => prev.map((s, i) => i === activeStage ? { ...s, ai_feedback: data.result } : s));
-      } else {
-        notify("error", friendlyAiError(data, "Feedback unavailable. Check AI configuration."));
       }
     } catch {
       notify("error", "Connection error. Try again.");

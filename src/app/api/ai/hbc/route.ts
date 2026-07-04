@@ -127,14 +127,36 @@ Review this submission. Guide and question — do NOT rewrite or give away the a
       return Response.json({ error: err?.message ?? "All AI providers failed" }, { status: 503 });
     }
 
-    let result = "";
-    for await (const chunk of providerResult.stream) result += chunk;
+    const { stream: aiStream, getUsage } = providerResult;
 
-    const usage = await providerResult.getUsage();
-    const tokensUsed = usage ? usage.promptTokens + usage.completionTokens : 0;
-    await recordAiUsage(admin, profile.id, quota.usageRow, tokensUsed);
+    // Was buffering the entire response server-side before replying at all
+    // (for await ... result += chunk, then a single JSON response) — the
+    // student saw nothing until generation fully finished. Streams now,
+    // same pattern as /api/ai/chat.
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const text of aiStream) {
+            if (text) controller.enqueue(new TextEncoder().encode(text));
+          }
+        } catch (streamErr: any) {
+          console.error("[AI HBC] Stream error:", streamErr?.message ?? streamErr);
+        } finally {
+          controller.close();
+          try {
+            const usage = await getUsage();
+            const tokensUsed = usage ? usage.promptTokens + usage.completionTokens : 0;
+            await recordAiUsage(admin, profile.id, quota.usageRow, tokensUsed);
+          } catch (trackErr) {
+            console.warn("[AI HBC] Usage tracking failed:", trackErr);
+          }
+        }
+      },
+    });
 
-    return Response.json({ result, mode });
+    return new Response(stream, {
+      headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-cache" },
+    });
   } catch (err) {
     console.error("[AI HBC]", err);
     return Response.json({ error: "AI service error" }, { status: 500 });

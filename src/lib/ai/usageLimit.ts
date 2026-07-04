@@ -21,40 +21,38 @@ const STUDENT_PRO_DAILY_LIMIT = 20;
 export async function resolveAiQuota(admin: any, profileId: string, role: string): Promise<AiQuota> {
   const today = new Date().toISOString().split("T")[0];
 
-  const { data: usageRow } = await admin
-    .from("ai_usage")
-    .select("id, questions_used, tokens_used")
-    .eq("user_id", profileId)
-    .eq("date", today)
-    .maybeSingle();
-
-  const used: number = usageRow?.questions_used ?? 0;
-
   if (role !== "student") {
-    return { limit: null, used, usageRow: usageRow ?? null };
+    // Non-students are always unlimited — no need to touch subscriptions/
+    // school_members/platform_settings at all, just the usage counter.
+    const { data: usageRow } = await admin
+      .from("ai_usage")
+      .select("id, questions_used, tokens_used")
+      .eq("user_id", profileId)
+      .eq("date", today)
+      .maybeSingle();
+    return { limit: null, used: usageRow?.questions_used ?? 0, usageRow: usageRow ?? null };
   }
 
-  // 1. Personal subscription — plan_key is the real plan slug (student_pro,
-  // free_student, ...). `plan` is a legacy generic enum and must not be used.
-  const { data: personalSub } = await admin
-    .from("subscriptions")
-    .select("plan_key, status")
-    .eq("user_id", profileId)
-    .in("status", ["active", "trial"])
-    .maybeSingle();
+  // These four don't depend on each other's results, only the final decision
+  // does — fetching them in parallel instead of one-after-another was adding
+  // up to 4 sequential round-trips of pure latency before the AI call even
+  // started. schoolSub is the one genuine dependency (needs membership's
+  // school_id first) so it can't join this batch.
+  const [{ data: usageRow }, { data: personalSub }, { data: membership }, { data: settingRow }] = await Promise.all([
+    admin.from("ai_usage").select("id, questions_used, tokens_used").eq("user_id", profileId).eq("date", today).maybeSingle(),
+    // plan_key is the real plan slug (student_pro, free_student, ...). `plan` is a legacy generic enum and must not be used.
+    admin.from("subscriptions").select("plan_key, status").eq("user_id", profileId).in("status", ["active", "trial"]).maybeSingle(),
+    admin.from("school_members").select("school_id").eq("user_id", profileId).maybeSingle(),
+    admin.from("platform_settings").select("value").eq("key", "free_ai_daily_limit").maybeSingle(),
+  ]);
+
+  const used: number = usageRow?.questions_used ?? 0;
 
   if (personalSub?.plan_key === "student_pro") {
     return { limit: STUDENT_PRO_DAILY_LIMIT, used, usageRow: usageRow ?? null };
   }
 
-  // 2. School-tier — unlimited if the student's school has an active
-  // school_* subscription.
-  const { data: membership } = await admin
-    .from("school_members")
-    .select("school_id")
-    .eq("user_id", profileId)
-    .maybeSingle();
-
+  // School-tier — unlimited if the student's school has an active school_* subscription.
   if (membership?.school_id) {
     const { data: schoolSub } = await admin
       .from("subscriptions")
@@ -68,13 +66,7 @@ export async function resolveAiQuota(admin: any, profileId: string, role: string
     }
   }
 
-  // 3. Free tier — admin-configurable, defaults to 5.
-  const { data: settingRow } = await admin
-    .from("platform_settings")
-    .select("value")
-    .eq("key", "free_ai_daily_limit")
-    .maybeSingle();
-
+  // Free tier — admin-configurable, defaults to 5.
   const parsed = Number(settingRow?.value);
   const limit = Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_FREE_DAILY_LIMIT;
 

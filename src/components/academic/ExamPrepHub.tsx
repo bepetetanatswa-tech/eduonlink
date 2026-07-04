@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { uploadToR2 } from "@/lib/uploadToR2";
 
 interface Paper { id: string; title: string; subject: string; year: number | null; level: string | null; description: string | null; file_url: string | null }
 interface Question { question: string; options: string[]; answer: string; explanation: string; type: "mcq" | "essay" }
@@ -11,12 +12,23 @@ const S = { border: "rgba(255,255,255,0.07)", text: "#CDD6F4", muted: "#8892B0",
 const inp: React.CSSProperties = { width: "100%", padding: "9px 12px", background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}`, borderRadius: 9, color: S.text, fontSize: 13, outline: "none", boxSizing: "border-box" };
 
 const SUBJECTS = ["Mathematics","English Language","Chemistry","Physics","Biology","History","Geography","Computer Science"];
+const LEVELS = ["Primary", "O-Level", "A-Level"];
 
-export function ExamPrepHub({ profileId }: { profileId: string }) {
+export function ExamPrepHub({ profileId, isStaff }: { profileId: string; isStaff?: boolean }) {
   const supabase = createClient();
   const [tab, setTab] = useState<"papers"|"practice"|"mock">("papers");
   const [papers, setPapers] = useState<Paper[]>([]);
   const [filterSubject, setFilterSubject] = useState("All");
+  const [showUpload, setShowUpload] = useState(false);
+  const [fTitle, setFTitle] = useState("");
+  const [fSubject, setFSubject] = useState(SUBJECTS[0]);
+  const [fLevel, setFLevel] = useState(LEVELS[1]);
+  const [fYear, setFYear] = useState(new Date().getFullYear().toString());
+  const [fDesc, setFDesc] = useState("");
+  const [fFile, setFFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadPct, setUploadPct] = useState(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [practiceSubject, setPracticeSubject] = useState("Mathematics");
   const [practiceQuestions, setPracticeQuestions] = useState<Question[]>([]);
   const [practiceLoading, setPracticeLoading] = useState(false);
@@ -34,6 +46,27 @@ export function ExamPrepHub({ profileId }: { profileId: string }) {
     const { data } = await (supabase.from("exam_papers") as any)
       .select("*").order("year", { ascending: false });
     setPapers(data ?? []);
+  };
+
+  const uploadPaper = async () => {
+    if (!fTitle.trim() || !fFile) return;
+    setUploading(true);
+    setUploadError(null);
+    setUploadPct(0);
+    try {
+      const { fileUrl } = await uploadToR2(fFile, "past-paper", { level: fLevel, subject: fSubject, year: fYear }, setUploadPct);
+      await (supabase.from("exam_papers") as any).insert({
+        title: fTitle.trim(), subject: fSubject, level: fLevel,
+        year: parseInt(fYear, 10) || null, description: fDesc.trim() || null,
+        file_url: fileUrl, uploaded_by: profileId,
+      });
+      setFTitle(""); setFDesc(""); setFFile(null);
+      setShowUpload(false);
+      loadPapers();
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "Upload failed");
+    }
+    setUploading(false);
   };
 
   const loadSessions = async () => {
@@ -147,12 +180,42 @@ export function ExamPrepHub({ profileId }: { profileId: string }) {
       {/* PAST PAPERS */}
       {tab === "papers" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
             <select value={filterSubject} onChange={e => setFilterSubject(e.target.value)} style={{ ...inp, width: "auto" }}>
               <option value="All">All Subjects</option>
               {SUBJECTS.map(s => <option key={s} value={s} style={{ background: "#0E1117" }}>{s}</option>)}
             </select>
+            {isStaff && (
+              <button onClick={() => setShowUpload(p => !p)}
+                style={{ padding: "9px 16px", borderRadius: 9, background: S.accent, border: "none", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                + Upload Paper
+              </button>
+            )}
           </div>
+
+          {isStaff && showUpload && (
+            <div style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${S.border}`, borderRadius: 14, padding: 18, display: "flex", flexDirection: "column", gap: 10 }}>
+              <input value={fTitle} onChange={e => setFTitle(e.target.value)} placeholder="Title * (e.g. 2023 Paper 1)" style={inp} />
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+                <select value={fSubject} onChange={e => setFSubject(e.target.value)} style={inp}>
+                  {SUBJECTS.map(s => <option key={s} value={s} style={{ background: "#0E1117" }}>{s}</option>)}
+                </select>
+                <select value={fLevel} onChange={e => setFLevel(e.target.value)} style={inp}>
+                  {LEVELS.map(l => <option key={l} value={l} style={{ background: "#0E1117" }}>{l}</option>)}
+                </select>
+                <input value={fYear} onChange={e => setFYear(e.target.value)} placeholder="Year" style={inp} />
+              </div>
+              <input value={fDesc} onChange={e => setFDesc(e.target.value)} placeholder="Description (optional, e.g. Paper 2 with mark scheme)" style={inp} />
+              <input type="file" accept="application/pdf" onChange={e => setFFile(e.target.files?.[0] ?? null)} style={{ fontSize: 12, color: S.muted }} />
+              {uploading && <p style={{ fontSize: 12, color: S.accent, margin: 0 }}>Uploading… {uploadPct}%</p>}
+              {uploadError && <p style={{ fontSize: 12, color: "#FF6B6B", margin: 0 }}>{uploadError}</p>}
+              <button onClick={uploadPaper} disabled={uploading || !fTitle.trim() || !fFile}
+                style={{ padding: "9px 16px", borderRadius: 9, background: S.accent, border: "none", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", alignSelf: "flex-start", opacity: (uploading || !fTitle.trim() || !fFile) ? 0.5 : 1 }}>
+                {uploading ? "Uploading…" : "Upload"}
+              </button>
+            </div>
+          )}
+
           {filteredPapers.length === 0 && (
             <div style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${S.border}`, borderRadius: 14, padding: "40px", textAlign: "center" }}>
               <div style={{ fontSize: 36, marginBottom: 10 }}>📚</div>

@@ -4,8 +4,9 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { uploadToR2 } from "@/lib/uploadToR2";
+import { gradeForScore, levelFromGradeLevel } from "@/lib/grading";
 
-interface Cls { id: string; name: string; subject: string }
+interface Cls { id: string; name: string; subject: string; grade_level: string | null }
 interface Assignment {
   id: string; class_id: string; title: string; description: string | null;
   instructions: string | null; due_date: string | null; max_score: number;
@@ -46,16 +47,23 @@ export function AssignmentManager({ profileId, lockedClassId }: { profileId: str
 
   // Grading
   const [grades, setGrades] = useState<Record<string, { score: string; feedback: string }>>({});
+  const [classGradeLevel, setClassGradeLevel] = useState<string | null>(null);
 
   useEffect(() => {
     if (lockedClassId) return; // embedded in a single class's detail page — no class picker needed
-    (supabase.from("classes") as any).select("id,name,subject").eq("teacher_id", profileId).order("name")
+    (supabase.from("classes") as any).select("id,name,subject,grade_level").eq("teacher_id", profileId).order("name")
       .then(({ data }: any) => {
         const list = data ?? [];
         setClasses(list);
         if (list.length > 0) setSelectedClass(list[0].id);
       });
   }, [profileId, lockedClassId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!selectedClass) return;
+    (supabase.from("classes") as any).select("grade_level").eq("id", selectedClass).maybeSingle()
+      .then(({ data }: any) => setClassGradeLevel(data?.grade_level ?? null));
+  }, [selectedClass]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { if (selectedClass) loadAssignments(); }, [selectedClass]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -136,14 +144,7 @@ export function AssignmentManager({ profileId, lockedClassId }: { profileId: str
   };
 
   const isOverdue = (due: string | null) => due ? new Date(due) < new Date() : false;
-  const gradeLetter = (score: number, max: number) => {
-    const pct = (score / max) * 100;
-    if (pct >= 80) return { l: "A", c: "#00E5A3" };
-    if (pct >= 65) return { l: "B", c: "#4D7FFF" };
-    if (pct >= 50) return { l: "C", c: "#F5A623" };
-    if (pct >= 40) return { l: "D", c: "#FF9B6B" };
-    return { l: "F", c: "#FF6B6B" };
-  };
+  const gradeLetter = (score: number, max: number) => gradeForScore((score / max) * 100, levelFromGradeLevel(classGradeLevel));
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>

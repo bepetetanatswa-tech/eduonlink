@@ -2,10 +2,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { GRADE_COLOR } from "@/lib/grading";
+import { generateReportCardPdf } from "@/lib/reportCard";
 
-interface GradeRecord { id: string; term: number; academic_year: string; score: number | null; grade: string | null; teacher_comment: string | null; class: { name: string; subject: string } }
-
-const GRADE_COLOR: Record<string, string> = { A: "#00E5A3", B: "#4D7FFF", C: "#F5A623", D: "#FF9B6B", F: "#FF6B6B" };
+interface GradeRecord { id: string; term: number; academic_year: string; score: number | null; grade: string | null; teacher_comment: string | null; class_rank: number | null; locked: boolean; class: { name: string; subject: string } }
 const S = { border: "rgba(255,255,255,0.07)", text: "#CDD6F4", muted: "#8892B0", dim: "#4A5170", accent: "#4D7FFF" };
 
 export function StudentGrades({ profileId }: { profileId: string; parentView?: boolean }) {
@@ -14,13 +14,14 @@ export function StudentGrades({ profileId }: { profileId: string; parentView?: b
   const [term, setTerm] = useState<number | "all">("all");
   const [year, setYear] = useState(new Date().getFullYear().toString());
   const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
 
   useEffect(() => { load(); }, [profileId, year]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const load = async () => {
     setLoading(true);
     const { data } = await (supabase.from("grades") as any)
-      .select("id,term,academic_year,score,grade,teacher_comment,class:classes(name,subject)")
+      .select("id,term,academic_year,score,grade,teacher_comment,class_rank,locked,class:classes(name,subject)")
       .eq("student_id", profileId).eq("academic_year", year).order("term").order("created_at");
     setGrades(data ?? []);
     setLoading(false);
@@ -31,6 +32,38 @@ export function StudentGrades({ profileId }: { profileId: string; parentView?: b
     const scores = filtered.filter(g => g.score !== null).map(g => g.score!);
     if (scores.length === 0) return null;
     return (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1);
+  };
+
+  const downloadReportCard = async () => {
+    if (term === "all" || generating) return;
+    setGenerating(true);
+    const { data: profile } = await (supabase.from("profiles") as any)
+      .select("full_name,school_name").eq("id", profileId).single();
+
+    const { data: attendance } = await (supabase.from("attendance") as any)
+      .select("status").eq("student_id", profileId).like("date", `${year}%`);
+    const attList = attendance ?? [];
+    const attPresent = attList.filter((a: any) => a.status === "present" || a.status === "late").length;
+    const attTotal = attList.length;
+
+    generateReportCardPdf({
+      schoolName: profile?.school_name || "EduOnLink School",
+      studentName: profile?.full_name ?? "Student",
+      term,
+      academicYear: year,
+      subjects: filtered.map(g => ({
+        subject: g.class?.subject ?? "Unknown",
+        className: g.class?.name ?? "",
+        score: g.score,
+        grade: g.grade,
+        classRank: g.class_rank,
+        teacherComment: g.teacher_comment,
+      })),
+      attendanceRate: attTotal > 0 ? Math.round((attPresent / attTotal) * 100) : null,
+      attendancePresent: attPresent,
+      attendanceTotal: attTotal,
+    });
+    setGenerating(false);
   };
 
   const inp: React.CSSProperties = { padding: "9px 12px", background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}`, borderRadius: 9, color: S.text, fontSize: 13, outline: "none" };
@@ -47,9 +80,10 @@ export function StudentGrades({ profileId }: { profileId: string; parentView?: b
         <select value={year} onChange={e => setYear(e.target.value)} style={inp}>
           {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y.toString()} style={{ background: "#0E1117" }}>{y}</option>)}
         </select>
-        <button onClick={() => window.print()}
-          style={{ padding: "9px 16px", borderRadius: 9, background: "rgba(255,255,255,0.05)", border: `1px solid ${S.border}`, color: S.muted, fontSize: 12, cursor: "pointer" }}>
-          🖨 Print Report Card
+        <button onClick={downloadReportCard} disabled={term === "all" || generating}
+          title={term === "all" ? "Select a specific term to download a report card" : undefined}
+          style={{ padding: "9px 16px", borderRadius: 9, background: "rgba(255,255,255,0.05)", border: `1px solid ${S.border}`, color: S.muted, fontSize: 12, cursor: term === "all" ? "not-allowed" : "pointer", opacity: term === "all" ? 0.5 : 1 }}>
+          {generating ? "Generating…" : "⬇ Download Report Card (PDF)"}
         </button>
       </div>
 
@@ -96,7 +130,11 @@ export function StudentGrades({ profileId }: { profileId: string; parentView?: b
                       )}
                       <div style={{ flex: 1 }}>
                         <p style={{ fontSize: 13, fontWeight: 600, color: S.text, margin: "0 0 2px" }}>{g.class?.subject ?? "Unknown"}</p>
-                        <p style={{ fontSize: 11, color: S.dim, margin: 0 }}>{g.class?.name}</p>
+                        <p style={{ fontSize: 11, color: S.dim, margin: 0 }}>
+                          {g.class?.name}
+                          {g.class_rank && ` · Rank #${g.class_rank} in class`}
+                          {g.locked && " · 🔒 Locked"}
+                        </p>
                       </div>
                       {pct !== null && (
                         <div style={{ textAlign: "right" }}>

@@ -2,18 +2,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { gradeForScore, levelFromGradeLevel } from "@/lib/grading";
 
-interface Cls { id: string; name: string; subject: string }
+interface Cls { id: string; name: string; subject: string; grade_level: string | null }
 interface Student { id: string; full_name: string }
-interface GradeEntry { id?: string; student_id: string; score: string; comment: string }
-
-const GRADE = (score: number) => {
-  if (score >= 80) return { l: "A", c: "#00E5A3" };
-  if (score >= 65) return { l: "B", c: "#4D7FFF" };
-  if (score >= 50) return { l: "C", c: "#F5A623" };
-  if (score >= 40) return { l: "D", c: "#FF9B6B" };
-  return { l: "F", c: "#FF6B6B" };
-};
+interface GradeEntry { id?: string; student_id: string; score: string; comment: string; locked: boolean }
 
 const S = { border: "rgba(255,255,255,0.07)", text: "#CDD6F4", muted: "#8892B0", dim: "#4A5170", accent: "#4D7FFF" };
 
@@ -25,11 +18,18 @@ export function GradeBook({ profileId }: { profileId: string }) {
   const [year, setYear] = useState(new Date().getFullYear().toString());
   const [students, setStudents] = useState<Student[]>([]);
   const [grades, setGrades] = useState<Record<string, GradeEntry>>({});
+  const [subjectId, setSubjectId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [locking, setLocking] = useState(false);
+
+  const cls = classes.find(c => c.id === classId);
+  const level = levelFromGradeLevel(cls?.grade_level);
+  const gradedEntries = students.map(s => grades[s.id]).filter((g): g is GradeEntry & { id: string } => !!g?.id);
+  const termLocked = gradedEntries.length > 0 && gradedEntries.every(g => g.locked);
 
   useEffect(() => {
-    (supabase.from("classes") as any).select("id,name,subject").eq("teacher_id", profileId).order("name")
+    (supabase.from("classes") as any).select("id,name,subject,grade_level").eq("teacher_id", profileId).order("name")
       .then(({ data }: any) => {
         const list = data ?? [];
         setClasses(list);
@@ -47,15 +47,25 @@ export function GradeBook({ profileId }: { profileId: string }) {
     setStudents(studs);
 
     const { data: existing } = await (supabase.from("grades") as any)
-      .select("id,student_id,score,grade,teacher_comment")
+      .select("id,student_id,score,grade,teacher_comment,subject_id,locked")
       .eq("class_id", classId).eq("term", term).eq("academic_year", year);
 
     const map: Record<string, GradeEntry> = {};
-    studs.forEach((s: Student) => { map[s.id] = { student_id: s.id, score: "", comment: "" }; });
+    studs.forEach((s: Student) => { map[s.id] = { student_id: s.id, score: "", comment: "", locked: false }; });
     (existing ?? []).forEach((g: any) => {
-      map[g.student_id] = { id: g.id, student_id: g.student_id, score: g.score?.toString() ?? "", comment: g.teacher_comment ?? "" };
+      map[g.student_id] = { id: g.id, student_id: g.student_id, score: g.score?.toString() ?? "", comment: g.teacher_comment ?? "", locked: g.locked };
     });
     setGrades(map);
+    setSubjectId(existing?.[0]?.subject_id ?? null);
+
+    // Best-effort link to the canonical ZIMSEC subject (by name + level) for
+    // rows that don't have one yet — doesn't block saving if no match found.
+    if (cls?.subject) {
+      const lvl = levelFromGradeLevel(cls.grade_level);
+      const { data: subj } = await (supabase.from("subjects") as any)
+        .select("id").ilike("name", cls.subject.trim()).eq("level", lvl).limit(1).maybeSingle();
+      if (subj?.id) setSubjectId(subj.id);
+    }
   };
 
   const setScore = (sid: string, score: string) => setGrades(prev => ({ ...prev, [sid]: { ...prev[sid], score } }));
@@ -63,19 +73,21 @@ export function GradeBook({ profileId }: { profileId: string }) {
 
   const saveAll = async () => {
     setSaving(true);
-    const cls = classes.find(c => c.id === classId);
-    const records = students
+    const gradedStudents = students
       .filter(s => grades[s.id]?.score !== "")
-      .map(s => {
-        const sc = parseFloat(grades[s.id].score);
-        const gl = isNaN(sc) ? null : GRADE(sc).l;
-        return {
-          student_id: s.id, class_id: classId, term, academic_year: year,
-          score: isNaN(sc) ? null : sc, grade: gl,
-          teacher_comment: grades[s.id].comment || null,
-          subject_id: null,
-        };
-      });
+      .sort((a, b) => parseFloat(grades[b.id].score) - parseFloat(grades[a.id].score));
+
+    const records = gradedStudents.map((s, i) => {
+      const sc = parseFloat(grades[s.id].score);
+      const gl = isNaN(sc) ? null : gradeForScore(sc, level).l;
+      return {
+        student_id: s.id, class_id: classId, term, academic_year: year,
+        score: isNaN(sc) ? null : sc, grade: gl,
+        teacher_comment: grades[s.id].comment || null,
+        subject_id: subjectId,
+        class_rank: isNaN(sc) ? null : i + 1,
+      };
+    });
     if (records.length > 0) {
       await (supabase.from("grades") as any).upsert(records, { onConflict: "student_id,class_id,term,academic_year" });
     }
@@ -83,7 +95,6 @@ export function GradeBook({ profileId }: { profileId: string }) {
     // the notifications RLS insert policy only allows user_id =
     // get_my_profile_id(), so this used to insert rows for other users
     // (students) directly, which RLS silently rejected.
-    const gradedStudents = students.filter(s => grades[s.id]?.score !== "");
     if (gradedStudents.length > 0) {
       await supabase.rpc("notify_grades_posted", {
         p_class_id: classId,
@@ -95,6 +106,15 @@ export function GradeBook({ profileId }: { profileId: string }) {
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
+    loadGrades();
+  };
+
+  const lockTerm = async () => {
+    if (!confirm(`Lock ${cls?.subject} grades for Term ${term}, ${year}? Locked grades can only be changed by a super admin.`)) return;
+    setLocking(true);
+    await (supabase.from("grades") as any).update({ locked: true })
+      .eq("class_id", classId).eq("term", term).eq("academic_year", year);
+    setLocking(false);
     loadGrades();
   };
 
@@ -121,6 +141,11 @@ export function GradeBook({ profileId }: { profileId: string }) {
         <select value={year} onChange={e => setYear(e.target.value)} style={inp}>
           {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y.toString()} style={{ background: "#0E1117" }}>{y}</option>)}
         </select>
+        {termLocked && (
+          <span style={{ padding: "6px 12px", borderRadius: 8, background: "rgba(245,166,35,0.1)", border: "1px solid rgba(245,166,35,0.25)", color: "#F5A623", fontSize: 12, fontWeight: 600 }}>
+            🔒 Term locked
+          </span>
+        )}
       </div>
 
       {saved && <div style={{ padding: "10px 16px", borderRadius: 10, background: "rgba(0,229,163,0.1)", border: "1px solid rgba(0,229,163,0.25)", color: "#00E5A3", fontSize: 13 }}>✓ Grades saved and students notified</div>}
@@ -156,9 +181,9 @@ export function GradeBook({ profileId }: { profileId: string }) {
             return sb - sa;
           })
           .map((s, rank) => {
-            const g = grades[s.id] ?? { score: "", comment: "" };
+            const g = grades[s.id] ?? { score: "", comment: "", locked: false };
             const sc = parseFloat(g.score);
-            const gl = !isNaN(sc) && g.score !== "" ? GRADE(sc) : null;
+            const gl = !isNaN(sc) && g.score !== "" ? gradeForScore(sc, level) : null;
             return (
               <div key={s.id} style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${S.border}`, borderRadius: 12, padding: "14px 16px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
@@ -167,9 +192,9 @@ export function GradeBook({ profileId }: { profileId: string }) {
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <div>
                       <label style={{ fontSize: 10, color: S.dim, display: "block", marginBottom: 3 }}>Score / 100</label>
-                      <input type="number" min="0" max="100" value={g.score}
+                      <input type="number" min="0" max="100" value={g.score} disabled={g.locked}
                         onChange={e => setScore(s.id, e.target.value)}
-                        style={{ ...inp, width: 80 }} />
+                        style={{ ...inp, width: 80, opacity: g.locked ? 0.5 : 1 }} />
                     </div>
                     {gl && (
                       <div style={{ width: 42, height: 42, borderRadius: 11, background: `${gl.c}15`, border: `1px solid ${gl.c}30`, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -178,8 +203,8 @@ export function GradeBook({ profileId }: { profileId: string }) {
                     )}
                     <div style={{ minWidth: 200 }}>
                       <label style={{ fontSize: 10, color: S.dim, display: "block", marginBottom: 3 }}>Teacher comment</label>
-                      <input value={g.comment} onChange={e => setComment(s.id, e.target.value)}
-                        placeholder="Optional comment…" style={{ ...inp, width: "100%" }} />
+                      <input value={g.comment} disabled={g.locked} onChange={e => setComment(s.id, e.target.value)}
+                        placeholder="Optional comment…" style={{ ...inp, width: "100%", opacity: g.locked ? 0.5 : 1 }} />
                     </div>
                   </div>
                 </div>
@@ -189,10 +214,18 @@ export function GradeBook({ profileId }: { profileId: string }) {
       </div>
 
       {students.length > 0 && (
-        <button onClick={saveAll} disabled={saving}
-          style={{ padding: "11px 24px", borderRadius: 10, background: S.accent, border: "none", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", alignSelf: "flex-start", opacity: saving ? 0.6 : 1, fontFamily: "'Space Grotesk',sans-serif" }}>
-          {saving ? "Saving…" : "Save All Grades"}
-        </button>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button onClick={saveAll} disabled={saving || termLocked}
+            style={{ padding: "11px 24px", borderRadius: 10, background: S.accent, border: "none", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", opacity: (saving || termLocked) ? 0.5 : 1, fontFamily: "'Space Grotesk',sans-serif" }}>
+            {saving ? "Saving…" : "Save All Grades"}
+          </button>
+          {!termLocked && students.some(s => grades[s.id]?.score !== "") && (
+            <button onClick={lockTerm} disabled={locking}
+              style={{ padding: "11px 24px", borderRadius: 10, background: "rgba(245,166,35,0.1)", border: "1px solid rgba(245,166,35,0.25)", color: "#F5A623", fontSize: 14, fontWeight: 600, cursor: "pointer", opacity: locking ? 0.6 : 1, fontFamily: "'Space Grotesk',sans-serif" }}>
+              {locking ? "Locking…" : "🔒 Lock Term"}
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

@@ -7,10 +7,13 @@ import { createClient } from "@/lib/supabase/client";
 import { createReconnectingSubscription, type ConnStatus } from "@/lib/supabase/reconnect";
 
 interface Profile { id: string; full_name: string; avatar_url: string | null; role: string; email: string }
+interface ParentMsg { id: string; content: string; sender: { full_name: string } }
 interface DMsg {
   id: string; sender_id: string; receiver_id: string; content: string; read_at: string | null; created_at: string;
   message_type: string; file_url: string | null; attachment_name: string | null;
+  parent_id: string | null; is_deleted: boolean;
   sender: Profile; receiver: Profile;
+  parent: ParentMsg | null;
 }
 
 interface Props {
@@ -83,6 +86,14 @@ export function DirectMessages({ profileId, userRole, allowedRoles }: Props) {
   const [isNearBottom, setIsNearBottom] = useState(true);
   const [newMessageCount, setNewMessageCount] = useState(0);
   const prevMessageCount = useRef(0);
+  const [replyTo, setReplyTo] = useState<DMsg | null>(null);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [recording, setRecording] = useState(false);
+  const [recordSeconds, setRecordSeconds] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordChunksRef = useRef<Blob[]>([]);
+  const recordTimerRef = useRef<ReturnType<typeof setInterval>>();
 
   const scrollToBottom = (smooth = true) => {
     bottomRef.current?.scrollIntoView({ behavior: smooth ? "smooth" : "auto" });
@@ -145,6 +156,7 @@ export function DirectMessages({ profileId, userRole, allowedRoles }: Props) {
     const { data: sent } = await (supabase.from("messages") as any)
       .select("*, sender:profiles!messages_sender_id_fkey(id,full_name,avatar_url,role,email), receiver:profiles!messages_receiver_id_fkey(id,full_name,avatar_url,role,email)")
       .is("class_id", null)
+      .eq("is_deleted", false)
       .or(`sender_id.eq.${profileId},receiver_id.eq.${profileId}`)
       .order("created_at", { ascending: false })
       .limit(200);
@@ -188,7 +200,7 @@ export function DirectMessages({ profileId, userRole, allowedRoles }: Props) {
           filter: `receiver_id=eq.${profileId}`,
         }, async (payload) => {
           const { data } = await (supabase.from("messages") as any)
-            .select("*, sender:profiles!messages_sender_id_fkey(id,full_name,avatar_url,role,email), receiver:profiles!messages_receiver_id_fkey(id,full_name,avatar_url,role,email)")
+            .select("*, sender:profiles!messages_sender_id_fkey(id,full_name,avatar_url,role,email), receiver:profiles!messages_receiver_id_fkey(id,full_name,avatar_url,role,email), parent:messages!messages_parent_id_fkey(id,content,sender:profiles!messages_sender_id_fkey(full_name))")
             .eq("id", payload.new.id)
             .single();
           if (data) {
@@ -301,13 +313,17 @@ export function DirectMessages({ profileId, userRole, allowedRoles }: Props) {
     setIsNearBottom(true);
     setNewMessageCount(0);
     setDmRequestStatus("checking");
+    setReplyTo(null);
+    setShowSearch(false);
+    setSearchQuery("");
     prevMessageCount.current = 0;
     // Fetch the most recent 100 (descending), then reverse to ascending —
     // ordering ascending with a limit returns the oldest 100 messages ever
     // sent instead, hiding all recent activity past 100 messages.
     const { data } = await (supabase.from("messages") as any)
-      .select("*, sender:profiles!messages_sender_id_fkey(id,full_name,avatar_url,role,email), receiver:profiles!messages_receiver_id_fkey(id,full_name,avatar_url,role,email)")
+      .select("*, sender:profiles!messages_sender_id_fkey(id,full_name,avatar_url,role,email), receiver:profiles!messages_receiver_id_fkey(id,full_name,avatar_url,role,email), parent:messages!messages_parent_id_fkey(id,content,sender:profiles!messages_sender_id_fkey(full_name))")
       .is("class_id", null)
+      .eq("is_deleted", false)
       .or(`and(sender_id.eq.${profileId},receiver_id.eq.${other.id}),and(sender_id.eq.${other.id},receiver_id.eq.${profileId})`)
       .order("created_at", { ascending: false })
       .limit(100);
@@ -348,8 +364,8 @@ export function DirectMessages({ profileId, userRole, allowedRoles }: Props) {
     setSendError(null);
     const text = input;
     const { data, error } = await (supabase.from("messages") as any)
-      .insert({ sender_id: profileId, receiver_id: selected.id, content: text, class_id: null, message_type: "text" })
-      .select("*, sender:profiles!messages_sender_id_fkey(id,full_name,avatar_url,role,email), receiver:profiles!messages_receiver_id_fkey(id,full_name,avatar_url,role,email)")
+      .insert({ sender_id: profileId, receiver_id: selected.id, content: text, class_id: null, message_type: "text", parent_id: replyTo?.id ?? null })
+      .select("*, sender:profiles!messages_sender_id_fkey(id,full_name,avatar_url,role,email), receiver:profiles!messages_receiver_id_fkey(id,full_name,avatar_url,role,email), parent:messages!messages_parent_id_fkey(id,content,sender:profiles!messages_sender_id_fkey(full_name))")
       .single();
 
     if (error || !data) {
@@ -359,6 +375,7 @@ export function DirectMessages({ profileId, userRole, allowedRoles }: Props) {
     }
 
     setInput("");
+    setReplyTo(null);
     setMessages(prev => [...prev, data]);
     setConversations(prev => {
       const idx = prev.findIndex(c => c.other.id === selected.id);
@@ -392,10 +409,12 @@ export function DirectMessages({ profileId, userRole, allowedRoles }: Props) {
       .insert({
         sender_id: profileId, receiver_id: selected.id, class_id: null,
         content: file.name, message_type: type, file_url: publicUrl, attachment_name: file.name,
+        parent_id: replyTo?.id ?? null,
       })
-      .select("*, sender:profiles!messages_sender_id_fkey(id,full_name,avatar_url,role,email), receiver:profiles!messages_receiver_id_fkey(id,full_name,avatar_url,role,email)")
+      .select("*, sender:profiles!messages_sender_id_fkey(id,full_name,avatar_url,role,email), receiver:profiles!messages_receiver_id_fkey(id,full_name,avatar_url,role,email), parent:messages!messages_parent_id_fkey(id,content,sender:profiles!messages_sender_id_fkey(full_name))")
       .single();
     if (!error && data) {
+      setReplyTo(null);
       setMessages(prev => [...prev, data]);
       setConversations(prev => {
         const idx = prev.findIndex(c => c.other.id === selected.id);
@@ -408,6 +427,92 @@ export function DirectMessages({ profileId, userRole, allowedRoles }: Props) {
       });
     }
     setUploading(false);
+  }
+
+  async function startRecording() {
+    if (!selected || blockedByMe || blockedMe || dmRequestStatus !== "accepted" || recording) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      recordChunksRef.current = [];
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) recordChunksRef.current.push(e.data); };
+      recorder.onstop = () => {
+        stream.getTracks().forEach((t) => t.stop());
+        clearInterval(recordTimerRef.current);
+        const seconds = recordSeconds;
+        setRecording(false);
+        setRecordSeconds(0);
+        if (seconds < 1) return; // too short — treat as cancelled
+        const blob = new Blob(recordChunksRef.current, { type: "audio/webm" });
+        uploadVoiceNote(blob, seconds);
+      };
+      mediaRecorderRef.current = recorder;
+      recorder.start();
+      setRecording(true);
+      setRecordSeconds(0);
+      recordTimerRef.current = setInterval(() => setRecordSeconds((s) => s + 1), 1000);
+    } catch {
+      // permission denied or no mic — silently no-op, button just won't record
+    }
+  }
+
+  function stopRecording(cancel = false) {
+    if (!mediaRecorderRef.current || mediaRecorderRef.current.state === "inactive") return;
+    if (cancel) recordChunksRef.current = [];
+    mediaRecorderRef.current.stop();
+  }
+
+  async function uploadVoiceNote(blob: Blob, seconds: number) {
+    if (!selected) return;
+    setUploading(true);
+    try {
+      const filename = `voice-${Date.now()}.webm`;
+      // Reuses the "voice-note" R2 category (folder keyed by `classId`) with
+      // the sorted DM pair key standing in for a class id — same category,
+      // just a different kind of conversation identifier.
+      const presignRes = await fetch("/api/uploads/presign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category: "voice-note", filename, contentType: "audio/webm", fileSize: blob.size, ids: { classId: dmChannelKey(profileId, selected.id) } }),
+      });
+      if (!presignRes.ok) throw new Error("presign failed");
+      const { uploadUrl, fileUrl } = await presignRes.json();
+
+      const putRes = await fetch(uploadUrl, { method: "PUT", headers: { "Content-Type": "audio/webm" }, body: blob });
+      if (!putRes.ok) throw new Error("upload failed");
+
+      const mins = Math.floor(seconds / 60), secs = seconds % 60;
+      const { data, error } = await (supabase.from("messages") as any)
+        .insert({
+          sender_id: profileId, receiver_id: selected.id, class_id: null,
+          content: `${mins}:${secs.toString().padStart(2, "0")}`, message_type: "voice",
+          file_url: fileUrl, attachment_name: "voice-note.webm", parent_id: replyTo?.id ?? null,
+        })
+        .select("*, sender:profiles!messages_sender_id_fkey(id,full_name,avatar_url,role,email), receiver:profiles!messages_receiver_id_fkey(id,full_name,avatar_url,role,email), parent:messages!messages_parent_id_fkey(id,content,sender:profiles!messages_sender_id_fkey(full_name))")
+        .single();
+      if (!error && data) {
+        setReplyTo(null);
+        setMessages(prev => [...prev, data]);
+        setConversations(prev => {
+          const idx = prev.findIndex(c => c.other.id === selected.id);
+          if (idx >= 0) {
+            const updated = [...prev];
+            updated[idx] = { ...updated[idx], lastMsg: data };
+            return updated;
+          }
+          return [{ other: selected, lastMsg: data, unread: 0 }, ...prev];
+        });
+        await (supabase.rpc as any)("notify_dm_message", { p_recipient_id: selected.id, p_preview: "🎤 Voice message" });
+      }
+    } catch {
+      // best-effort, matches uploadFile's existing lack of error UI
+    }
+    setUploading(false);
+  }
+
+  async function deleteMessage(id: string) {
+    await (supabase.from("messages") as any).update({ is_deleted: true }).eq("id", id);
+    setMessages(prev => prev.filter(m => m.id !== id));
   }
 
   async function toggleBlock() {
@@ -449,7 +554,7 @@ export function DirectMessages({ profileId, userRole, allowedRoles }: Props) {
                   <span style={{ fontSize: 10, color: S.dim, flexShrink: 0, marginLeft: 4 }}>{timeAgo(conv.lastMsg.created_at)}</span>
                 </div>
                 <p style={{ fontSize: 11, color: S.muted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: "2px 0 0" }}>
-                  {conv.lastMsg.sender_id === profileId ? "You: " : ""}{conv.lastMsg.message_type === "text" ? conv.lastMsg.content : `📎 ${conv.lastMsg.attachment_name ?? "Attachment"}`}
+                  {conv.lastMsg.sender_id === profileId ? "You: " : ""}{conv.lastMsg.message_type === "text" ? conv.lastMsg.content : conv.lastMsg.message_type === "voice" ? "🎤 Voice message" : `📎 ${conv.lastMsg.attachment_name ?? "Attachment"}`}
                 </p>
               </div>
             </div>
@@ -478,6 +583,9 @@ export function DirectMessages({ profileId, userRole, allowedRoles }: Props) {
             {connStatus !== "connected" ? (connStatus === "connecting" ? "Connecting…" : "Reconnecting…") : otherTyping ? "typing…" : otherOnline ? "Online" : selected.role.replace("_", " ")}
           </p>
         </div>
+        <button onClick={() => setShowSearch(!showSearch)} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${S.border}`, background: showSearch ? `${S.accent}20` : "transparent", color: showSearch ? S.accent : S.muted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" /></svg>
+        </button>
         <button onClick={toggleMute} title={muted ? "Unmute notifications" : "Mute notifications"} style={{ background: "none", border: `1px solid ${S.border}`, borderRadius: 8, color: muted ? "#F5A623" : S.muted, cursor: "pointer", fontSize: 13, padding: "6px 8px", display: "flex", alignItems: "center" }}>
           {muted ? "🔕" : "🔔"}
         </button>
@@ -485,27 +593,65 @@ export function DirectMessages({ profileId, userRole, allowedRoles }: Props) {
           {blockedByMe ? "Unblock" : "Block"}
         </button>
       </div>
+
+      {/* Search bar */}
+      {showSearch && (
+        <div style={{ padding: "8px 16px", borderBottom: `1px solid ${S.border}`, background: S.card, flexShrink: 0 }}>
+          <input
+            autoFocus
+            placeholder="Search messages..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            style={{ width: "100%", background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}`, borderRadius: 8, padding: "7px 12px", fontSize: 13, color: S.text, outline: "none" }}
+          />
+        </div>
+      )}
+
       {/* Messages */}
       <div style={{ flex: 1, position: "relative", minHeight: 0 }}>
       <div ref={messagesContainerRef} onScroll={handleScroll} style={{ height: "100%", overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: 6 }}>
-        {messages.length === 0 && <p style={{ textAlign: "center", fontSize: 13, color: S.dim, marginTop: 40 }}>Start the conversation</p>}
-        {messages.map(m => {
+        {(() => {
+          const displayed = showSearch && searchQuery
+            ? messages.filter(m => m.content.toLowerCase().includes(searchQuery.toLowerCase()))
+            : messages;
+          return displayed.length === 0 ? (
+            <p style={{ textAlign: "center", fontSize: 13, color: S.dim, marginTop: 40 }}>
+              {showSearch && searchQuery ? "No messages match your search" : "Start the conversation"}
+            </p>
+          ) : displayed.map(m => {
           const isOwn = m.sender_id === profileId;
           return (
-            <div key={m.id} style={{ display: "flex", flexDirection: isOwn ? "row-reverse" : "row", gap: 8, alignItems: "flex-end" }}>
+            <div key={m.id} className="dm-msg-row" style={{ display: "flex", flexDirection: isOwn ? "row-reverse" : "row", gap: 8, alignItems: "flex-end" }}>
               {!isOwn && <Avatar name={m.sender.full_name} url={m.sender.avatar_url} size={26} />}
-              <div style={{ maxWidth: "65%" }}>
-                <div style={{ background: isOwn ? "linear-gradient(135deg,#1E3A6E,#1A3060)" : "rgba(255,255,255,0.05)", border: `1px solid ${isOwn ? "rgba(77,127,255,0.3)" : S.border}`, borderRadius: isOwn ? "12px 4px 12px 12px" : "4px 12px 12px 12px", padding: "8px 12px" }}>
-                  {m.message_type === "image" && m.file_url && (
-                    <img src={m.file_url} alt={m.attachment_name ?? "image"} style={{ maxWidth: 220, borderRadius: 8, display: "block", marginBottom: 4 }} />
-                  )}
-                  {m.message_type === "file" && m.file_url && (
-                    <a href={m.file_url} target="_blank" rel="noreferrer" style={{ display: "flex", gap: 8, alignItems: "center", color: S.accent, textDecoration: "none", fontSize: 13, marginBottom: 4 }}>
-                      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                      {m.attachment_name}
-                    </a>
-                  )}
-                  {m.message_type === "text" && <p style={{ fontSize: 13, color: S.text, lineHeight: 1.5, margin: 0, wordBreak: "break-word" }}>{m.content}</p>}
+              <div style={{ maxWidth: "65%", display: "flex", flexDirection: "column", alignItems: isOwn ? "flex-end" : "flex-start" }}>
+                {m.parent && (
+                  <div style={{ background: isOwn ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.05)", borderLeft: `2px solid ${S.accent}`, borderRadius: "6px 6px 0 0", padding: "5px 10px", fontSize: 11, color: S.muted, maxWidth: "100%" }}>
+                    <span style={{ color: S.accent, fontWeight: 600 }}>{m.parent.sender?.full_name} </span>
+                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block", maxWidth: "100%" }}>{m.parent.content}</span>
+                  </div>
+                )}
+                <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 6, flexDirection: isOwn ? "row-reverse" : "row" }} className="dm-msg-bubble-wrap">
+                  <div style={{ background: isOwn ? "linear-gradient(135deg,#1E3A6E,#1A3060)" : "rgba(255,255,255,0.05)", border: `1px solid ${isOwn ? "rgba(77,127,255,0.3)" : S.border}`, borderRadius: isOwn ? (m.parent ? "12px 4px 12px 12px" : "12px 4px 12px 12px") : (m.parent ? "4px 12px 12px 12px" : "4px 12px 12px 12px"), padding: "8px 12px" }}>
+                    {m.message_type === "image" && m.file_url && (
+                      <img src={m.file_url} alt={m.attachment_name ?? "image"} style={{ maxWidth: 220, borderRadius: 8, display: "block", marginBottom: 4 }} />
+                    )}
+                    {m.message_type === "file" && m.file_url && (
+                      <a href={m.file_url} target="_blank" rel="noreferrer" style={{ display: "flex", gap: 8, alignItems: "center", color: S.accent, textDecoration: "none", fontSize: 13, marginBottom: 4 }}>
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                        {m.attachment_name}
+                      </a>
+                    )}
+                    {m.message_type === "voice" && m.file_url && (
+                      <div style={{ marginBottom: 4 }}>
+                        <audio controls src={m.file_url} style={{ height: 32, maxWidth: 220 }} />
+                      </div>
+                    )}
+                    {m.message_type === "text" && <p style={{ fontSize: 13, color: S.text, lineHeight: 1.5, margin: 0, wordBreak: "break-word" }}>{m.content}</p>}
+                  </div>
+                  <div className="dm-msg-actions" style={{ display: "none", gap: 4 }}>
+                    <button onClick={() => setReplyTo(m)} title="Reply" style={{ background: "none", border: "none", cursor: "pointer", color: S.muted, fontSize: 13, padding: 2 }}>↩</button>
+                    {isOwn && <button onClick={() => deleteMessage(m.id)} title="Delete" style={{ background: "none", border: "none", cursor: "pointer", color: "#FF6B6B", fontSize: 13, padding: 2 }}>✕</button>}
+                  </div>
                 </div>
                 <p style={{ fontSize: 10, color: S.dim, marginTop: 2, textAlign: isOwn ? "right" : "left" }}>
                   {fmt(m.created_at)}{isOwn && m.read_at && " ✓✓"}
@@ -513,7 +659,8 @@ export function DirectMessages({ profileId, userRole, allowedRoles }: Props) {
               </div>
             </div>
           );
-        })}
+        });
+        })()}
         {otherTyping && (
           <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 0" }}>
             <div style={{ display: "flex", gap: 4 }}>
@@ -563,28 +710,52 @@ export function DirectMessages({ profileId, userRole, allowedRoles }: Props) {
           </div>
         </div>
       )}
-      <div style={{ padding: "10px 14px", borderTop: `1px solid ${S.border}`, background: S.card, display: "flex", gap: 8, flexShrink: 0 }}>
-        <input type="file" ref={fileInputRef} style={{ display: "none" }} accept="image/*,.pdf,.doc,.docx,.txt" onChange={e => { if (e.target.files?.[0]) uploadFile(e.target.files[0]); e.target.value = ""; }} />
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isBlocked || uploading || dmRequestStatus !== "accepted"}
-          style={{ width: 36, height: 36, borderRadius: 10, border: `1px solid ${S.border}`, background: "rgba(255,255,255,0.04)", color: uploading ? S.accent : S.muted, cursor: (isBlocked || dmRequestStatus !== "accepted") ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
-        >
-          {uploading ? <span style={{ fontSize: 11 }}>…</span> : <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>}
-        </button>
-        <input
-          ref={messageInputRef}
-          value={input}
-          onChange={e => handleInputChange(e.target.value)}
-          onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-          placeholder={isBlocked ? "Messaging unavailable" : dmRequestStatus === "checking" ? "…" : dmRequestStatus === "none" ? `Send a message request to ${selected.full_name.split(" ")[0]}…` : dmRequestStatus !== "accepted" ? "Messaging unavailable" : `Message ${selected.full_name.split(" ")[0]}…`}
-          disabled={isBlocked || (dmRequestStatus !== "accepted" && dmRequestStatus !== "none")}
-          style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}`, borderRadius: 10, padding: "9px 14px", fontSize: 13, color: S.text, outline: "none" }}
-        />
-        <button onClick={sendMessage} disabled={!input.trim() || sending || isBlocked || (dmRequestStatus !== "accepted" && dmRequestStatus !== "none")}
-          style={{ width: 36, height: 36, borderRadius: 10, background: (!input.trim() || isBlocked) ? "rgba(77,127,255,0.2)" : S.accent, border: "none", color: "#fff", cursor: isBlocked ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
-        </button>
+      <div style={{ padding: "10px 14px", borderTop: `1px solid ${S.border}`, background: S.card, flexShrink: 0 }}>
+        {replyTo && (
+          <div style={{ background: "rgba(255,255,255,0.04)", borderLeft: `2px solid ${S.accent}`, borderRadius: 6, padding: "5px 10px", marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <span style={{ fontSize: 11, color: S.accent, fontWeight: 600 }}>Replying to {replyTo.sender_id === profileId ? "yourself" : replyTo.sender.full_name}</span>
+              <p style={{ fontSize: 11, color: S.muted, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 250 }}>{replyTo.content}</p>
+            </div>
+            <button onClick={() => setReplyTo(null)} style={{ background: "none", border: "none", color: S.dim, cursor: "pointer", fontSize: 14 }}>✕</button>
+          </div>
+        )}
+        <div style={{ display: "flex", gap: 8 }}>
+          <input type="file" ref={fileInputRef} style={{ display: "none" }} accept="image/*,.pdf,.doc,.docx,.txt" onChange={e => { if (e.target.files?.[0]) uploadFile(e.target.files[0]); e.target.value = ""; }} />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isBlocked || uploading || dmRequestStatus !== "accepted"}
+            style={{ width: 36, height: 36, borderRadius: 10, border: `1px solid ${S.border}`, background: "rgba(255,255,255,0.04)", color: uploading ? S.accent : S.muted, cursor: (isBlocked || dmRequestStatus !== "accepted") ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
+          >
+            {uploading ? <span style={{ fontSize: 11 }}>…</span> : <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>}
+          </button>
+          <button
+            onMouseDown={startRecording}
+            onMouseUp={() => stopRecording(false)}
+            onMouseLeave={() => { if (recording) stopRecording(true); }}
+            onTouchStart={(e) => { e.preventDefault(); startRecording(); }}
+            onTouchEnd={(e) => { e.preventDefault(); stopRecording(false); }}
+            disabled={isBlocked || uploading || dmRequestStatus !== "accepted"}
+            title="Hold to record a voice note"
+            style={{ width: 36, height: 36, borderRadius: 10, border: `1px solid ${recording ? "#FF6B6B" : S.border}`, background: recording ? "rgba(255,107,107,0.15)" : "rgba(255,255,255,0.04)", color: recording ? "#FF6B6B" : S.muted, cursor: (isBlocked || dmRequestStatus !== "accepted") ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, position: "relative" }}
+          >
+            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" /></svg>
+            {recording && <span style={{ position: "absolute", bottom: -16, fontSize: 9, color: "#FF6B6B", whiteSpace: "nowrap" }}>{recordSeconds}s</span>}
+          </button>
+          <input
+            ref={messageInputRef}
+            value={input}
+            onChange={e => handleInputChange(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+            placeholder={isBlocked ? "Messaging unavailable" : recording ? "Recording…" : dmRequestStatus === "checking" ? "…" : dmRequestStatus === "none" ? `Send a message request to ${selected.full_name.split(" ")[0]}…` : dmRequestStatus !== "accepted" ? "Messaging unavailable" : `Message ${selected.full_name.split(" ")[0]}…`}
+            disabled={isBlocked || recording || (dmRequestStatus !== "accepted" && dmRequestStatus !== "none")}
+            style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}`, borderRadius: 10, padding: "9px 14px", fontSize: 13, color: S.text, outline: "none" }}
+          />
+          <button onClick={sendMessage} disabled={!input.trim() || sending || isBlocked || (dmRequestStatus !== "accepted" && dmRequestStatus !== "none")}
+            style={{ width: 36, height: 36, borderRadius: 10, background: (!input.trim() || isBlocked) ? "rgba(77,127,255,0.2)" : S.accent, border: "none", color: "#fff", cursor: isBlocked ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+          </button>
+        </div>
       </div>
     </div>
   ) : (
@@ -642,7 +813,10 @@ export function DirectMessages({ profileId, userRole, allowedRoles }: Props) {
       {ChatPanel}
       {NewDmPanel}
       {BlockConfirm}
-      <style>{`@keyframes dm-bounce { 0%,80%,100% { transform: translateY(0); } 40% { transform: translateY(-4px); } }`}</style>
+      <style>{`
+        @keyframes dm-bounce { 0%,80%,100% { transform: translateY(0); } 40% { transform: translateY(-4px); } }
+        .dm-msg-row:hover .dm-msg-actions { display: flex !important; }
+      `}</style>
     </div>
   );
 }

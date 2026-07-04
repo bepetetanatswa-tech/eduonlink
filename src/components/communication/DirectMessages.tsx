@@ -15,6 +15,7 @@ interface DMsg {
   sender: Profile; receiver: Profile;
   parent: ParentMsg | null;
 }
+interface PendingMessage { tempId: string; content: string; parentId: string | null; receiverId: string; status: "offline" | "failed" | "retrying" }
 
 interface Props {
   profileId: string;
@@ -94,6 +95,9 @@ export function DirectMessages({ profileId, userRole, allowedRoles }: Props) {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordChunksRef = useRef<Blob[]>([]);
   const recordTimerRef = useRef<ReturnType<typeof setInterval>>();
+  const [isOnline, setIsOnline] = useState(true);
+  const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
+  const pendingMessagesRef = useRef<PendingMessage[]>([]);
 
   const scrollToBottom = (smooth = true) => {
     bottomRef.current?.scrollIntoView({ behavior: smooth ? "smooth" : "auto" });
@@ -118,6 +122,21 @@ export function DirectMessages({ profileId, userRole, allowedRoles }: Props) {
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileId]);
+
+  useEffect(() => { pendingMessagesRef.current = pendingMessages; }, [pendingMessages]);
+
+  useEffect(() => {
+    setIsOnline(navigator.onLine);
+    const goOnline = () => { setIsOnline(true); retryAllPending(); };
+    const goOffline = () => setIsOnline(false);
+    window.addEventListener("online", goOnline);
+    window.addEventListener("offline", goOffline);
+    return () => {
+      window.removeEventListener("online", goOnline);
+      window.removeEventListener("offline", goOffline);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Deep link from a push notification: /messages?with={id}&focus=1
   useEffect(() => {
@@ -363,33 +382,70 @@ export function DirectMessages({ profileId, userRole, allowedRoles }: Props) {
     setSending(true);
     setSendError(null);
     const text = input;
+    const receiverId = selected.id;
+    setInput("");
+    const parentId = replyTo?.id ?? null;
+    setReplyTo(null);
+
+    const ok = await attemptSend(text, receiverId, parentId);
+    if (!ok) {
+      setPendingMessages(prev => [...prev, {
+        tempId: `pending-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        content: text, parentId, receiverId, status: navigator.onLine ? "failed" : "offline",
+      }]);
+    }
+    setSending(false);
+  }
+
+  // Sends now go through here so a dropped connection or offline device
+  // doesn't just silently lose the message — it's queued locally with a
+  // retry button (and auto-retried once "online" fires) instead.
+  async function attemptSend(content: string, receiverId: string, parentId: string | null): Promise<boolean> {
+    if (!navigator.onLine) return false;
     const { data, error } = await (supabase.from("messages") as any)
-      .insert({ sender_id: profileId, receiver_id: selected.id, content: text, class_id: null, message_type: "text", parent_id: replyTo?.id ?? null })
+      .insert({ sender_id: profileId, receiver_id: receiverId, content, class_id: null, message_type: "text", parent_id: parentId })
       .select("*, sender:profiles!messages_sender_id_fkey(id,full_name,avatar_url,role,email), receiver:profiles!messages_receiver_id_fkey(id,full_name,avatar_url,role,email), parent:messages!messages_parent_id_fkey(id,content,sender:profiles!messages_sender_id_fkey(full_name))")
       .single();
 
     if (error || !data) {
       setSendError("Message failed to send. Try again.");
-      setSending(false);
-      return;
+      return false;
     }
 
-    setInput("");
-    setReplyTo(null);
-    setMessages(prev => [...prev, data]);
+    if (selected?.id === receiverId) setMessages(prev => [...prev, data]);
     setConversations(prev => {
-      const idx = prev.findIndex(c => c.other.id === selected.id);
+      const idx = prev.findIndex(c => c.other.id === receiverId);
       if (idx >= 0) {
         const updated = [...prev];
         updated[idx] = { ...updated[idx], lastMsg: data };
         return updated;
       }
-      return [{ other: selected, lastMsg: data, unread: 0 }, ...prev];
+      return selected ? [{ other: selected, lastMsg: data, unread: 0 }, ...prev] : prev;
     });
     // Client can't insert a notification row for another user under RLS —
     // this RPC runs SECURITY DEFINER and re-checks block/mute status server-side.
-    await (supabase.rpc as any)("notify_dm_message", { p_recipient_id: selected.id, p_preview: text.slice(0, 80) });
-    setSending(false);
+    await (supabase.rpc as any)("notify_dm_message", { p_recipient_id: receiverId, p_preview: content.slice(0, 80) });
+    return true;
+  }
+
+  async function retryPending(tempId: string) {
+    const msg = pendingMessagesRef.current.find(p => p.tempId === tempId);
+    if (!msg) return;
+    setPendingMessages(prev => prev.map(p => p.tempId === tempId ? { ...p, status: "retrying" } : p));
+    const ok = await attemptSend(msg.content, msg.receiverId, msg.parentId);
+    if (ok) setPendingMessages(prev => prev.filter(p => p.tempId !== tempId));
+    else setPendingMessages(prev => prev.map(p => p.tempId === tempId ? { ...p, status: navigator.onLine ? "failed" : "offline" } : p));
+  }
+
+  async function retryAllPending() {
+    for (const p of pendingMessagesRef.current) {
+      const ok = await attemptSend(p.content, p.receiverId, p.parentId);
+      if (ok) setPendingMessages(prev => prev.filter(x => x.tempId !== p.tempId));
+    }
+  }
+
+  function discardPending(tempId: string) {
+    setPendingMessages(prev => prev.filter(p => p.tempId !== tempId));
   }
 
   async function uploadFile(file: File) {
@@ -579,8 +635,8 @@ export function DirectMessages({ profileId, userRole, allowedRoles }: Props) {
         </div>
         <div style={{ flex: 1 }}>
           <p style={{ fontSize: 13, fontWeight: 600, color: S.text, margin: 0 }}>{selected.full_name}</p>
-          <p style={{ fontSize: 11, color: connStatus !== "connected" ? "#F5A623" : otherTyping ? S.accent : S.dim, textTransform: otherTyping ? "none" : "capitalize", margin: 0 }}>
-            {connStatus !== "connected" ? (connStatus === "connecting" ? "Connecting…" : "Reconnecting…") : otherTyping ? "typing…" : otherOnline ? "Online" : selected.role.replace("_", " ")}
+          <p style={{ fontSize: 11, color: !isOnline ? "#FF6B6B" : connStatus !== "connected" ? "#F5A623" : otherTyping ? S.accent : S.dim, textTransform: otherTyping ? "none" : "capitalize", margin: 0 }}>
+            {!isOnline ? "Offline — messages will send when reconnected" : connStatus !== "connected" ? (connStatus === "connecting" ? "Connecting…" : "Reconnecting…") : otherTyping ? "typing…" : otherOnline ? "Online" : selected.role.replace("_", " ")}
           </p>
         </div>
         <button onClick={() => setShowSearch(!showSearch)} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${S.border}`, background: showSearch ? `${S.accent}20` : "transparent", color: showSearch ? S.accent : S.muted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -661,6 +717,29 @@ export function DirectMessages({ profileId, userRole, allowedRoles }: Props) {
           );
         });
         })()}
+
+        {/* Queued/failed sends for this conversation */}
+        {pendingMessages.filter(p => p.receiverId === selected.id).map(p => (
+          <div key={p.tempId} style={{ display: "flex", flexDirection: "row-reverse", gap: 8 }}>
+            <div style={{ maxWidth: "65%" }}>
+              <div style={{ background: "rgba(255,107,107,0.08)", border: "1px solid rgba(255,107,107,0.3)", borderRadius: "12px 4px 12px 12px", padding: "8px 12px" }}>
+                <p style={{ fontSize: 13, color: S.text, lineHeight: 1.5, margin: 0, wordBreak: "break-word" }}>{p.content}</p>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2 }}>
+                <span style={{ fontSize: 10, color: "#FF6B6B" }}>
+                  {p.status === "retrying" ? "Retrying…" : p.status === "offline" ? "Waiting for connection…" : "Failed to send"}
+                </span>
+                {p.status !== "retrying" && (
+                  <>
+                    <button onClick={() => retryPending(p.tempId)} style={{ background: "none", border: "none", color: S.accent, fontSize: 10, fontWeight: 600, cursor: "pointer", padding: 0 }}>Retry</button>
+                    <button onClick={() => discardPending(p.tempId)} style={{ background: "none", border: "none", color: S.dim, fontSize: 10, cursor: "pointer", padding: 0 }}>Discard</button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+
         {otherTyping && (
           <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 0" }}>
             <div style={{ display: "flex", gap: 4 }}>

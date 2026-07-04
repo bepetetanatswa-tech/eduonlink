@@ -26,6 +26,8 @@ interface ChatMessage {
   parent: ParentMsg | null;
 }
 
+interface PendingMessage { tempId: string; content: string; parentId: string | null; status: "offline" | "failed" | "retrying" }
+
 interface Props {
   classId: string;
   profileId: string;
@@ -100,6 +102,9 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
   const [showInfo, setShowInfo] = useState(false);
   const [infoTab, setInfoTab] = useState<"members" | "media" | "files" | "links">("members");
   const [members, setMembers] = useState<{ id: string; full_name: string; avatar_url: string | null; role: string }[] | null>(null);
+  const [isOnline, setIsOnline] = useState(true);
+  const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
+  const pendingMessagesRef = useRef<PendingMessage[]>([]);
 
   const scrollToBottom = useCallback((smooth = true) => {
     bottomRef.current?.scrollIntoView({ behavior: smooth ? "smooth" : "auto" });
@@ -122,6 +127,21 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
     return () => teardown();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classId]);
+
+  useEffect(() => { pendingMessagesRef.current = pendingMessages; }, [pendingMessages]);
+
+  useEffect(() => {
+    setIsOnline(navigator.onLine);
+    const goOnline = () => { setIsOnline(true); retryAllPending(); };
+    const goOffline = () => setIsOnline(false);
+    window.addEventListener("online", goOnline);
+    window.addEventListener("offline", goOffline);
+    return () => {
+      window.removeEventListener("online", goOnline);
+      window.removeEventListener("offline", goOffline);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const grew = messages.length > prevMessageCount.current;
@@ -270,21 +290,59 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
     }
   }
 
+  // Sends now go through here so a dropped connection or offline device
+  // doesn't just silently lose the message — it's queued locally with a
+  // retry button (and auto-retried once "online" fires) instead.
+  async function attemptSend(content: string, parentId: string | null): Promise<boolean> {
+    if (!navigator.onLine) return false;
+    const { error } = await (supabase.from("messages") as any).insert({
+      sender_id: profileId,
+      class_id: classId,
+      content,
+      message_type: "text",
+      parent_id: parentId,
+    });
+    if (error) return false;
+    notifyClassMembers(content.slice(0, 80));
+    return true;
+  }
+
   async function sendMessage() {
     const text = input.trim();
     if (!text || sending || isMuted) return;
     setSending(true);
     setInput("");
+    const parentId = replyTo?.id ?? null;
     setReplyTo(null);
-    await (supabase.from("messages") as any).insert({
-      sender_id: profileId,
-      class_id: classId,
-      content: text,
-      message_type: "text",
-      parent_id: replyTo?.id ?? null,
-    });
-    notifyClassMembers(text.slice(0, 80));
+
+    const ok = await attemptSend(text, parentId);
+    if (!ok) {
+      setPendingMessages(prev => [...prev, {
+        tempId: `pending-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        content: text, parentId, status: navigator.onLine ? "failed" : "offline",
+      }]);
+    }
     setSending(false);
+  }
+
+  async function retryPending(tempId: string) {
+    const msg = pendingMessagesRef.current.find(p => p.tempId === tempId);
+    if (!msg) return;
+    setPendingMessages(prev => prev.map(p => p.tempId === tempId ? { ...p, status: "retrying" } : p));
+    const ok = await attemptSend(msg.content, msg.parentId);
+    if (ok) setPendingMessages(prev => prev.filter(p => p.tempId !== tempId));
+    else setPendingMessages(prev => prev.map(p => p.tempId === tempId ? { ...p, status: navigator.onLine ? "failed" : "offline" } : p));
+  }
+
+  async function retryAllPending() {
+    for (const p of pendingMessagesRef.current) {
+      const ok = await attemptSend(p.content, p.parentId);
+      if (ok) setPendingMessages(prev => prev.filter(x => x.tempId !== p.tempId));
+    }
+  }
+
+  function discardPending(tempId: string) {
+    setPendingMessages(prev => prev.filter(p => p.tempId !== tempId));
   }
 
   async function uploadFile(file: File) {
@@ -463,7 +521,9 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
           </div>
           <div>
             <p style={{ fontSize: 14, fontWeight: 600, color: S.text, fontFamily: "'Space Grotesk',sans-serif" }}>{className}</p>
-            {connStatus === "connected" ? (
+            {!isOnline ? (
+              <p style={{ fontSize: 11, color: "#FF6B6B" }}>Offline — messages will send when reconnected</p>
+            ) : connStatus === "connected" ? (
               <p style={{ fontSize: 11, color: S.dim }}>{onlineCount} online</p>
             ) : (
               <p style={{ fontSize: 11, color: "#F5A623" }}>{connStatus === "connecting" ? "Connecting…" : "Reconnecting…"}</p>
@@ -630,6 +690,28 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
             </div>
           );
         })}
+
+        {/* Queued/failed sends */}
+        {pendingMessages.map(p => (
+          <div key={p.tempId} style={{ display: "flex", flexDirection: "row-reverse", gap: 8, marginBottom: 4 }}>
+            <div style={{ maxWidth: "70%", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
+              <div style={{ background: "rgba(255,107,107,0.08)", border: "1px solid rgba(255,107,107,0.3)", borderRadius: "12px 4px 12px 12px", padding: "8px 12px" }}>
+                <p style={{ fontSize: 13, color: S.text, lineHeight: 1.5, margin: 0, wordBreak: "break-word" }}>{p.content}</p>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 10, color: "#FF6B6B" }}>
+                  {p.status === "retrying" ? "Retrying…" : p.status === "offline" ? "Waiting for connection…" : "Failed to send"}
+                </span>
+                {p.status !== "retrying" && (
+                  <>
+                    <button onClick={() => retryPending(p.tempId)} style={{ background: "none", border: "none", color: S.accent, fontSize: 10, fontWeight: 600, cursor: "pointer", padding: 0 }}>Retry</button>
+                    <button onClick={() => discardPending(p.tempId)} style={{ background: "none", border: "none", color: S.dim, fontSize: 10, cursor: "pointer", padding: 0 }}>Discard</button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
 
         {/* Typing indicator */}
         {typingUsers.length > 0 && (

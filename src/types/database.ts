@@ -87,6 +87,7 @@ export interface Class {
   subject: string | null;
   teacher_id: string | null;
   academic_year: string;
+  join_code: string;
   created_at: string;
 }
 

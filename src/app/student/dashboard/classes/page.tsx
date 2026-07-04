@@ -2,6 +2,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ClassCard } from "./ClassCard";
+import { JoinClassButton } from "@/components/academic/JoinClassButton";
 
 export default async function StudentClassesPage() {
   const supabase = await createClient();
@@ -80,14 +81,17 @@ export default async function StudentClassesPage() {
 
   return (
     <div style={{ maxWidth: 900, display: "flex", flexDirection: "column", gap: 24 }}>
-      <div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: S.text, fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>My Classes</h2>
-        <p style={{ fontSize: 12, color: S.dim, marginTop: 4 }}>{classes.length} class{classes.length !== 1 ? "es" : ""} enrolled</p>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
+        <div>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: S.text, fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>My Classes</h2>
+          <p style={{ fontSize: 12, color: S.dim, marginTop: 4 }}>{classes.length} class{classes.length !== 1 ? "es" : ""} enrolled</p>
+        </div>
+        <JoinClassButton />
       </div>
 
       {enriched.length === 0 ? (
         <div style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${S.border}`, borderRadius: 16, padding: "48px", textAlign: "center" }}>
-          <p style={{ fontSize: 14, color: S.dim }}>You are not enrolled in any classes yet. Ask your school administrator.</p>
+          <p style={{ fontSize: 14, color: S.dim }}>You are not enrolled in any classes yet. Ask your teacher for a join code, or ask your school administrator.</p>
         </div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 14 }}>

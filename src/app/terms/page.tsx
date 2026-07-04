@@ -14,7 +14,7 @@ export default function TermsPage() {
         </Link>
 
         <h1 className="font-display font-bold text-white text-3xl mb-2">Terms of Service</h1>
-        <p className="text-sm mb-1" style={{ color: "#4A5170" }}>Last updated: June 2026</p>
+        <p className="text-sm mb-1" style={{ color: "#4A5170" }}>Last updated: July 2026</p>
         <p className="text-xs mb-10" style={{ color: "#2A2D3E" }}>
           EduOnLink is operated by <strong style={{ color: "#4A5170" }}>Vavhimi Threads (Pvt) Ltd</strong>, a registered company in Zimbabwe.
         </p>
@@ -58,14 +58,27 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="font-display font-semibold text-white text-lg mb-3">6. Changes to Terms</h2>
+            <h2 className="font-display font-semibold text-white text-lg mb-3">6. Paid Lessons, Courses & Platform Commission</h2>
+            <p className="text-sm leading-relaxed mb-3">
+              Teachers and schools may offer paid lessons and courses through EduOnLink. On every paid sale, EduOnLink retains a platform commission of <strong style={{ color: "#CDD6F4" }}>20% of the sale amount</strong>, and the teacher or school keeps the remaining 80%.
+            </p>
+            <p className="text-sm leading-relaxed mb-3">
+              This 20% commission is a flat rate applied to your total income from paid sales on the platform — it is not a separate or additional charge per lesson, and it does not increase or stack based on how many lessons or classes you sell. Whether you sell one lesson or one hundred, the same 20% rate applies to each sale and therefore to your total earnings. The commission rate applies uniformly to all teachers and schools unless a different rate is agreed with you in writing.
+            </p>
+            <p className="text-sm leading-relaxed">
+              Earnings are recorded per sale in your dashboard, showing the amount paid by the student, the platform commission deducted, and your net earning. Withdrawals of your accumulated net earnings are subject to our standard payout process.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="font-display font-semibold text-white text-lg mb-3">7. Changes to Terms</h2>
             <p className="text-sm leading-relaxed">
               We reserve the right to update these Terms at any time. Continued use of the platform after changes constitutes acceptance of the revised Terms.
             </p>
           </section>
 
           <section>
-            <h2 className="font-display font-semibold text-white text-lg mb-3">7. Contact</h2>
+            <h2 className="font-display font-semibold text-white text-lg mb-3">8. Contact</h2>
             <p className="text-sm leading-relaxed">
               For questions about these Terms, contact us at{" "}
               <a href="mailto:vavhimiacademy@gmail.com" style={{ color: "#4D7FFF" }}>vavhimiacademy@gmail.com</a>.

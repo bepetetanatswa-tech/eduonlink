@@ -43,6 +43,7 @@ export default async function TeacherDashboardPage() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ? (supabase.from("assignments") as any).select("id, title, due_date, class_id").in("class_id", classIds).order("created_at", { ascending: false }).limit(5)
       : Promise.resolve({ data: [] }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     supabase.rpc("get_platform_student_count" as any),
   ]);
 

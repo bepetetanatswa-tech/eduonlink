@@ -5,12 +5,14 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { uploadToR2 } from "@/lib/uploadToR2";
 import { gradeForScore, levelFromGradeLevel } from "@/lib/grading";
+import { parseRubric, type RubricCriterion } from "@/lib/rubric";
 
 interface Cls { id: string; name: string; subject: string; grade_level: string | null }
 interface Assignment {
   id: string; class_id: string; title: string; description: string | null;
   instructions: string | null; due_date: string | null; max_score: number;
   attachment_url: string | null; rubric: string | null; allow_late: boolean;
+  late_penalty_per_day: number;
   created_at: string;
   submissions?: Submission[];
 }
@@ -18,6 +20,12 @@ interface Submission {
   id: string; student_id: string; content: string | null; file_url: string | null;
   score: number | null; feedback: string | null; submitted_at: string; status: string; is_late: boolean;
   student: { full_name: string; avatar_url: string | null };
+}
+
+function daysLate(submittedAt: string, dueDate: string | null): number {
+  if (!dueDate) return 0;
+  const ms = new Date(submittedAt).getTime() - new Date(dueDate).getTime();
+  return ms > 0 ? Math.ceil(ms / 86400000) : 0;
 }
 
 const S = { border: "rgba(255,255,255,0.07)", text: "#CDD6F4", muted: "#8892B0", dim: "#4A5170", accent: "#4D7FFF" };
@@ -41,12 +49,13 @@ export function AssignmentManager({ profileId, lockedClassId }: { profileId: str
   const [fInstructions, setFInstructions] = useState("");
   const [fDue, setFDue] = useState("");
   const [fMax, setFMax] = useState("100");
-  const [fRubric, setFRubric] = useState("");
+  const [fRubricCriteria, setFRubricCriteria] = useState<{ name: string; maxPoints: string }[]>([]);
   const [fAllowLate, setFAllowLate] = useState(true);
+  const [fLatePenalty, setFLatePenalty] = useState("0");
   const [fFile, setFFile] = useState<File | null>(null);
 
   // Grading
-  const [grades, setGrades] = useState<Record<string, { score: string; feedback: string }>>({});
+  const [grades, setGrades] = useState<Record<string, { score: string; feedback: string; rubricScores: Record<number, string> }>>({});
   const [classGradeLevel, setClassGradeLevel] = useState<string | null>(null);
 
   useEffect(() => {
@@ -79,9 +88,9 @@ export function AssignmentManager({ profileId, lockedClassId }: { profileId: str
       .eq("assignment_id", a.id).order("submitted_at");
     const enriched = { ...a, submissions: data ?? [] };
     setSelectedAssignment(enriched);
-    const g: Record<string, { score: string; feedback: string }> = {};
+    const g: Record<string, { score: string; feedback: string; rubricScores: Record<number, string> }> = {};
     (data ?? []).forEach((s: Submission) => {
-      g[s.id] = { score: s.score?.toString() ?? "", feedback: s.feedback ?? "" };
+      g[s.id] = { score: s.score?.toString() ?? "", feedback: s.feedback ?? "", rubricScores: {} };
     });
     setGrades(g);
     setView("grade");
@@ -106,19 +115,22 @@ export function AssignmentManager({ profileId, lockedClassId }: { profileId: str
       }
       setUploading(false);
     }
+    const criteria: RubricCriterion[] = fRubricCriteria
+      .filter(c => c.name.trim())
+      .map(c => ({ name: c.name.trim(), maxPoints: parseFloat(c.maxPoints) || 0 }));
     const { data: created } = await (supabase.from("assignments") as any).insert({
       class_id: selectedClass, title: fTitle.trim(),
       description: fDesc.trim() || null, instructions: fInstructions.trim() || null,
       due_date: fDue || null, max_score: parseFloat(fMax) || 100,
-      attachment_url: attachmentUrl, rubric: fRubric.trim() || null,
-      allow_late: fAllowLate, created_by: profileId,
+      attachment_url: attachmentUrl, rubric: criteria.length > 0 ? JSON.stringify(criteria) : null,
+      allow_late: fAllowLate, late_penalty_per_day: parseFloat(fLatePenalty) || 0, created_by: profileId,
     }).select("id").single();
     // Client can't insert a notification row for another user under RLS —
     // this RPC (migration 034) runs SECURITY DEFINER and re-checks that the
     // caller is actually the teacher of this class server-side.
     if (created) await supabase.rpc("notify_assignment_posted", { p_assignment_id: created.id } as any);
     setSaving(false);
-    setFTitle(""); setFDesc(""); setFInstructions(""); setFDue(""); setFMax("100"); setFRubric(""); setFFile(null);
+    setFTitle(""); setFDesc(""); setFInstructions(""); setFDue(""); setFMax("100"); setFRubricCriteria([]); setFLatePenalty("0"); setFFile(null);
     setView("list");
     loadAssignments();
   };
@@ -134,6 +146,15 @@ export function AssignmentManager({ profileId, lockedClassId }: { profileId: str
       graded_by: profileId,
     }).eq("id", submissionId);
     if (selectedAssignment) loadSubmissions(selectedAssignment);
+  };
+
+  const setRubricScore = (submissionId: string, criterionIndex: number, value: string, criteria: RubricCriterion[], maxScore: number) => {
+    setGrades(prev => {
+      const cur = prev[submissionId] ?? { score: "", feedback: "", rubricScores: {} };
+      const rubricScores = { ...cur.rubricScores, [criterionIndex]: value };
+      const total = criteria.reduce((sum, c, i) => sum + (parseFloat(rubricScores[i]) || 0), 0);
+      return { ...prev, [submissionId]: { ...cur, rubricScores, score: Math.min(total, maxScore).toString() } };
+    });
   };
 
   const deleteAssignment = async (id: string) => {
@@ -210,16 +231,43 @@ export function AssignmentManager({ profileId, lockedClassId }: { profileId: str
             </div>
           </div>
           <div>
-            <label style={{ fontSize: 11, fontWeight: 600, color: S.muted, display: "block", marginBottom: 5 }}>Marking Rubric (optional)</label>
-            <textarea value={fRubric} onChange={e => setFRubric(e.target.value)} rows={3}
-              placeholder="Marking criteria, e.g. 'Clarity 20pts, Structure 30pts, Content 50pts'…"
-              style={{ ...inp, resize: "vertical", fontFamily: "inherit" }} />
-          </div>
-          <div onClick={() => setFAllowLate(!fAllowLate)} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
-            <div style={{ width: 36, height: 20, borderRadius: 10, background: fAllowLate ? S.accent : "rgba(255,255,255,0.1)", position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
-              <div style={{ width: 14, height: 14, borderRadius: "50%", background: "#fff", position: "absolute", top: 3, left: fAllowLate ? 19 : 3, transition: "left 0.2s" }} />
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
+              <label style={{ fontSize: 11, fontWeight: 600, color: S.muted }}>Marking Rubric (optional)</label>
+              <span style={{ fontSize: 11, color: S.dim }}>
+                Total: {fRubricCriteria.reduce((s, c) => s + (parseFloat(c.maxPoints) || 0), 0)} / {fMax} pts
+              </span>
             </div>
-            <span style={{ fontSize: 13, color: S.muted }}>Allow late submissions</span>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {fRubricCriteria.map((c, i) => (
+                <div key={i} style={{ display: "flex", gap: 8 }}>
+                  <input value={c.name} onChange={e => setFRubricCriteria(prev => prev.map((x, xi) => xi === i ? { ...x, name: e.target.value } : x))}
+                    placeholder="Criterion, e.g. Content" style={{ ...inp, flex: 1 }} />
+                  <input type="number" value={c.maxPoints} onChange={e => setFRubricCriteria(prev => prev.map((x, xi) => xi === i ? { ...x, maxPoints: e.target.value } : x))}
+                    placeholder="Points" style={{ ...inp, width: 90 }} />
+                  <button onClick={() => setFRubricCriteria(prev => prev.filter((_, xi) => xi !== i))}
+                    style={{ background: "none", border: "none", color: S.dim, cursor: "pointer", fontSize: 16, padding: "0 6px" }}>✕</button>
+                </div>
+              ))}
+              <button onClick={() => setFRubricCriteria(prev => [...prev, { name: "", maxPoints: "" }])}
+                style={{ padding: "7px 14px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}`, color: S.muted, fontSize: 12, cursor: "pointer", alignSelf: "flex-start" }}>
+                + Add Criterion
+              </button>
+            </div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div onClick={() => setFAllowLate(!fAllowLate)} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
+              <div style={{ width: 36, height: 20, borderRadius: 10, background: fAllowLate ? S.accent : "rgba(255,255,255,0.1)", position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
+                <div style={{ width: 14, height: 14, borderRadius: "50%", background: "#fff", position: "absolute", top: 3, left: fAllowLate ? 19 : 3, transition: "left 0.2s" }} />
+              </div>
+              <span style={{ fontSize: 13, color: S.muted }}>Allow late submissions</span>
+            </div>
+            {fAllowLate && (
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <label style={{ fontSize: 12, color: S.muted }}>Late penalty</label>
+                <input type="number" min="0" value={fLatePenalty} onChange={e => setFLatePenalty(e.target.value)} style={{ ...inp, width: 80 }} />
+                <span style={{ fontSize: 12, color: S.dim }}>points per day late</span>
+              </div>
+            )}
           </div>
           <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
             <button onClick={() => setView("list")} style={{ padding: "9px 18px", borderRadius: 9, background: "rgba(255,255,255,0.05)", border: `1px solid ${S.border}`, color: S.muted, fontSize: 13, cursor: "pointer" }}>Cancel</button>
@@ -282,12 +330,23 @@ export function AssignmentManager({ profileId, lockedClassId }: { profileId: str
               <span style={{ fontSize: 12, color: S.dim }}>Max score: {selectedAssignment.max_score}</span>
               <span style={{ fontSize: 12, color: S.dim }}>{selectedAssignment.submissions?.length ?? 0} submission{selectedAssignment.submissions?.length !== 1 ? "s" : ""}</span>
             </div>
-            {selectedAssignment.rubric && (
-              <div style={{ marginTop: 10, padding: "10px 14px", background: "rgba(77,127,255,0.05)", border: `1px solid rgba(77,127,255,0.1)`, borderRadius: 9 }}>
-                <p style={{ fontSize: 11, fontWeight: 600, color: "#4D7FFF", margin: "0 0 4px" }}>Marking Rubric</p>
-                <p style={{ fontSize: 12, color: S.muted, margin: 0, lineHeight: 1.5, whiteSpace: "pre-wrap" }}>{selectedAssignment.rubric}</p>
-              </div>
-            )}
+            {selectedAssignment.rubric && (() => {
+              const criteria = parseRubric(selectedAssignment.rubric);
+              return (
+                <div style={{ marginTop: 10, padding: "10px 14px", background: "rgba(77,127,255,0.05)", border: `1px solid rgba(77,127,255,0.1)`, borderRadius: 9 }}>
+                  <p style={{ fontSize: 11, fontWeight: 600, color: "#4D7FFF", margin: "0 0 4px" }}>Marking Rubric</p>
+                  {criteria ? (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                      {criteria.map((c, i) => (
+                        <p key={i} style={{ fontSize: 12, color: S.muted, margin: 0 }}>{c.name} — {c.maxPoints} pts</p>
+                      ))}
+                    </div>
+                  ) : (
+                    <p style={{ fontSize: 12, color: S.muted, margin: 0, lineHeight: 1.5, whiteSpace: "pre-wrap" }}>{selectedAssignment.rubric}</p>
+                  )}
+                </div>
+              );
+            })()}
           </div>
 
           {(selectedAssignment.submissions ?? []).length === 0 ? (
@@ -297,8 +356,11 @@ export function AssignmentManager({ profileId, lockedClassId }: { profileId: str
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {(selectedAssignment.submissions ?? []).map(s => {
-                const g = grades[s.id] ?? { score: "", feedback: "" };
+                const g = grades[s.id] ?? { score: "", feedback: "", rubricScores: {} };
                 const gl = s.score !== null ? gradeLetter(s.score, selectedAssignment.max_score) : null;
+                const criteria = parseRubric(selectedAssignment.rubric);
+                const late = daysLate(s.submitted_at, selectedAssignment.due_date);
+                const penalty = late * (selectedAssignment.late_penalty_per_day ?? 0);
                 return (
                   <div key={s.id} style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${S.border}`, borderRadius: 12, padding: "16px 20px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
@@ -336,6 +398,32 @@ export function AssignmentManager({ profileId, lockedClassId }: { profileId: str
                         style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: S.accent, background: "rgba(77,127,255,0.08)", border: `1px solid rgba(77,127,255,0.15)`, padding: "6px 12px", borderRadius: 8, textDecoration: "none", marginBottom: 12 }}>
                         📎 View submitted file
                       </a>
+                    )}
+
+                    {criteria && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
+                        {criteria.map((c, i) => (
+                          <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                            <span style={{ fontSize: 12, color: S.muted, flex: 1 }}>{c.name}</span>
+                            <input type="number" min="0" max={c.maxPoints} value={g.rubricScores[i] ?? ""}
+                              onChange={e => setRubricScore(s.id, i, e.target.value, criteria, selectedAssignment.max_score)}
+                              style={{ ...inp, width: 70 }} />
+                            <span style={{ fontSize: 11, color: S.dim, width: 50 }}>/ {c.maxPoints}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {late > 0 && selectedAssignment.late_penalty_per_day > 0 && (
+                      <p style={{ fontSize: 12, color: "#F5A623", margin: "0 0 12px" }}>
+                        ⚠ {late} day{late !== 1 ? "s" : ""} late — suggested penalty −{penalty} pt{penalty !== 1 ? "s" : ""}
+                        <button onClick={() => setGrades(prev => {
+                          const base = parseFloat(prev[s.id]?.score ?? "0") || 0;
+                          return { ...prev, [s.id]: { ...prev[s.id], score: Math.max(0, base - penalty).toString() } };
+                        })}
+                          style={{ marginLeft: 8, padding: "2px 10px", borderRadius: 6, background: "rgba(245,166,35,0.1)", border: "1px solid rgba(245,166,35,0.25)", color: "#F5A623", fontSize: 11, cursor: "pointer" }}>
+                          Apply penalty
+                        </button>
+                      </p>
                     )}
 
                     <div style={{ display: "grid", gridTemplateColumns: "120px 1fr auto", gap: 10, alignItems: "flex-end" }}>

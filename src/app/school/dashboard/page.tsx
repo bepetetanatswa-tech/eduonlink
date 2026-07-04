@@ -66,6 +66,7 @@ export default async function SchoolDashboardPage() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ? (supabase.from("school_members") as any).select("id, user_id, joined_at, profiles(full_name, email)").eq("school_id", schoolId).eq("role", "teacher").order("joined_at", { ascending: false }).limit(5)
       : Promise.resolve({ data: [] }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     supabase.rpc("get_platform_student_count" as any),
   ]);
 

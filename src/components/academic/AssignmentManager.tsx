@@ -97,13 +97,17 @@ export function AssignmentManager({ profileId }: { profileId: string }) {
       }
       setUploading(false);
     }
-    await (supabase.from("assignments") as any).insert({
+    const { data: created } = await (supabase.from("assignments") as any).insert({
       class_id: selectedClass, title: fTitle.trim(),
       description: fDesc.trim() || null, instructions: fInstructions.trim() || null,
       due_date: fDue || null, max_score: parseFloat(fMax) || 100,
       attachment_url: attachmentUrl, rubric: fRubric.trim() || null,
       allow_late: fAllowLate, created_by: profileId,
-    });
+    }).select("id").single();
+    // Client can't insert a notification row for another user under RLS —
+    // this RPC (migration 034) runs SECURITY DEFINER and re-checks that the
+    // caller is actually the teacher of this class server-side.
+    if (created) await supabase.rpc("notify_assignment_posted", { p_assignment_id: created.id } as any);
     setSaving(false);
     setFTitle(""); setFDesc(""); setFInstructions(""); setFDue(""); setFMax("100"); setFRubric(""); setFFile(null);
     setView("list");

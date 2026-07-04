@@ -53,14 +53,6 @@ export function SubmissionPortal({ profileId }: { profileId: string }) {
       .select("*, class:classes(name,subject)")
       .in("class_id", classIds).order("due_date", { ascending: true, nullsFirst: false });
 
-    const { data: subs } = await (supabase.from("submissions") as any)
-      .select("id,content,file_url,score,feedback,submitted_at,status,is_late")
-      .eq("student_id", profileId)
-      .in("assignment_id", (asgns ?? []).map((a: any) => a.id));
-
-    const subMap: Record<string, Submission> = {};
-    (subs ?? []).forEach((s: Submission & { assignment_id?: string }) => { if (s.id) subMap[(subs as any[]).find((x: any) => x.id === s.id)?.assignment_id] = s; });
-    // Fix: map by assignment_id directly
     const { data: subs2 } = await (supabase.from("submissions") as any)
       .select("id,assignment_id,content,file_url,score,feedback,submitted_at,status,is_late")
       .eq("student_id", profileId);
@@ -103,6 +95,10 @@ export function SubmissionPortal({ profileId }: { profileId: string }) {
     } else {
       await (supabase.from("submissions") as any).insert(payload);
     }
+    // Client can't insert a notification row for another user under RLS —
+    // this RPC (migration 034) runs SECURITY DEFINER and re-checks that a
+    // submission actually exists for this caller server-side.
+    await supabase.rpc("notify_assignment_submitted", { p_assignment_id: selected.id } as any);
     setSubmitting(false);
     setSubmitted(true);
     load();

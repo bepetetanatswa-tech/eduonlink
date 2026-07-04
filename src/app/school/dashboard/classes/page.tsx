@@ -2,6 +2,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { SchoolClassCard } from "./SchoolClassCard";
+import { CreateClassButton } from "@/components/academic/CreateClassButton";
 
 export default async function SchoolClassesPage() {
   const supabase = await createClient();
@@ -35,9 +36,12 @@ export default async function SchoolClassesPage() {
 
   return (
     <div style={{ maxWidth: 900, display: "flex", flexDirection: "column", gap: 20 }}>
-      <div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", margin: 0 }}>Classes</h2>
-        <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>{classes.length} class{classes.length !== 1 ? "es" : ""} at your school</p>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+        <div>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", margin: 0 }}>Classes</h2>
+          <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>{classes.length} class{classes.length !== 1 ? "es" : ""} at your school</p>
+        </div>
+        {schoolId && <CreateClassButton schoolId={schoolId} />}
       </div>
 
       {!schoolId ? (

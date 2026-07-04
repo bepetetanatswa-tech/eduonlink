@@ -17,17 +17,55 @@ export default async function TeacherClassesPage() {
     .eq("teacher_id", profile.id)
     .order("name");
   const classes = classesRaw ?? [];
-
   const classIds = classes.map((c: { id: string }) => c.id);
-  const { data: enrollments } = classIds.length
-    ? await (supabase.from("class_enrollments") as any)
-        .select("class_id").in("class_id", classIds).eq("status", "active")
-    : { data: [] };
+
+  const today = new Date().toISOString().slice(0, 10);
+  const [enrollments, nextSessions, lastActivity, unreadNotifs, attendanceToday] = classIds.length ? await Promise.all([
+    (supabase.from("class_enrollments") as any).select("class_id").in("class_id", classIds).eq("status", "active"),
+    (supabase.from("live_sessions") as any)
+      .select("class_id, scheduled_at")
+      .in("class_id", classIds)
+      .eq("status", "scheduled")
+      .gt("scheduled_at", new Date().toISOString())
+      .order("scheduled_at", { ascending: true }),
+    (supabase.from("messages") as any)
+      .select("class_id, created_at")
+      .in("class_id", classIds)
+      .order("created_at", { ascending: false }),
+    (supabase.from("notifications") as any)
+      .select("link")
+      .eq("user_id", profile.id)
+      .eq("type", "message")
+      .eq("read", false),
+    (supabase.from("attendance") as any)
+      .select("class_id")
+      .eq("date", today)
+      .in("class_id", classIds),
+  ]) : [{ data: [] }, { data: [] }, { data: [] }, { data: [] }, { data: [] }];
 
   const countByClass = new Map<string, number>();
-  (enrollments ?? []).forEach((e: { class_id: string }) => {
+  (enrollments.data ?? []).forEach((e: { class_id: string }) => {
     countByClass.set(e.class_id, (countByClass.get(e.class_id) ?? 0) + 1);
   });
+
+  const nextSessionByClass = new Map<string, string>();
+  (nextSessions.data ?? []).forEach((s: { class_id: string; scheduled_at: string }) => {
+    if (!nextSessionByClass.has(s.class_id)) nextSessionByClass.set(s.class_id, s.scheduled_at);
+  });
+
+  const lastActivityByClass = new Map<string, string>();
+  (lastActivity.data ?? []).forEach((m: { class_id: string; created_at: string }) => {
+    if (!lastActivityByClass.has(m.class_id)) lastActivityByClass.set(m.class_id, m.created_at);
+  });
+
+  const unreadByClass = new Map<string, number>();
+  (unreadNotifs.data ?? []).forEach((n: { link: string | null }) => {
+    const match = n.link?.match(/\/classes\/([^/]+)\/chat/);
+    if (match) unreadByClass.set(match[1], (unreadByClass.get(match[1]) ?? 0) + 1);
+  });
+
+  const attendanceMarkedToday = new Set<string>();
+  (attendanceToday.data ?? []).forEach((a: { class_id: string }) => attendanceMarkedToday.add(a.class_id));
 
   return (
     <div style={{ maxWidth: 900, display: "flex", flexDirection: "column", gap: 20 }}>
@@ -43,7 +81,14 @@ export default async function TeacherClassesPage() {
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 14 }}>
           {classes.map((c: { id: string; name: string; subject: string | null; grade_level: string | null }) => (
-            <TeacherClassCard key={c.id} c={{ ...c, studentCount: countByClass.get(c.id) ?? 0 }} />
+            <TeacherClassCard key={c.id} c={{
+              ...c,
+              studentCount: countByClass.get(c.id) ?? 0,
+              nextSessionAt: nextSessionByClass.get(c.id) ?? null,
+              lastActivityAt: lastActivityByClass.get(c.id) ?? null,
+              unreadCount: unreadByClass.get(c.id) ?? 0,
+              attendanceMarkedToday: attendanceMarkedToday.has(c.id),
+            }} />
           ))}
         </div>
       )}

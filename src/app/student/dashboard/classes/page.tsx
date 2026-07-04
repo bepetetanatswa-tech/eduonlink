@@ -12,11 +12,69 @@ export default async function StudentClassesPage() {
   if (!profile) redirect("/auth/login");
 
   const { data: enrollments } = await (supabase.from("class_enrollments") as any)
-    .select("class_id, status, classes(id,name,subject,grade_level,teacher_id,profiles!classes_teacher_id_fkey(full_name))")
+    .select("class_id, status, classes(id,name,subject,grade_level,teacher_id,profiles!classes_teacher_id_fkey(full_name,avatar_url))")
     .eq("student_id", profile.id)
     .eq("status", "active");
 
-  const classes = (enrollments ?? []).map((e: any) => ({ ...e.classes, teacherName: e.classes?.profiles?.full_name }));
+  const classes = (enrollments ?? []).map((e: any) => ({
+    ...e.classes,
+    teacherName: e.classes?.profiles?.full_name,
+    teacherAvatar: e.classes?.profiles?.avatar_url,
+  }));
+  const classIds = classes.map((c: any) => c.id);
+
+  const today = new Date().toISOString().slice(0, 10);
+  const [nextSessions, lastActivity, unreadNotifs, attendanceToday] = classIds.length ? await Promise.all([
+    (supabase.from("live_sessions") as any)
+      .select("class_id, scheduled_at")
+      .in("class_id", classIds)
+      .eq("status", "scheduled")
+      .gt("scheduled_at", new Date().toISOString())
+      .order("scheduled_at", { ascending: true }),
+    (supabase.from("messages") as any)
+      .select("class_id, created_at")
+      .in("class_id", classIds)
+      .order("created_at", { ascending: false }),
+    (supabase.from("notifications") as any)
+      .select("link")
+      .eq("user_id", profile.id)
+      .eq("type", "message")
+      .eq("read", false),
+    (supabase.from("attendance") as any)
+      .select("class_id, status")
+      .eq("student_id", profile.id)
+      .eq("date", today)
+      .in("class_id", classIds),
+  ]) : [{ data: [] }, { data: [] }, { data: [] }, { data: [] }];
+
+  const nextSessionByClass = new Map<string, string>();
+  (nextSessions.data ?? []).forEach((s: { class_id: string; scheduled_at: string }) => {
+    if (!nextSessionByClass.has(s.class_id)) nextSessionByClass.set(s.class_id, s.scheduled_at);
+  });
+
+  const lastActivityByClass = new Map<string, string>();
+  (lastActivity.data ?? []).forEach((m: { class_id: string; created_at: string }) => {
+    if (!lastActivityByClass.has(m.class_id)) lastActivityByClass.set(m.class_id, m.created_at);
+  });
+
+  const unreadByClass = new Map<string, number>();
+  (unreadNotifs.data ?? []).forEach((n: { link: string | null }) => {
+    const match = n.link?.match(/\/classes\/([^/]+)\/chat/);
+    if (match) unreadByClass.set(match[1], (unreadByClass.get(match[1]) ?? 0) + 1);
+  });
+
+  const attendanceByClass = new Map<string, string>();
+  (attendanceToday.data ?? []).forEach((a: { class_id: string; status: string }) => {
+    attendanceByClass.set(a.class_id, a.status);
+  });
+
+  const enriched = classes.map((c: any) => ({
+    ...c,
+    nextSessionAt: nextSessionByClass.get(c.id) ?? null,
+    lastActivityAt: lastActivityByClass.get(c.id) ?? null,
+    unreadCount: unreadByClass.get(c.id) ?? 0,
+    attendanceToday: attendanceByClass.get(c.id) ?? null,
+  }));
 
   const S = { border: "rgba(255,255,255,0.07)", accent: "#4D7FFF", text: "#CDD6F4", muted: "#8892B0", dim: "#4A5170" };
 
@@ -27,13 +85,13 @@ export default async function StudentClassesPage() {
         <p style={{ fontSize: 12, color: S.dim, marginTop: 4 }}>{classes.length} class{classes.length !== 1 ? "es" : ""} enrolled</p>
       </div>
 
-      {classes.length === 0 ? (
+      {enriched.length === 0 ? (
         <div style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${S.border}`, borderRadius: 16, padding: "48px", textAlign: "center" }}>
           <p style={{ fontSize: 14, color: S.dim }}>You are not enrolled in any classes yet. Ask your school administrator.</p>
         </div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 14 }}>
-          {classes.map((c: any) => <ClassCard key={c.id} c={c} />)}
+          {enriched.map((c: any) => <ClassCard key={c.id} c={c} />)}
         </div>
       )}
     </div>

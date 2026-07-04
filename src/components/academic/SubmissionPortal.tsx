@@ -28,7 +28,7 @@ const GRADE = (score: number, max: number) => {
   return { l: "F", c: "#FF6B6B" };
 };
 
-export function SubmissionPortal({ profileId }: { profileId: string }) {
+export function SubmissionPortal({ profileId, lockedClassId }: { profileId: string; lockedClassId?: string }) {
   const supabase = createClient();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [selected, setSelected] = useState<Assignment | null>(null);
@@ -40,13 +40,17 @@ export function SubmissionPortal({ profileId }: { profileId: string }) {
   const [submitted, setSubmitted] = useState(false);
   const [filter, setFilter] = useState<"all"|"pending"|"submitted"|"graded">("all");
 
-  useEffect(() => { load(); }, [profileId]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [profileId, lockedClassId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const load = async () => {
-    // Get enrolled classes
-    const { data: enrollments } = await (supabase.from("class_enrollments") as any)
-      .select("class_id").eq("student_id", profileId).eq("status", "active");
-    const classIds = (enrollments ?? []).map((e: any) => e.class_id);
+    let classIds: string[];
+    if (lockedClassId) {
+      classIds = [lockedClassId];
+    } else {
+      const { data: enrollments } = await (supabase.from("class_enrollments") as any)
+        .select("class_id").eq("student_id", profileId).eq("status", "active");
+      classIds = (enrollments ?? []).map((e: any) => e.class_id);
+    }
     if (classIds.length === 0) { setAssignments([]); return; }
 
     const { data: asgns } = await (supabase.from("assignments") as any)

@@ -1,8 +1,9 @@
 "use client";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { ClassChat } from "./ClassChat";
 
 interface Session {
   id: string;
@@ -25,7 +26,10 @@ interface Props {
   profileId: string;
   isTeacher: boolean;
   className: string;
+  userName: string;
 }
+
+const JOIN_EARLY_MS = 5 * 60000;
 
 function Countdown({ scheduledAt }: { scheduledAt: string }) {
   const [left, setLeft] = useState("");
@@ -52,7 +56,7 @@ function Countdown({ scheduledAt }: { scheduledAt: string }) {
 const STATUS_COLOR: Record<string, string> = { scheduled: "#F5A623", live: "#00E5A3", ended: "#4A5170", cancelled: "#FF6B6B" };
 const STATUS_LABEL: Record<string, string> = { scheduled: "Scheduled", live: "LIVE", ended: "Ended", cancelled: "Cancelled" };
 
-export function LiveClassRoom({ classId, profileId, isTeacher, className }: Props) {
+export function LiveClassRoom({ classId, profileId, isTeacher, className, userName }: Props) {
   const supabase = createClient();
   const S = { bg: "#07080C", border: "rgba(255,255,255,0.07)", accent: "#4D7FFF", text: "#CDD6F4", muted: "#8892B0", dim: "#4A5170" };
 
@@ -62,6 +66,20 @@ export function LiveClassRoom({ classId, profileId, isTeacher, className }: Prop
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ title: "", description: "", scheduled_at: "" });
   const [creating, setSaving] = useState(false);
+  const [now, setNow] = useState(Date.now());
+  const [showChat, setShowChat] = useState(true);
+  const [handRaised, setHandRaised] = useState(false);
+  const [raisedHands, setRaisedHands] = useState<string[]>([]);
+  const handsChannelRef = useRef<any>(null);
+
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 15000);
+    return () => clearInterval(t);
+  }, []);
+
+  function canJoinEarly(scheduledAt: string) {
+    return now >= new Date(scheduledAt).getTime() - JOIN_EARLY_MS;
+  }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -83,6 +101,41 @@ export function LiveClassRoom({ classId, profileId, isTeacher, className }: Prop
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [classId, load, supabase]);
+
+  // Raised hands — ephemeral presence, not persisted. Each participant
+  // tracks their own {name, raised}; the teacher sees whoever currently
+  // has a hand up. Students lower their own hand (no "force lower" from
+  // the teacher — same as most video tools' basic raise-hand support).
+  useEffect(() => {
+    if (!joinedSession) {
+      if (handsChannelRef.current) { supabase.removeChannel(handsChannelRef.current); handsChannelRef.current = null; }
+      setHandRaised(false);
+      setRaisedHands([]);
+      return;
+    }
+    const channel = supabase.channel(`live-hands:${joinedSession.id}`, { config: { presence: { key: profileId } } });
+    channel
+      .on("presence", { event: "sync" }, () => {
+        const state = channel.presenceState<{ name: string; raised: boolean }>();
+        const names = Object.values(state)
+          .flatMap((entries) => entries)
+          .filter((u: any) => u.raised)
+          .map((u: any) => u.name);
+        setRaisedHands(names);
+      })
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") await channel.track({ name: userName.split(" ")[0], raised: false });
+      });
+    handsChannelRef.current = channel;
+    return () => { supabase.removeChannel(channel); handsChannelRef.current = null; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [joinedSession?.id]);
+
+  function toggleHand() {
+    const next = !handRaised;
+    setHandRaised(next);
+    handsChannelRef.current?.track({ name: userName.split(" ")[0], raised: next });
+  }
 
   async function createSession() {
     if (!form.title || !form.scheduled_at || creating) return;
@@ -158,25 +211,47 @@ export function LiveClassRoom({ classId, profileId, isTeacher, className }: Prop
         </div>
       )}
 
-      {/* Jitsi embed */}
+      {/* Jitsi embed + raise hand + in-session chat */}
       {joinedSession && (
-        <div style={{ background: S.border, borderRadius: 16, overflow: "hidden", border: `1px solid ${S.border}` }}>
-          <div style={{ padding: "12px 16px", background: "#0A0B10", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${S.border}` }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#00E5A3" }} />
-              <span style={{ fontSize: 14, fontWeight: 600, color: S.text }}>{joinedSession.title}</span>
+        <div style={{ display: "flex", gap: 12, alignItems: "flex-start", flexWrap: "wrap" }}>
+          <div style={{ flex: "2 1 480px", background: S.border, borderRadius: 16, overflow: "hidden", border: `1px solid ${S.border}` }}>
+            <div style={{ padding: "12px 16px", background: "#0A0B10", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${S.border}`, flexWrap: "wrap", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#00E5A3" }} />
+                <span style={{ fontSize: 14, fontWeight: 600, color: S.text }}>{joinedSession.title}</span>
+              </div>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                {!isTeacher && (
+                  <button onClick={toggleHand} title="Raise hand" style={{ padding: "6px 12px", borderRadius: 8, background: handRaised ? "rgba(245,166,35,0.15)" : "rgba(255,255,255,0.06)", border: `1px solid ${handRaised ? "#F5A623" : S.border}`, color: handRaised ? "#F5A623" : S.muted, cursor: "pointer", fontSize: 12, fontWeight: 600 }}>
+                    ✋ {handRaised ? "Lower hand" : "Raise hand"}
+                  </button>
+                )}
+                <button onClick={() => setShowChat(!showChat)} style={{ padding: "6px 12px", borderRadius: 8, background: showChat ? "rgba(77,127,255,0.15)" : "rgba(255,255,255,0.06)", border: `1px solid ${showChat ? S.accent : S.border}`, color: showChat ? S.accent : S.muted, cursor: "pointer", fontSize: 12, fontWeight: 600 }}>
+                  💬 Chat
+                </button>
+                {isTeacher && <button onClick={() => endSession(joinedSession)} style={{ padding: "6px 14px", borderRadius: 8, background: "#FF6B6B20", border: "1px solid #FF6B6B60", color: "#FF6B6B", cursor: "pointer", fontSize: 12, fontWeight: 600 }}>End Session</button>}
+                <button onClick={() => setJoinedSession(null)} style={{ padding: "6px 14px", borderRadius: 8, background: "rgba(255,255,255,0.06)", border: `1px solid ${S.border}`, color: S.muted, cursor: "pointer", fontSize: 12 }}>Leave</button>
+              </div>
             </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              {isTeacher && <button onClick={() => endSession(joinedSession)} style={{ padding: "6px 14px", borderRadius: 8, background: "#FF6B6B20", border: "1px solid #FF6B6B60", color: "#FF6B6B", cursor: "pointer", fontSize: 12, fontWeight: 600 }}>End Session</button>}
-              <button onClick={() => setJoinedSession(null)} style={{ padding: "6px 14px", borderRadius: 8, background: "rgba(255,255,255,0.06)", border: `1px solid ${S.border}`, color: S.muted, cursor: "pointer", fontSize: 12 }}>Leave</button>
-            </div>
+            {isTeacher && raisedHands.length > 0 && (
+              <div style={{ padding: "8px 16px", background: "rgba(245,166,35,0.08)", borderBottom: "1px solid rgba(245,166,35,0.25)", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 12 }}>✋</span>
+                <span style={{ fontSize: 12, color: "#F5A623", fontWeight: 600 }}>{raisedHands.join(", ")}</span>
+                <span style={{ fontSize: 11, color: S.dim }}>{raisedHands.length === 1 ? "has a hand raised" : "have hands raised"}</span>
+              </div>
+            )}
+            <iframe
+              src={`https://meet.jit.si/${joinedSession.jitsi_room}`}
+              allow="camera; microphone; fullscreen; display-capture; autoplay"
+              style={{ width: "100%", height: 520, border: "none", display: "block" }}
+              title={joinedSession.title}
+            />
           </div>
-          <iframe
-            src={`https://meet.jit.si/${joinedSession.jitsi_room}`}
-            allow="camera; microphone; fullscreen; display-capture; autoplay"
-            style={{ width: "100%", height: 520, border: "none", display: "block" }}
-            title={joinedSession.title}
-          />
+          {showChat && (
+            <div style={{ flex: "1 1 320px", minWidth: 300, height: 570 }}>
+              <ClassChat classId={classId} profileId={profileId} userName={userName} className={className} isTeacher={isTeacher} height="100%" />
+            </div>
+          )}
         </div>
       )}
 
@@ -258,6 +333,11 @@ export function LiveClassRoom({ classId, profileId, isTeacher, className }: Prop
                 {isLive && (
                   <button onClick={() => joinSession(s)} style={{ padding: "8px 20px", borderRadius: 10, background: "#00E5A3", border: "none", color: "#07080C", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
                     Join
+                  </button>
+                )}
+                {isScheduled && canJoinEarly(s.scheduled_at) && (
+                  <button onClick={() => joinSession(s)} style={{ padding: "8px 20px", borderRadius: 10, background: "rgba(0,229,163,0.15)", border: "1px solid rgba(0,229,163,0.4)", color: "#00E5A3", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+                    Join Class
                   </button>
                 )}
                 {isTeacher && isScheduled && (

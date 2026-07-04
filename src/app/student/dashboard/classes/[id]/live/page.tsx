@@ -29,6 +29,7 @@ export default async function StudentLivePage({ params }: Props) {
         profileId={profile.id}
         isTeacher={false}
         className={cls?.name ?? "Class"}
+        userName={profile.full_name}
       />
     </div>
   );

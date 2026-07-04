@@ -35,6 +35,7 @@ interface Props {
   userName: string;
   className: string;
   isTeacher?: boolean;
+  height?: string;
 }
 
 const EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🔥", "✅", "👎"];
@@ -67,7 +68,7 @@ function dayLabel(iso: string) {
   return d.toLocaleDateString([], { weekday: "long", day: "numeric", month: "long" });
 }
 
-export function ClassChat({ classId, profileId, userName, className, isTeacher = false }: Props) {
+export function ClassChat({ classId, profileId, userName, className, isTeacher = false, height = "calc(100vh - 80px)" }: Props) {
   const supabase = createClient();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -512,7 +513,7 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
   const S = { bg: "#07080C", card: "rgba(255,255,255,0.02)", border: "rgba(255,255,255,0.07)", accent: "#4D7FFF", text: "#CDD6F4", muted: "#8892B0", dim: "#4A5170" };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 80px)", background: S.bg, borderRadius: 16, border: `1px solid ${S.border}`, overflow: "hidden" }}>
+    <div style={{ display: "flex", flexDirection: "column", height, background: S.bg, borderRadius: 16, border: `1px solid ${S.border}`, overflow: "hidden" }}>
       {/* Header */}
       <div style={{ padding: "12px 16px", borderBottom: `1px solid ${S.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", background: "#0A0B10", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>

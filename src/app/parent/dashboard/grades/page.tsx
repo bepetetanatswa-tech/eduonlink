@@ -10,11 +10,12 @@ export default async function ParentGradesPage() {
   const { data: profile } = await (supabase.from("profiles") as any).select("id,role").eq("user_id", user.id).single();
   if (!profile || (profile.role !== "parent" && profile.role !== "super_admin")) redirect("/dashboard");
 
-  // Find linked children
-  const { data: children } = await (supabase.from("profiles") as any)
-    .select("id,full_name").eq("parent_id", profile.id);
+  // Find linked children (confirmed parent_children links only)
+  const { data: links } = await (supabase.from("parent_children") as any)
+    .select("child:child_id(id,full_name)").eq("parent_id", profile.id).eq("status", "confirmed");
+  const children = (links ?? []).map((l: any) => l.child).filter(Boolean);
 
-  if (!children || children.length === 0) {
+  if (children.length === 0) {
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <div>

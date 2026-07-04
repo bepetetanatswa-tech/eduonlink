@@ -1,6 +1,9 @@
 "use client";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { createReconnectingSubscription } from "@/lib/supabase/reconnect";
 
 interface Sale {
   id: string; amount_paid: number; platform_fee_pct: number; teacher_earning_amount: number;
@@ -16,11 +19,12 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 export function EarningsClient({
-  totalEarned, totalWithdrawn, availableBalance, sales, withdrawals,
+  profileId, totalEarned, totalGross, totalCommission, totalWithdrawn, availableBalance, sales, withdrawals,
 }: {
-  totalEarned: number; totalWithdrawn: number; availableBalance: number;
+  profileId: string; totalEarned: number; totalGross: number; totalCommission: number; totalWithdrawn: number; availableBalance: number;
   sales: Sale[]; withdrawals: Withdrawal[];
 }) {
+  const supabase = createClient();
   const [showForm, setShowForm] = useState(false);
   const [amount, setAmount] = useState(availableBalance.toFixed(2));
   const [phone, setPhone] = useState("");
@@ -28,6 +32,39 @@ export function EarningsClient({
   const [error, setError] = useState<string | null>(null);
   const [localWithdrawals, setLocalWithdrawals] = useState(withdrawals);
   const [localAvailable, setLocalAvailable] = useState(availableBalance);
+  const [localSales, setLocalSales] = useState(sales);
+  const [localGross, setLocalGross] = useState(totalGross);
+  const [localCommission, setLocalCommission] = useState(totalCommission);
+  const [localEarned, setLocalEarned] = useState(totalEarned);
+  const [live, setLive] = useState(false);
+
+  useEffect(() => {
+    const stop = createReconnectingSubscription((onStatus) => {
+      const channel = supabase
+        .channel(`teacher-sales:${profileId}`)
+        .on("postgres_changes", {
+          event: "INSERT", schema: "public", table: "course_purchases",
+          filter: `teacher_id=eq.${profileId}`,
+        }, async (payload: any) => {
+          const row = payload.new;
+          if (row.status !== "completed") return;
+          const { data: course } = await (supabase.from("courses") as any).select("title").eq("id", row.course_id).maybeSingle();
+          setLocalSales((prev) => [{
+            id: row.id, amount_paid: row.amount_paid, platform_fee_pct: row.platform_fee_pct,
+            teacher_earning_amount: row.teacher_earning_amount, created_at: row.created_at,
+            courses: course ?? null,
+          }, ...prev]);
+          setLocalGross((p) => p + row.amount_paid);
+          setLocalCommission((p) => p + (row.platform_fee_amount ?? 0));
+          setLocalEarned((p) => p + row.teacher_earning_amount);
+          setLocalAvailable((p) => p + row.teacher_earning_amount);
+        })
+        .subscribe(onStatus);
+      return { remove: () => supabase.removeChannel(channel) };
+    }, (status) => setLive(status === "connected"));
+    return () => stop();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileId]);
 
   const submitWithdrawal = async () => {
     setError(null);
@@ -58,14 +95,38 @@ export function EarningsClient({
 
   return (
     <div style={{ maxWidth: 800, display: "flex", flexDirection: "column", gap: 20 }}>
-      <div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", margin: 0 }}>Earnings</h2>
-        <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>Revenue from your paid courses, after the platform commission</p>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+        <div>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", margin: 0 }}>Earnings</h2>
+          <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>Revenue from your paid courses, after the platform commission</p>
+        </div>
+        <span style={{ fontSize: 11, color: live ? "#00E5A3" : "#4A5170", display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ width: 7, height: 7, borderRadius: "50%", background: live ? "#00E5A3" : "#4A5170" }} />
+          {live ? "Live" : "Connecting…"}
+        </span>
+      </div>
+
+      <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: "18px 20px" }}>
+        <p style={{ fontSize: 11, color: "#4A5170", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.04em" }}>How your earnings are calculated</p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 16 }}>
+          <div>
+            <p style={{ fontSize: 11, color: "#8892B0", margin: "0 0 4px" }}>Total sales (what students paid)</p>
+            <p style={{ fontSize: 20, fontWeight: 800, color: "#CDD6F4", fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>${localGross.toFixed(2)}</p>
+          </div>
+          <div>
+            <p style={{ fontSize: 11, color: "#8892B0", margin: "0 0 4px" }}>− Platform commission (20%)</p>
+            <p style={{ fontSize: 20, fontWeight: 800, color: "#FF9B6B", fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>−${localCommission.toFixed(2)}</p>
+          </div>
+          <div>
+            <p style={{ fontSize: 11, color: "#8892B0", margin: "0 0 4px" }}>= You earned</p>
+            <p style={{ fontSize: 20, fontWeight: 800, color: "#00E5A3", fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>${localEarned.toFixed(2)}</p>
+          </div>
+        </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
         {[
-          { label: "Total earned", value: totalEarned, color: "#CDD6F4" },
+          { label: "Total earned (net)", value: localEarned, color: "#CDD6F4" },
           { label: "Already withdrawn", value: totalWithdrawn, color: "#8892B0" },
           { label: "Available to withdraw", value: localAvailable, color: "#00E5A3" },
         ].map((s) => (
@@ -132,11 +193,11 @@ export function EarningsClient({
 
       <div>
         <p style={{ fontSize: 13, fontWeight: 600, color: "#8892B0", marginBottom: 8 }}>Recent sales</p>
-        {sales.length === 0 ? (
+        {localSales.length === 0 ? (
           <p style={{ fontSize: 12, color: "#4A5170" }}>No sales yet. Set a price on a course to start earning.</p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {sales.map((s) => (
+            {localSales.map((s) => (
               <div key={s.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10 }}>
                 <div>
                   <p style={{ fontSize: 13, color: "#CDD6F4", margin: 0 }}>{s.courses?.title ?? "Course"}</p>

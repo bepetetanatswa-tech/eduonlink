@@ -13,6 +13,7 @@ interface PV {
   credit_amount: number | null; status: string; screenshot_url: string | null; purchase_type: string | null;
   rejection_reason: string | null; created_at: string;
   profile?: { id: string; user_id: string; full_name: string; email: string; role: string } | null;
+  course?: { title: string } | null;
 }
 
 const REJECTION_PRESETS = ["Wrong amount sent", "Fake transaction ID", "Transaction not found on EcoCash", "Reference code missing", "Duplicate submission", "Phone number blacklisted"];
@@ -36,7 +37,7 @@ export function AdminPaymentQueue({ statusFilter = "pending", onCountChange }: {
   const load = async () => {
     setLoading(true);
     const { data } = await (supabase.from("payment_verifications") as any)
-      .select("*, profile:profiles!payment_verifications_profile_id_fkey(id,user_id,full_name,email,role)")
+      .select("*, profile:profiles!payment_verifications_profile_id_fkey(id,user_id,full_name,email,role), course:courses(title)")
       .eq("status", statusFilter)
       .order("created_at", { ascending: false })
       .limit(200);
@@ -88,6 +89,19 @@ export function AdminPaymentQueue({ statusFilter = "pending", onCountChange }: {
         user_id: pv.user_id,
         title: "Credits added to your account! 🎉",
         message: `${pv.credit_amount} ${pv.credit_type?.replace(/_/g, " ")} credits have been added to your account.`,
+        type: "payment",
+      });
+    } else if (pv.purchase_type === "course") {
+      // course_purchases is created automatically by the activate_course_purchase
+      // DB trigger the moment status flips to 'approved' above (which also
+      // notifies the teacher) - nothing else to activate here. This branch
+      // used to fall through to the subscription-activation code below,
+      // which inserted a bogus subscription with a null plan_key on every
+      // single course purchase approval.
+      await (supabase.from("notifications") as any).insert({
+        user_id: pv.user_id,
+        title: "Purchase confirmed! 🎉",
+        message: `Your payment for "${pv.course?.title ?? "the course"}" was approved. You now have full access.`,
         type: "payment",
       });
     } else {
@@ -190,7 +204,9 @@ export function AdminPaymentQueue({ statusFilter = "pending", onCountChange }: {
         </div>
       )}
       {payments.map(pv => {
-        const planLabel = pv.purchase_type === "credits" ? (pv.credit_pack_key ?? "Credits") : getPlan(pv.plan_key ?? "free_student").name;
+        const planLabel = pv.purchase_type === "credits" ? (pv.credit_pack_key ?? "Credits")
+          : pv.purchase_type === "course" ? (pv.course?.title ?? "Course")
+          : getPlan(pv.plan_key ?? "free_student").name;
         const isPending = pv.status === "pending";
         const borderColor = isPending ? "rgba(245,166,35,0.25)" : pv.status === "approved" ? "rgba(0,229,163,0.15)" : "rgba(255,107,107,0.15)";
         return (
@@ -204,8 +220,8 @@ export function AdminPaymentQueue({ statusFilter = "pending", onCountChange }: {
                   <span style={{ fontSize: 10, color: S.dim, background: "rgba(255,255,255,0.05)", padding: "2px 8px", borderRadius: 20 }}>
                     {pv.profile?.role ?? "user"}
                   </span>
-                  <span style={{ fontSize: 10, color: pv.purchase_type === "credits" ? "#00E5A3" : S.accent, background: pv.purchase_type === "credits" ? "rgba(0,229,163,0.08)" : "rgba(77,127,255,0.08)", padding: "2px 8px", borderRadius: 20 }}>
-                    {pv.purchase_type === "credits" ? "Credit Pack" : "Subscription"}
+                  <span style={{ fontSize: 10, color: pv.purchase_type === "credits" ? "#00E5A3" : pv.purchase_type === "course" ? "#F5A623" : S.accent, background: pv.purchase_type === "credits" ? "rgba(0,229,163,0.08)" : pv.purchase_type === "course" ? "rgba(245,166,35,0.08)" : "rgba(77,127,255,0.08)", padding: "2px 8px", borderRadius: 20 }}>
+                    {pv.purchase_type === "credits" ? "Credit Pack" : pv.purchase_type === "course" ? "Course Sale" : "Subscription"}
                   </span>
                 </div>
                 <p style={{ fontSize: 12, color: S.muted, margin: "0 0 6px" }}>{pv.profile?.email}</p>

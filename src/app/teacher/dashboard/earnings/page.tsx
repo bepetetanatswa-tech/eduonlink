@@ -14,7 +14,7 @@ export default async function EarningsPage() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: sales } = await (supabase.from("course_purchases") as any)
-    .select("id, amount_paid, platform_fee_pct, teacher_earning_amount, created_at, courses(title)")
+    .select("id, amount_paid, platform_fee_pct, platform_fee_amount, teacher_earning_amount, created_at, courses(title)")
     .eq("teacher_id", profile.id)
     .eq("status", "completed")
     .order("created_at", { ascending: false });
@@ -26,6 +26,8 @@ export default async function EarningsPage() {
     .order("requested_at", { ascending: false });
 
   const totalEarned = (sales ?? []).reduce((sum: number, s: { teacher_earning_amount: number }) => sum + s.teacher_earning_amount, 0);
+  const totalGross = (sales ?? []).reduce((sum: number, s: { amount_paid: number }) => sum + s.amount_paid, 0);
+  const totalCommission = (sales ?? []).reduce((sum: number, s: { platform_fee_amount: number }) => sum + (s.platform_fee_amount ?? 0), 0);
   const totalWithdrawn = (withdrawals ?? [])
     .filter((w: { status: string }) => w.status === "paid")
     .reduce((sum: number, w: { amount: number }) => sum + w.amount, 0);
@@ -36,7 +38,10 @@ export default async function EarningsPage() {
 
   return (
     <EarningsClient
+      profileId={profile.id}
       totalEarned={totalEarned}
+      totalGross={totalGross}
+      totalCommission={totalCommission}
       totalWithdrawn={totalWithdrawn}
       availableBalance={availableBalance}
       sales={sales ?? []}

@@ -8,7 +8,7 @@ export default async function ExamPrepPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
   const { data: profile } = await (supabase.from("profiles") as any).select("id,role").eq("user_id", user.id).single();
-  if (!profile || profile.role !== "student") redirect("/dashboard");
+  if (!profile || (profile.role !== "student" && profile.role !== "super_admin")) redirect("/dashboard");
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>

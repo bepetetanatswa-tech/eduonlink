@@ -164,6 +164,30 @@ const NAV: Record<UserRole, NavGroup[]> = {
   ],
 };
 
+// The middleware already lets super_admin reach any route, and RLS bypasses
+// via is_super_admin() cover the data layer — so an admin visiting e.g.
+// /teacher/dashboard is using their own real account the whole time, never
+// borrowing another person's identity or data. This just derives which
+// role's nav/branding to *display* from the current URL, purely a QA/testing
+// convenience (see admin sidebar "Preview Dashboards"), so the sidebar
+// genuinely looks like the dashboard being tested rather than staying on
+// the admin's own nav the whole time.
+function deriveDisplayRole(realRole: UserRole, pathname: string): UserRole {
+  if (realRole !== "super_admin") return realRole;
+  if (pathname.startsWith("/teacher")) return "teacher";
+  if (pathname.startsWith("/student")) return "student";
+  if (pathname.startsWith("/parent")) return "parent";
+  if (pathname.startsWith("/school")) return "school_admin";
+  return "super_admin";
+}
+
+const PREVIEW_LINKS: { label: string; href: string; role: UserRole }[] = [
+  { label: "Student Dashboard", href: "/student/dashboard", role: "student" },
+  { label: "Teacher Dashboard", href: "/teacher/dashboard", role: "teacher" },
+  { label: "Parent Dashboard",  href: "/parent/dashboard",  role: "parent" },
+  { label: "School Dashboard",  href: "/school/dashboard",  role: "school_admin" },
+];
+
 interface SidebarProps {
   role: UserRole;
   isOpen: boolean;
@@ -172,7 +196,9 @@ interface SidebarProps {
 
 export function Sidebar({ role, isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
-  const groups = NAV[role] ?? [];
+  const displayRole = deriveDisplayRole(role, pathname);
+  const isPreviewing = role === "super_admin" && displayRole !== "super_admin";
+  const groups = NAV[displayRole] ?? [];
 
   const isActive = (href: string, exact?: boolean) =>
     exact ? pathname === href : pathname === href || pathname.startsWith(href + "/");
@@ -187,7 +213,21 @@ export function Sidebar({ role, isOpen, onClose }: SidebarProps) {
             Educonnect
           </span>
         </div>
-        <RoleBadge role={role} size="xs" />
+        <RoleBadge role={displayRole} size="xs" />
+        {isPreviewing && (
+          <Link
+            href="/admin/dashboard"
+            onClick={onClose}
+            style={{
+              display: "flex", alignItems: "center", gap: 6, marginTop: 10,
+              padding: "6px 10px", borderRadius: 8, fontSize: 11, fontWeight: 600,
+              color: "#F5A623", background: "rgba(245,166,35,0.1)", border: "1px solid rgba(245,166,35,0.25)",
+              textDecoration: "none",
+            }}
+          >
+            ← Return to Admin
+          </Link>
+        )}
       </div>
 
       {/* Nav */}
@@ -238,6 +278,53 @@ export function Sidebar({ role, isOpen, onClose }: SidebarProps) {
             })}
           </div>
         ))}
+
+        {role === "super_admin" && (
+          <div style={{ marginBottom: "20px" }}>
+            <p style={{
+              fontSize: "9px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase",
+              color: "#2A2D3E", fontFamily: "monospace", padding: "0 8px", marginBottom: "6px",
+            }}>
+              Preview Dashboards
+            </p>
+            {PREVIEW_LINKS.map((item) => {
+              const active = displayRole === item.role;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={onClose}
+                  style={{
+                    display: "flex", alignItems: "center", gap: "10px",
+                    padding: "9px 10px", borderRadius: "10px", marginBottom: "2px",
+                    fontSize: "13px", fontWeight: active ? 600 : 400,
+                    color: active ? "#CDD6F4" : "#6B7290",
+                    background: active ? "rgba(77,127,255,0.12)" : "transparent",
+                    border: active ? "1px solid rgba(77,127,255,0.2)" : "1px solid transparent",
+                    textDecoration: "none", transition: "all 0.15s",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!active) {
+                      (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)";
+                      (e.currentTarget as HTMLElement).style.color = "#8892B0";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!active) {
+                      (e.currentTarget as HTMLElement).style.background = "transparent";
+                      (e.currentTarget as HTMLElement).style.color = "#6B7290";
+                    }
+                  }}
+                >
+                  <span style={{ opacity: active ? 1 : 0.6, color: active ? "#4D7FFF" : "currentColor", flexShrink: 0 }}>
+                    {ic("M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422A12.083 12.083 0 0112 21a12.083 12.083 0 01-6.16-10.422L12 14z")}
+                  </span>
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </nav>
     </div>
   );

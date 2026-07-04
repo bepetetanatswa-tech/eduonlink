@@ -10,7 +10,7 @@ export default async function StudentMessagesPage() {
 
   const { data: profile } = await (supabase.from("profiles") as any)
     .select("id,full_name,email,role,avatar_url").eq("user_id", user.id).single();
-  if (!profile || profile.role !== "student") redirect("/dashboard");
+  if (!profile || (profile.role !== "student" && profile.role !== "super_admin")) redirect("/dashboard");
 
   return (
     <DirectMessages

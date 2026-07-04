@@ -11,7 +11,7 @@ export default async function StudentLessonsPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: profile } = await (supabase.from("profiles") as any)
     .select("id, full_name, role").eq("user_id", user.id).single();
-  if (!profile || profile.role !== "student") redirect("/dashboard");
+  if (!profile || (profile.role !== "student" && profile.role !== "super_admin")) redirect("/dashboard");
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: courses } = await (supabase.from("courses") as any)
@@ -105,7 +105,7 @@ export default async function StudentLessonsPage() {
                       courseId={c.id}
                       courseTitle={c.title}
                       price={c.price}
-                      hasPurchased={purchasedCourseIds.has(c.id)}
+                      hasPurchased={profile.role === "super_admin" || purchasedCourseIds.has(c.id)}
                       materials={mats}
                       completedIds={Array.from(completedIds) as string[]}
                       accentColor={accentColor}

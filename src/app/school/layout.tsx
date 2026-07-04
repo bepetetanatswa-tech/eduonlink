@@ -11,7 +11,7 @@ export default async function SchoolLayout({ children }: { children: React.React
 
   const { profile, isImpersonating } = await getEffectiveProfile(user);
 
-  if (!profile || profile.role !== "school_admin") redirect("/dashboard");
+  if (!profile || (profile.role !== "school_admin" && profile.role !== "super_admin")) redirect("/dashboard");
 
   return (
     <DashboardShell profile={profile}>

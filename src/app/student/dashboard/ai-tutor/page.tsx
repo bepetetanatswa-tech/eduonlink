@@ -15,7 +15,7 @@ export default async function AITutorPage() {
     .eq("user_id", user.id)
     .single();
 
-  if (!profile || profile.role !== "student") redirect("/dashboard");
+  if (!profile || (profile.role !== "student" && profile.role !== "super_admin")) redirect("/dashboard");
 
   const quota = await resolveAiQuota(createAdminClient(), profile.id, "student");
 

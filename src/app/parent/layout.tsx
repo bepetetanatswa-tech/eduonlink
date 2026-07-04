@@ -11,7 +11,7 @@ export default async function ParentLayout({ children }: { children: React.React
 
   const { profile, isImpersonating } = await getEffectiveProfile(user);
 
-  if (!profile || profile.role !== "parent") redirect("/dashboard");
+  if (!profile || (profile.role !== "parent" && profile.role !== "super_admin")) redirect("/dashboard");
 
   return (
     <DashboardShell profile={profile}>

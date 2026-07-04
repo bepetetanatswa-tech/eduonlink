@@ -11,7 +11,7 @@ export default async function StudentHBCPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: profile } = await (supabase.from("profiles") as any)
     .select("id, full_name, role").eq("user_id", user.id).single();
-  if (!profile || profile.role !== "student") redirect("/dashboard");
+  if (!profile || (profile.role !== "student" && profile.role !== "super_admin")) redirect("/dashboard");
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: projects } = await (supabase.from("hbc_projects") as any)

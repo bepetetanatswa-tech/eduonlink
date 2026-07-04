@@ -8,6 +8,6 @@ export default async function ParentNotificationsPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
   const { data: profile } = await (supabase.from("profiles") as any).select("id,role").eq("user_id", user.id).single();
-  if (!profile || profile.role !== "parent") redirect("/dashboard");
+  if (!profile || (profile.role !== "parent" && profile.role !== "super_admin")) redirect("/dashboard");
   return <NotificationsPage profileId={profile.id} />;
 }

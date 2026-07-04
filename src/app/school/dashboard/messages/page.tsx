@@ -10,7 +10,7 @@ export default async function SchoolMessagesPage() {
 
   const { data: profile } = await (supabase.from("profiles") as any)
     .select("id,full_name,role,avatar_url").eq("user_id", user.id).single();
-  if (!profile || profile.role !== "school_admin") redirect("/dashboard");
+  if (!profile || (profile.role !== "school_admin" && profile.role !== "super_admin")) redirect("/dashboard");
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>

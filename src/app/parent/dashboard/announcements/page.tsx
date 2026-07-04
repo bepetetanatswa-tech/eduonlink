@@ -10,7 +10,7 @@ export default async function ParentAnnouncementsPage() {
 
   const { data: profile } = await (supabase.from("profiles") as any)
     .select("id,role,school_members(school_id)").eq("user_id", user.id).single();
-  if (!profile || profile.role !== "parent") redirect("/dashboard");
+  if (!profile || (profile.role !== "parent" && profile.role !== "super_admin")) redirect("/dashboard");
 
   const schoolId = profile.school_members?.[0]?.school_id ?? null;
 

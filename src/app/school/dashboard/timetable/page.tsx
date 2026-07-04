@@ -8,7 +8,7 @@ export default async function SchoolTimetablePage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
   const { data: profile } = await (supabase.from("profiles") as any).select("id,role").eq("user_id", user.id).single();
-  if (!profile || profile.role !== "school_admin") redirect("/dashboard");
+  if (!profile || (profile.role !== "school_admin" && profile.role !== "super_admin")) redirect("/dashboard");
   const { data: member } = await (supabase.from("school_members") as any).select("school_id").eq("user_id", profile.id).maybeSingle();
   if (!member?.school_id) return <p style={{ color: "#4A5170", padding: 24 }}>No school linked to your account.</p>;
   return (

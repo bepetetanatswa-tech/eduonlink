@@ -15,7 +15,7 @@ export default async function StudentClassDetailLayout({ children, params }: Pro
 
   const { data: profile } = await (supabase.from("profiles") as any)
     .select("id,role").eq("user_id", user.id).single();
-  if (!profile || profile.role !== "student") redirect("/dashboard");
+  if (!profile || (profile.role !== "student" && profile.role !== "super_admin")) redirect("/dashboard");
 
   const { data: enrollment } = await (supabase.from("class_enrollments") as any)
     .select("id").eq("class_id", classId).eq("student_id", profile.id).eq("status", "active").maybeSingle();

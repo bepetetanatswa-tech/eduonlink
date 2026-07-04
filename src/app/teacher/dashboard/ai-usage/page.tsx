@@ -10,7 +10,7 @@ export default async function TeacherAIUsagePage() {
 
   const { data: profile } = await (supabase.from("profiles") as any)
     .select("id, full_name, role").eq("user_id", user.id).single();
-  if (!profile || profile.role !== "teacher") redirect("/dashboard");
+  if (!profile || (profile.role !== "teacher" && profile.role !== "super_admin")) redirect("/dashboard");
 
   const { data: membership } = await (supabase.from("school_members") as any)
     .select("school_id").eq("user_id", profile.id).eq("role", "teacher").maybeSingle();

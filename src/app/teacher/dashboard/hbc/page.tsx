@@ -10,7 +10,7 @@ export default async function TeacherHBCPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: profile } = await (supabase.from("profiles") as any)
     .select("id, full_name, role").eq("user_id", user.id).single();
-  if (!profile || profile.role !== "teacher") redirect("/dashboard");
+  if (!profile || (profile.role !== "teacher" && profile.role !== "super_admin")) redirect("/dashboard");
 
   // Get school via school_members
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

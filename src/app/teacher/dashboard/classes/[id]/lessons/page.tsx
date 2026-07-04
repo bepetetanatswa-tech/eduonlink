@@ -13,7 +13,7 @@ export default async function TeacherClassLessonsPage({ params }: Props) {
 
   const { data: profile } = await (supabase.from("profiles") as any)
     .select("id,role").eq("user_id", user.id).single();
-  if (!profile || profile.role !== "teacher") redirect("/dashboard");
+  if (!profile || (profile.role !== "teacher" && profile.role !== "super_admin")) redirect("/dashboard");
 
   const { data: cls } = await (supabase.from("classes") as any)
     .select("teacher_id").eq("id", classId).single();

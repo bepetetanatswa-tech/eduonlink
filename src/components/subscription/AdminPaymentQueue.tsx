@@ -118,7 +118,7 @@ export function AdminPaymentQueue({ statusFilter = "pending", onCountChange }: {
       await (supabase.from("notifications") as any).insert({
         user_id: pv.user_id,
         title: `Payment approved! Your ${planName} is now active 🎉`,
-        message: `Welcome to Educonnect Pro! Your subscription runs until ${end.toLocaleDateString()}. Enjoy full access!`,
+        message: `Welcome to EduOnLink Pro! Your subscription runs until ${end.toLocaleDateString()}. Enjoy full access!`,
         type: "payment",
       });
     }

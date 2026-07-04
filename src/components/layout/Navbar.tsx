@@ -53,7 +53,7 @@ export default function Navbar() {
         <Link href="/" className="flex items-center gap-2.5 group">
           <VoaLogoMark size={32} />
           <div className="flex flex-col leading-none">
-            <span className="font-display font-bold text-white text-[15px] tracking-tight">Educonnect</span>
+            <span className="font-display font-bold text-white text-[15px] tracking-tight">EduOnLink</span>
             <span className="text-[9px] font-mono uppercase tracking-[0.15em]" style={{ color: "#4A5170" }}>Vavhimi</span>
           </div>
         </Link>

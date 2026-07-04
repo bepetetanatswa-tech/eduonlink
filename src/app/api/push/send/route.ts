@@ -30,7 +30,7 @@ export async function POST(req: Request) {
   if (!subs?.length) return Response.json({ ok: true, sent: 0 });
 
   const payload = JSON.stringify({
-    title: body.title || "Educonnect",
+    title: body.title || "EduOnLink",
     body: body.message || "",
     url: body.link || "/dashboard",
   });

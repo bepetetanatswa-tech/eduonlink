@@ -46,7 +46,7 @@ const items: BentoItem[] = [
     id: "hbc",
     size: "medium",
     accent: "#4D7FFF",
-    tag: "Unique to Educonnect",
+    tag: "Unique to EduOnLink",
     tagColor: "#4D7FFF",
     icon: "🔬",
     title: "HBC Project Suite",

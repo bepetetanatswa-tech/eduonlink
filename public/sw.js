@@ -1,4 +1,4 @@
-// Educonnect service worker — handles Web Push display + notification clicks.
+// EduOnLink service worker — handles Web Push display + notification clicks.
 // Intentionally minimal: no offline caching, this is push-only for now.
 
 self.addEventListener("install", () => {
@@ -15,10 +15,10 @@ self.addEventListener("push", (event) => {
   try {
     payload = event.data.json();
   } catch {
-    payload = { title: "Educonnect", body: event.data.text() };
+    payload = { title: "EduOnLink", body: event.data.text() };
   }
 
-  const title = payload.title || "Educonnect";
+  const title = payload.title || "EduOnLink";
   const options = {
     body: payload.body || "",
     icon: payload.icon || "/icon",

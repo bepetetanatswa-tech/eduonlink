@@ -1,8 +1,8 @@
 {
-  "name": "educonnect",
+  "name": "eduonlink",
   "version": "0.1.0",
   "private": true,
-  "description": "Educonnect - Production Platform (by Vavhimi Threads)",
+  "description": "EduOnLink - Production Platform (by Vavhimi Threads)",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

@@ -32,10 +32,12 @@ Do not say "complete" unless every check above actually passed. If something fai
 For every stage, create the buckets and tables needed in Supabase and wire them up with the app. Do not leave Supabase schema as a manual step — write the migration SQL and apply it.
 
 ## Branding
-The product name is **Educonnect** (renamed from "Vavhimi Online Academy" / "VOA" in July 2026). In every stage to come:
-- Never reintroduce "VOA" or "Vavhimi Online Academy" as the product name in new code, copy, emails, metadata, or UI — always use "Educonnect".
+The product name is **EduOnLink** (renamed from "Educonnect" in July 2026, which itself was renamed from "Vavhimi Online Academy" / "VOA" earlier that same month — "Educonnect" turned out to already be taken). In every stage to come:
+- Never reintroduce "VOA", "Vavhimi Online Academy", or "Educonnect" as the product name in new code, copy, emails, metadata, or UI — always use "EduOnLink".
 - The registered company remains **Vavhimi Threads (Pvt) Ltd** — keep that as the legal entity reference where relevant (footer, terms, privacy, logo subtitle), it is not being renamed.
-- If you find a leftover "VOA"/"Vavhimi Online Academy" reference while working on something else, fix it as part of that work.
+- The visual logo mark itself (the pencil + 3D "E" SVG in `src/components/logo/VoaLogoMark.tsx`) is unchanged by either rename — only the text/wordmark next to it and all other name references update.
+- If you find a leftover "VOA"/"Vavhimi Online Academy"/"Educonnect" reference while working on something else, fix it as part of that work.
+- Historical `supabase/migrations/*.sql` file comments are not retroactively renamed — they're a record of what the product was called at the time (migration 001 still says "VOA", for example). Only current/forward-looking code, live UI text, and new migrations use the current name.
 
 ## Storage Architecture
 Storage is deliberately split between two systems — check which one a new upload feature belongs to before defaulting to either one:

@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
 
   await sendEmail({
     to: teacher.email,
-    subject: decision === "approved" ? "Educonnect — You're verified! 🎉" : "Educonnect — Teacher application update",
+    subject: decision === "approved" ? "EduOnLink — You're verified! 🎉" : "EduOnLink — Teacher application update",
     html: decision === "approved"
       ? teacherApprovedEmail(teacher.full_name)
       : teacherRejectedEmail(teacher.full_name, reason.trim()),

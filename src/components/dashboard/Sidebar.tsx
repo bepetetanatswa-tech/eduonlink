@@ -210,7 +210,7 @@ export function Sidebar({ role, isOpen, onClose }: SidebarProps) {
         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
           <VoaLogoMark size={28} />
           <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, color: "#fff", fontSize: "16px", letterSpacing: "-0.01em" }}>
-            Educonnect
+            EduOnLink
           </span>
         </div>
         <RoleBadge role={displayRole} size="xs" />

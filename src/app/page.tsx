@@ -7,14 +7,12 @@ import CurriculumSection from "@/components/features/CurriculumSection";
 import HbcSection from "@/components/features/HbcSection";
 import CTASection from "@/components/features/CTASection";
 import Footer from "@/components/layout/Footer";
-import VoiceGreeting from "@/components/features/VoiceGreeting";
 
 export default function HomePage() {
   return (
     <div className="grain" style={{ background: "#07080C" }}>
       {/* mesh-bg scoped to landing page only */}
       <div className="mesh-bg" aria-hidden="true" />
-      <VoiceGreeting />
       <Navbar />
       <HeroSection />
 

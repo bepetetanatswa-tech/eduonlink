@@ -86,7 +86,7 @@ export const teacherRegisterSchema = baseRegisterSchema.extend({
 
 export const parentRegisterSchema = baseRegisterSchema.extend({
   role: z.literal("parent"),
-  childEmail: z.string().email("Enter your child's email (they must already have a Educonnect account)").optional(),
+  childEmail: z.string().email("Enter your child's email (they must already have a EduOnLink account)").optional(),
 }).refine((d) => d.password === d.confirmPassword, {
   message: "Passwords do not match", path: ["confirmPassword"],
 });
@@ -180,7 +180,7 @@ export const ROLE_META: Record<
   student:      { icon: "🎓", label: "Student",      description: "I want to learn and ace my ZIMSEC exams",              accent: "#4D7FFF" },
   teacher:      { icon: "👨‍🏫", label: "Teacher",      description: "I teach and want to create lessons, track my students", accent: "#F5A623" },
   parent:       { icon: "👨‍👩‍👧", label: "Parent",       description: "I want to monitor my child's academic progress",       accent: "#00E5A3" },
-  school_admin: { icon: "🏫", label: "School Admin", description: "I manage a school and want to deploy Educonnect institution-wide", accent: "#A78BFA" },
+  school_admin: { icon: "🏫", label: "School Admin", description: "I manage a school and want to deploy EduOnLink institution-wide", accent: "#A78BFA" },
 };
 
 export type RegisterRole = "student" | "teacher" | "parent" | "school_admin";

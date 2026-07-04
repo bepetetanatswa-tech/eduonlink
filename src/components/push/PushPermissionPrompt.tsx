@@ -47,7 +47,7 @@ export function PushPermissionPrompt() {
     }}>
       <p style={{ fontSize: 13, fontWeight: 700, color: "#CDD6F4", margin: "0 0 6px" }}>🔔 Stay in the loop</p>
       <p style={{ fontSize: 12, color: "#8892B0", margin: "0 0 14px", lineHeight: 1.5 }}>
-        Allow Educonnect to send you notifications for messages, assignments, and live classes?
+        Allow EduOnLink to send you notifications for messages, assignments, and live classes?
       </p>
       {error && <p style={{ fontSize: 11, color: "#FF6B6B", margin: "0 0 10px" }}>{error}</p>}
       <div style={{ display: "flex", gap: 8 }}>

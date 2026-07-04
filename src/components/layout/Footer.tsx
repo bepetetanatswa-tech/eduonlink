@@ -23,7 +23,7 @@ const COL: Record<string, { label: string; href: string }[]> = {
     { label: "Book a Demo",        href: "mailto:vavhimiacademy@gmail.com" },
   ],
   Company: [
-    { label: "About Educonnect",          href: "/about" },
+    { label: "About EduOnLink",          href: "/about" },
     { label: "Our Mission",        href: "/about#mission" },
     { label: "Contact",            href: "/contact" },
     { label: "Privacy Policy",     href: "/privacy" },
@@ -44,7 +44,7 @@ export default function Footer() {
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-2.5 mb-4">
               <VoaLogoMark size={36} />
-              <span className="font-display font-bold text-white">Educonnect</span>
+              <span className="font-display font-bold text-white">EduOnLink</span>
             </Link>
             <p className="text-xs leading-relaxed mb-5" style={{ color: "#4A5170" }}>
               The intelligence behind Zimbabwe&apos;s education. AI-powered. ZIMSEC-aligned. Built for every student.
@@ -118,7 +118,7 @@ export default function Footer() {
           <p className="text-xs" style={{ color: "#4A5170" }}>
             © 2026 Vavhimi Threads (Pvt) Ltd. All rights reserved.
             <span className="mx-2 opacity-40">·</span>
-            Educonnect is a product of Vavhimi Threads · Built in Zimbabwe, for Zimbabwe.
+            EduOnLink is a product of Vavhimi Threads · Built in Zimbabwe, for Zimbabwe.
           </p>
           <div className="flex items-center gap-4">
             <span className="badge badge-cobalt text-[11px]">🇿🇼 ZIMSEC Aligned</span>

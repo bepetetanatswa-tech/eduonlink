@@ -76,7 +76,7 @@ export default async function AdminOverviewPage() {
             God-Mode Overview ⚡
           </h2>
           <p style={{ fontSize: "13px", color: "#4A5170", marginTop: 2 }}>
-            Everything happening on the Educonnect platform, right now.
+            Everything happening on the EduOnLink platform, right now.
           </p>
         </div>
         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>

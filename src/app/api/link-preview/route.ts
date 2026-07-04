@@ -23,7 +23,7 @@ export async function GET(req: Request) {
 
   try {
     const res = await fetch(target.toString(), {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; EduconnectBot/1.0; +link-preview)" },
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; EduOnLinkBot/1.0; +link-preview)" },
       signal: AbortSignal.timeout(5000),
     });
     if (!res.ok) return Response.json({ error: "Could not fetch URL" }, { status: 502 });

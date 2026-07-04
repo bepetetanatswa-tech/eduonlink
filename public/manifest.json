@@ -1,6 +1,6 @@
 {
-  "name": "Educonnect",
-  "short_name": "Educonnect",
+  "name": "EduOnLink",
+  "short_name": "EduOnLink",
   "description": "AI-powered ZIMSEC learning for every student in Zimbabwe",
   "start_url": "/",
   "display": "standalone",

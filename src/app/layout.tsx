@@ -3,12 +3,12 @@ import "./globals.css";
 import { IdleLogout } from "@/components/auth/IdleLogout";
 
 export const metadata: Metadata = {
-  title: "Educonnect — The Intelligence Behind Zimbabwe's Education",
+  title: "EduOnLink — The Intelligence Behind Zimbabwe's Education",
   description:
-    "Educonnect: AI-powered learning for every ZIMSEC level. Sir Taks AI tutor, HBC project blueprints, live classes and exam prep — built from the ground up for Zimbabwe.",
-  keywords: ["ZIMSEC", "Zimbabwe education", "Heritage-Based Curriculum", "HBC", "AI tutor", "Sir Taks", "Educonnect", "O-Level", "A-Level"],
+    "EduOnLink: AI-powered learning for every ZIMSEC level. Sir Taks AI tutor, HBC project blueprints, live classes and exam prep — built from the ground up for Zimbabwe.",
+  keywords: ["ZIMSEC", "Zimbabwe education", "Heritage-Based Curriculum", "HBC", "AI tutor", "Sir Taks", "EduOnLink", "O-Level", "A-Level"],
   openGraph: {
-    title: "Educonnect — The Intelligence Behind Zimbabwe's Education",
+    title: "EduOnLink — The Intelligence Behind Zimbabwe's Education",
     description: "Sir Taks AI tutor + ZIMSEC curriculum + live classes. Premium. Global. Built for Zimbabwe.",
     type: "website",
     locale: "en_ZW",

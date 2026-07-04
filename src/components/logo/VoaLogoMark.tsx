@@ -22,7 +22,7 @@ export function VoaLogoMark({ size = 40, className }: MarkProps) {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
-      aria-label="Educonnect"
+      aria-label="EduOnLink"
     >
       <defs>
         {/* Navy — extrusion shadow face of the E */}
@@ -87,7 +87,7 @@ export function VoaLogoFull({ size = 40, className }: MarkProps) {
           className="font-display font-bold tracking-tight text-white"
           style={{ fontSize: size * 0.4 }}
         >
-          Educonnect
+          EduOnLink
         </span>
         <span
           className="font-mono uppercase tracking-[0.15em]"

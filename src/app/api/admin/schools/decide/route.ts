@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     const origin = process.env.NEXT_PUBLIC_APP_URL || "https://voa-production.vercel.app";
     await sendEmail({
       to: adminProfile.email,
-      subject: decision === "approved" ? "Educonnect — Your school is approved! 🎉" : "Educonnect — Registration update",
+      subject: decision === "approved" ? "EduOnLink — Your school is approved! 🎉" : "EduOnLink — Registration update",
       html: decision === "approved"
         ? schoolApprovedEmail(school.name, `${origin}/school/dashboard`)
         : schoolRejectedEmail(school.name, reason.trim()),

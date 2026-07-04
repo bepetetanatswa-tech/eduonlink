@@ -219,7 +219,7 @@ export default function LoginPage() {
 
       {/* Footer */}
       <p className="text-sm text-center mt-5" style={{ color: "#4A5170" }}>
-        New to Educonnect?{" "}
+        New to EduOnLink?{" "}
         <Link href="/auth/register" className="font-semibold transition-colors" style={{ color: "#4D7FFF" }}
           onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#90ABFF")}
           onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "#4D7FFF")}

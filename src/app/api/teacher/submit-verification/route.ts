@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
 
   await sendEmail({
     to: profile.email,
-    subject: "Educonnect — Teacher application received",
+    subject: "EduOnLink — Teacher application received",
     html: teacherApplicationReceivedEmail(),
   });
 

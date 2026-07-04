@@ -26,7 +26,7 @@ type ChildLink = {
 type School = { id: string; name: string };
 
 const STEP_META: Record<string, { title: string; subtitle: string }> = {
-  welcome:  { title: "Welcome to Educonnect 🎓", subtitle: "Let's finish setting up your profile — it only takes a couple of minutes." },
+  welcome:  { title: "Welcome to EduOnLink 🎓", subtitle: "Let's finish setting up your profile — it only takes a couple of minutes." },
   basics:   { title: "Tell us about yourself", subtitle: "This helps us personalise your experience." },
   address:  { title: "Where are you based?", subtitle: "Used for school matching and local content." },
   student:  { title: "Your school details", subtitle: "So we can tailor lessons to your level." },

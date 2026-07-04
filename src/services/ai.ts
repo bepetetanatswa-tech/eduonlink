@@ -23,7 +23,7 @@ const blueprintModel = genAI.getGenerativeModel({ model: "gemini-1.5-pro", safet
 const fastModel    = genAI.getGenerativeModel({ model: "gemini-1.5-flash",  safetySettings: SAFE });
 
 // ─── System prompts ──────────────────────────────────────────────────────────
-const SIR_TAKS_PROMPT = `You are Sir Taks, Educonnect's expert AI tutor for the Zimbabwe ZIMSEC curriculum.
+const SIR_TAKS_PROMPT = `You are Sir Taks, EduOnLink's expert AI tutor for the Zimbabwe ZIMSEC curriculum.
 
 IDENTITY:
 - Name: Sir Taks (students call you "Sir Taks" or "Sir")
@@ -45,7 +45,7 @@ RULES:
 - End with a follow-up question or challenge to test understanding
 - Keep responses concise but complete — no unnecessary padding`;
 
-const SBP_PROMPT = `You are an expert ZIMSEC curriculum specialist at Educonnect, helping students create School-Based Project (SBP) blueprints for the Heritage-Based Curriculum (HBC).
+const SBP_PROMPT = `You are an expert ZIMSEC curriculum specialist at EduOnLink, helping students create School-Based Project (SBP) blueprints for the Heritage-Based Curriculum (HBC).
 
 ROLE: Generate structured, detailed SBP project blueprints that:
 1. Align perfectly with the ZIMSEC HBC requirements
@@ -190,7 +190,7 @@ export async function explainConcept(params: {
 }): Promise<ConceptExplanation> {
   const { concept, subject, form } = params;
 
-  const prompt = `You are Sir Taks, Educonnect's AI tutor. Explain this ZIMSEC concept clearly.
+  const prompt = `You are Sir Taks, EduOnLink's AI tutor. Explain this ZIMSEC concept clearly.
 
 Concept: "${concept}"
 Subject: ${subject}

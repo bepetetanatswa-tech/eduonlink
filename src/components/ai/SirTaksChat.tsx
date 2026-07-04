@@ -109,9 +109,9 @@ const ROLE_CONFIG: Record<UserRole, {
   },
   super_admin: {
     title: "Sir Taks — Platform Advisor",
-    subtitle: "Strategic AI support for Educonnect platform management",
+    subtitle: "Strategic AI support for EduOnLink platform management",
     welcomeLabel: "Start Session",
-    welcomeBody: "I help you analyse platform metrics, plan growth strategy, and think through product decisions for Educonnect.",
+    welcomeBody: "I help you analyse platform metrics, plan growth strategy, and think through product decisions for EduOnLink.",
     disclaimer: "Strategic frameworks only — always validate with real platform data.",
     topics: [
       { name: "Platform Strategy", icon: "🚀", color: "#4D7FFF" },

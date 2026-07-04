@@ -103,7 +103,7 @@ export default function ContactPage() {
             className="text-base leading-relaxed max-w-xl mx-auto"
             style={{ color: "#8892B0" }}
           >
-            Questions about Educonnect, a school partnership, a teacher application, or just want to say hello — reach out below.
+            Questions about EduOnLink, a school partnership, a teacher application, or just want to say hello — reach out below.
           </motion.p>
         </div>
       </section>

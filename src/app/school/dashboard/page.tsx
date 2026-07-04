@@ -30,7 +30,7 @@ export default async function SchoolDashboardPage() {
         <p style={{ color: "#8892B0", fontSize: 14, lineHeight: 1.6, marginBottom: 16 }}>
           {school.status === "rejected"
             ? `${school.name} was not approved. Reason: ${school.rejection_reason ?? "No reason given."}`
-            : `${school.name} is awaiting review by the Educonnect team. We'll email you once a decision is made — usually within 1-2 business days.`}
+            : `${school.name} is awaiting review by the EduOnLink team. We'll email you once a decision is made — usually within 1-2 business days.`}
         </p>
       </div>
     );
@@ -91,7 +91,7 @@ export default async function SchoolDashboardPage() {
 
       {!school && (
         <div style={{ padding: "16px 20px", background: "rgba(245,166,35,0.08)", border: "1px solid rgba(245,166,35,0.2)", borderRadius: "12px", color: "#F5A623", fontSize: "13px" }}>
-          No school is linked to your account yet. Contact the Educonnect super admin to set up your school profile.
+          No school is linked to your account yet. Contact the EduOnLink super admin to set up your school profile.
         </div>
       )}
 

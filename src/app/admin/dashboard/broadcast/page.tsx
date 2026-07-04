@@ -52,14 +52,14 @@ export default function BroadcastPage() {
     setSendErr(null);
 
     // Save as announcement
-    const { error: annErr } = await (supabase.from("announcements") as any).insert({
+    const { data: ann, error: annErr } = await (supabase.from("announcements") as any).insert({
       author_id: profileId,
       title: title.trim(),
       content: message.trim(),
       target_role: target === "all" ? null : target,
       is_emergency: isEmergency,
       is_pinned: isEmergency,
-    });
+    }).select("id").single();
 
     if (annErr) {
       setSendErr(`Broadcast failed: ${annErr.message}`);
@@ -67,23 +67,17 @@ export default function BroadcastPage() {
       return;
     }
 
-    // Send notifications to targets
-    let query = (supabase.from("profiles") as any).select("id");
-    if (target !== "all") query = query.eq("role", target);
-    const { data: profiles } = await query;
+    // Send notifications to targets server-side (SECURITY DEFINER RPC,
+    // migration 032) — shared with AnnouncementForm so both entry points
+    // get the same real preview text (was truncated with no ellipsis here)
+    // instead of duplicating the targeting/insert logic.
+    let countQuery = (supabase.from("profiles") as any).select("id", { count: "exact", head: true }).neq("id", profileId);
+    if (target !== "all") countQuery = countQuery.eq("role", target);
+    const { count: audienceCount } = await countQuery;
+    const count = audienceCount ?? 0;
 
-    let count = 0;
-    if (profiles?.length > 0) {
-      count = profiles.length;
-      const notifications = profiles.map((p: { id: string }) => ({
-        user_id: p.id,
-        title: isEmergency ? `🚨 ${title}` : title,
-        message: message.slice(0, 120),
-        type: isEmergency ? "warning" : "announcement",
-        read: false,
-        link: "/dashboard",
-      }));
-      await (supabase.from("notifications") as any).insert(notifications);
+    if (count > 0) {
+      await supabase.rpc("notify_announcement", { p_announcement_id: ann.id } as any);
     }
 
     fetch("/api/admin/audit-log", {

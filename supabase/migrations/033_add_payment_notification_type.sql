@@ -1,0 +1,16 @@
+-- VOA/Educonnect — Migration 033: add 'payment' to notification_type enum.
+--
+-- Two real bugs found while building the dedicated notifications page:
+--   1. AdminPaymentQueue.tsx's reject() path inserted type: "error", which
+--      is not a valid notification_type value — the insert throws and is
+--      never checked, so payment-rejection notifications have never
+--      actually reached anyone.
+--   2. school/register/route.ts inserted type: "school_registration",
+--      also invalid — new-school-registration alerts to super_admins have
+--      silently never been created.
+-- Fixing #2 by reusing the existing "info" value (matches the equivalent
+-- "new teacher application" admin notification). Fixing #1 by giving
+-- payment notifications their own real type instead of overloading
+-- success/warning/error, which also lets the new notifications page filter
+-- a genuine "Payments" tab instead of guessing from title/message text.
+ALTER TYPE notification_type ADD VALUE IF NOT EXISTS 'payment';

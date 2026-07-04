@@ -88,7 +88,7 @@ export function AdminPaymentQueue({ statusFilter = "pending", onCountChange }: {
         user_id: pv.user_id,
         title: "Credits added to your account! 🎉",
         message: `${pv.credit_amount} ${pv.credit_type?.replace(/_/g, " ")} credits have been added to your account.`,
-        type: "success",
+        type: "payment",
       });
     } else {
       // Activate subscription
@@ -119,7 +119,7 @@ export function AdminPaymentQueue({ statusFilter = "pending", onCountChange }: {
         user_id: pv.user_id,
         title: `Payment approved! Your ${planName} is now active 🎉`,
         message: `Welcome to Educonnect Pro! Your subscription runs until ${end.toLocaleDateString()}. Enjoy full access!`,
-        type: "success",
+        type: "payment",
       });
     }
 
@@ -140,7 +140,7 @@ export function AdminPaymentQueue({ statusFilter = "pending", onCountChange }: {
       user_id: pv.user_id,
       title: "Payment verification failed",
       message: `Your payment of $${pv.amount} was not approved. Reason: ${reason}. Please contact support if you believe this is an error.`,
-      type: "error",
+      type: "payment",
     });
     notify("success", "Payment rejected");
     setRejectModal(null);

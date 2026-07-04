@@ -23,7 +23,7 @@ const ROLES = [
   { value: "school_admin", label: "School admins only" },
 ];
 
-export function AnnouncementForm({ profileId, userRole, schoolId, classes = [], onPosted, allowEmergency = false }: Props) {
+export function AnnouncementForm({ profileId, schoolId, classes = [], onPosted, allowEmergency = false }: Props) {
   const supabase = createClient();
   const S = { bg: "#07080C", border: "rgba(255,255,255,0.07)", accent: "#4D7FFF", text: "#CDD6F4", muted: "#8892B0", dim: "#4A5170" };
 
@@ -91,22 +91,13 @@ export function AnnouncementForm({ profileId, userRole, schoolId, classes = [], 
 
     const { data: ann } = await (supabase.from("announcements") as any).insert(payload).select("id").single();
 
-    // Notify targeted users
+    // Notify targeted users server-side (SECURITY DEFINER RPC, migration
+    // 032) — the notifications RLS insert policy only allows user_id =
+    // get_my_profile_id(), so a direct insert targeting every other user
+    // was silently rejected unless the poster was a super_admin. The RPC
+    // also builds a proper "…"-terminated preview instead of a hard cut.
     if (ann) {
-      let notifQ = (supabase.from("profiles") as any).select("id").neq("id", profileId);
-      if (targetRole) notifQ = notifQ.eq("role", targetRole);
-      const { data: targets } = await notifQ.limit(500);
-      if (targets?.length) {
-        await (supabase.from("notifications") as any).insert(
-          targets.map((p: any) => ({
-            user_id: p.id,
-            title: isEmergency ? `🚨 Emergency: ${title}` : title,
-            message: content.slice(0, 100),
-            type: isEmergency ? "warning" : "info",
-            link: `/${userRole}/dashboard/announcements`,
-          }))
-        );
-      }
+      await supabase.rpc("notify_announcement", { p_announcement_id: ann.id } as any);
     }
 
     setTitle(""); setContent(""); setTargetRole(""); setClassId(""); setIsEmergency(false); setScheduledAt(""); setFileUrl(null); setFileName(null);

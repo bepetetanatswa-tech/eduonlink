@@ -105,21 +105,11 @@ export function LiveClassRoom({ classId, profileId, isTeacher, className }: Prop
     await (supabase.from("live_sessions") as any)
       .update({ status: "live", started_at: new Date().toISOString() })
       .eq("id", s.id);
-    // Notify students
-    const { data: enrollments } = await (supabase.from("class_enrollments") as any)
-      .select("student_id")
-      .eq("class_id", classId)
-      .eq("status", "active");
-    if (enrollments) {
-      const notifs = enrollments.map((e: any) => ({
-        user_id: e.student_id,
-        title: `${className} is now LIVE!`,
-        message: s.title,
-        type: "info",
-        link: `/${isTeacher ? "teacher" : "student"}/dashboard/classes/${classId}/live`,
-      }));
-      await (supabase.from("notifications") as any).insert(notifs);
-    }
+    // Notify students server-side (SECURITY DEFINER RPC, migration 032) —
+    // the notifications RLS insert policy only allows user_id =
+    // get_my_profile_id(), so this used to insert rows for other users
+    // (students) directly, which RLS silently rejected.
+    await supabase.rpc("notify_live_class_started", { p_session_id: s.id } as any);
     load();
   }
 

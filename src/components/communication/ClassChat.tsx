@@ -4,6 +4,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { LinkPreviewCard, extractFirstUrl } from "./LinkPreviewCard";
+import { createReconnectingSubscription, type ConnStatus } from "@/lib/supabase/reconnect";
 
 interface Sender { id: string; full_name: string; avatar_url: string | null; role: string }
 interface Reaction { emoji: string; user_id: string }
@@ -87,6 +88,7 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
   const bottomRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const presenceChannelRef = useRef<any>(null);
+  const [connStatus, setConnStatus] = useState<ConnStatus>("connecting");
   const typingTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -116,8 +118,8 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
     loadMessages();
     checkMuted();
     checkNotifMuted();
-    setupRealtime();
-    return () => cleanup();
+    const teardown = setupRealtime();
+    return () => teardown();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classId]);
 
@@ -189,36 +191,44 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
   }
 
   function setupRealtime() {
-    const msgChannel = supabase
-      .channel(`class-msgs:${classId}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `class_id=eq.${classId}` }, async (payload) => {
-        const { data } = await (supabase.from("messages") as any)
-          .select(`*, sender:profiles!messages_sender_id_fkey(id,full_name,avatar_url,role), reactions:message_reactions(emoji,user_id), parent:messages!messages_parent_id_fkey(id,content,sender:profiles!messages_sender_id_fkey(full_name))`)
-          .eq("id", payload.new.id)
-          .single();
-        if (data) setMessages(prev => [...prev, data]);
-      })
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages", filter: `class_id=eq.${classId}` }, (payload) => {
-        setMessages(prev => prev.map(m => m.id === payload.new.id ? { ...m, ...payload.new } : m));
-        if (payload.new.is_pinned) {
-          setMessages(prev => {
-            const p = prev.find(m => m.id === payload.new.id);
-            if (p) setPinned(p);
-            return prev;
-          });
-        }
-      })
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "message_reactions" }, (payload) => {
-        setMessages(prev => prev.map(m => m.id === payload.new.message_id ? {
-          ...m, reactions: [...m.reactions, { emoji: payload.new.emoji, user_id: payload.new.user_id }]
-        } : m));
-      })
-      .on("postgres_changes", { event: "DELETE", schema: "public", table: "message_reactions" }, (payload) => {
-        setMessages(prev => prev.map(m => m.id === payload.old.message_id ? {
-          ...m, reactions: m.reactions.filter(r => !(r.emoji === payload.old.emoji && r.user_id === payload.old.user_id))
-        } : m));
-      })
-      .subscribe();
+    // Message channel: recreated with backoff on CHANNEL_ERROR/TIMED_OUT/CLOSED
+    // instead of silently going stale on a dropped connection (relevant on
+    // high-latency/unstable links). The previous version's returned cleanup
+    // closure was discarded by the caller — msgChannel was never removed on
+    // unmount/classId change, leaking a subscription on every remount.
+    const stopMsgReconnect = createReconnectingSubscription((onStatus) => {
+      const msgChannel = supabase
+        .channel(`class-msgs:${classId}`)
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `class_id=eq.${classId}` }, async (payload) => {
+          const { data } = await (supabase.from("messages") as any)
+            .select(`*, sender:profiles!messages_sender_id_fkey(id,full_name,avatar_url,role), reactions:message_reactions(emoji,user_id), parent:messages!messages_parent_id_fkey(id,content,sender:profiles!messages_sender_id_fkey(full_name))`)
+            .eq("id", payload.new.id)
+            .single();
+          if (data) setMessages(prev => [...prev, data]);
+        })
+        .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages", filter: `class_id=eq.${classId}` }, (payload) => {
+          setMessages(prev => prev.map(m => m.id === payload.new.id ? { ...m, ...payload.new } : m));
+          if (payload.new.is_pinned) {
+            setMessages(prev => {
+              const p = prev.find(m => m.id === payload.new.id);
+              if (p) setPinned(p);
+              return prev;
+            });
+          }
+        })
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "message_reactions" }, (payload) => {
+          setMessages(prev => prev.map(m => m.id === payload.new.message_id ? {
+            ...m, reactions: [...m.reactions, { emoji: payload.new.emoji, user_id: payload.new.user_id }]
+          } : m));
+        })
+        .on("postgres_changes", { event: "DELETE", schema: "public", table: "message_reactions" }, (payload) => {
+          setMessages(prev => prev.map(m => m.id === payload.old.message_id ? {
+            ...m, reactions: m.reactions.filter(r => !(r.emoji === payload.old.emoji && r.user_id === payload.old.user_id))
+          } : m));
+        })
+        .subscribe(onStatus);
+      return { remove: () => supabase.removeChannel(msgChannel) };
+    }, setConnStatus);
 
     const presenceChannel = supabase.channel(`class-presence:${classId}`, {
       config: { presence: { key: profileId } },
@@ -244,13 +254,9 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
     presenceChannelRef.current = presenceChannel;
 
     return () => {
-      supabase.removeChannel(msgChannel);
+      stopMsgReconnect();
       supabase.removeChannel(presenceChannel);
     };
-  }
-
-  function cleanup() {
-    if (presenceChannelRef.current) supabase.removeChannel(presenceChannelRef.current);
   }
 
   function handleInputChange(val: string) {
@@ -457,7 +463,11 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
           </div>
           <div>
             <p style={{ fontSize: 14, fontWeight: 600, color: S.text, fontFamily: "'Space Grotesk',sans-serif" }}>{className}</p>
-            <p style={{ fontSize: 11, color: S.dim }}>{onlineCount} online</p>
+            {connStatus === "connected" ? (
+              <p style={{ fontSize: 11, color: S.dim }}>{onlineCount} online</p>
+            ) : (
+              <p style={{ fontSize: 11, color: "#F5A623" }}>{connStatus === "connecting" ? "Connecting…" : "Reconnecting…"}</p>
+            )}
           </div>
         </div>
         <div style={{ display: "flex", gap: 6 }}>

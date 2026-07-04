@@ -62,6 +62,11 @@ const PAGE_TITLES: Record<string, string> = {
   "/teacher/dashboard/profile":          "My Profile",
   "/school/dashboard/profile":           "My Profile",
   "/admin/dashboard/profile":            "My Profile",
+  "/student/dashboard/notifications":    "Notifications",
+  "/teacher/dashboard/notifications":    "Notifications",
+  "/parent/dashboard/notifications":     "Notifications",
+  "/school/dashboard/notifications":     "Notifications",
+  "/admin/dashboard/notifications":      "Notifications",
 };
 
 const PROFILE_PATH: Record<UserRole, string> = {
@@ -132,7 +137,7 @@ export function TopBar({ profile, onMenuClick }: TopBarProps) {
 
       {/* Right */}
       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-        <NotificationBell profileId={profile.id} />
+        <NotificationBell profileId={profile.id} role={profile.role} />
 
         {/* Profile dropdown */}
         <div ref={ref} style={{ position: "relative" }}>

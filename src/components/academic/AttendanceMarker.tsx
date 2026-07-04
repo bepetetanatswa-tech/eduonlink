@@ -76,21 +76,13 @@ export function AttendanceMarker({ profileId }: { profileId: string }) {
       marked_by: profileId,
     }));
     await (supabase.from("attendance") as any).upsert(records, { onConflict: "class_id,student_id,date" });
-    // Notify parents of absent/late students, resolved via parent_children
-    // (the previous version filtered profiles by role="parent" AND
-    // id IN <the students' own ids>, which can never match anyone — it
-    // never actually looked up each student's linked parent).
-    const absentStudents = students.filter(s => rows[s.id]?.status === "absent" || rows[s.id]?.status === "late");
-    if (absentStudents.length > 0) {
-      const { data: links } = await (supabase.from("parent_children") as any)
-        .select("parent_id, child_id").eq("status", "confirmed").in("child_id", absentStudents.map(s => s.id));
-      const notifs = (links ?? []).map((l: any) => ({
-        user_id: l.parent_id,
-        title: "Attendance Alert",
-        message: `${absentStudents.find(s => s.id === l.child_id)?.full_name ?? "Your child"} was marked ${rows[l.child_id]?.status ?? "absent"} on ${date}`,
-        type: "warning",
-      }));
-      if (notifs.length > 0) await (supabase.from("notifications") as any).insert(notifs);
+    // Notify parents of absent/late students server-side (SECURITY DEFINER
+    // RPC, migration 032) — the notifications RLS insert policy only allows
+    // user_id = get_my_profile_id(), so a direct client insert targeting the
+    // parent's id was silently rejected and never reached anyone.
+    const hasAbsentOrLate = students.some(s => rows[s.id]?.status === "absent" || rows[s.id]?.status === "late");
+    if (hasAbsentOrLate) {
+      await supabase.rpc("notify_attendance_alerts", { p_class_id: classId, p_date: date } as any);
     }
     setSaving(false);
     setSaved(true);

@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       user_id: sa.id,
       title: "New school registration",
       message: `${school.name} has submitted for verification.`,
-      type: "school_registration",
+      type: "info",
     });
   }
 

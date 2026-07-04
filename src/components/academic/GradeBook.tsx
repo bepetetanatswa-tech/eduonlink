@@ -79,14 +79,18 @@ export function GradeBook({ profileId }: { profileId: string }) {
     if (records.length > 0) {
       await (supabase.from("grades") as any).upsert(records, { onConflict: "student_id,class_id,term,academic_year" });
     }
-    // Notify students
+    // Notify students server-side (SECURITY DEFINER RPC, migration 032) —
+    // the notifications RLS insert policy only allows user_id =
+    // get_my_profile_id(), so this used to insert rows for other users
+    // (students) directly, which RLS silently rejected.
     const gradedStudents = students.filter(s => grades[s.id]?.score !== "");
     if (gradedStudents.length > 0) {
-      await (supabase.from("notifications") as any).insert(gradedStudents.map(s => ({
-        user_id: s.id, title: "Grades Updated",
-        message: `Your Term ${term} ${cls?.subject ?? ""} grade has been posted`,
-        type: "grade",
-      })));
+      await supabase.rpc("notify_grades_posted", {
+        p_class_id: classId,
+        p_student_ids: gradedStudents.map(s => s.id),
+        p_term: term,
+        p_subject: cls?.subject ?? "",
+      } as any);
     }
     setSaving(false);
     setSaved(true);

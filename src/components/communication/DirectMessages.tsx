@@ -4,6 +4,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { createReconnectingSubscription, type ConnStatus } from "@/lib/supabase/reconnect";
 
 interface Profile { id: string; full_name: string; avatar_url: string | null; role: string; email: string }
 interface DMsg {
@@ -75,6 +76,7 @@ export function DirectMessages({ profileId, userRole, allowedRoles }: Props) {
   const [isMobile, setIsMobile] = useState(false);
   const presenceChannelRef = useRef<any>(null);
   const typingTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const [connStatus, setConnStatus] = useState<ConnStatus>("connecting");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
   const searchParams = useSearchParams();
@@ -177,30 +179,34 @@ export function DirectMessages({ profileId, userRole, allowedRoles }: Props) {
   }
 
   function setupRealtime() {
-    const ch = supabase.channel(`dm:${profileId}`)
-      .on("postgres_changes", {
-        event: "INSERT", schema: "public", table: "messages",
-        filter: `receiver_id=eq.${profileId}`,
-      }, async (payload) => {
-        const { data } = await (supabase.from("messages") as any)
-          .select("*, sender:profiles!messages_sender_id_fkey(id,full_name,avatar_url,role,email), receiver:profiles!messages_receiver_id_fkey(id,full_name,avatar_url,role,email)")
-          .eq("id", payload.new.id)
-          .single();
-        if (data) {
-          setMessages(prev => [...prev, data]);
-          setConversations(prev => {
-            const idx = prev.findIndex(c => c.other.id === data.sender.id);
-            if (idx >= 0) {
-              const updated = [...prev];
-              updated[idx] = { ...updated[idx], lastMsg: data, unread: updated[idx].unread + 1 };
-              return updated;
-            }
-            return [{ other: data.sender, lastMsg: data, unread: 1 }, ...prev];
-          });
-        }
-      })
-      .subscribe();
-    return () => supabase.removeChannel(ch);
+    // Recreated with backoff on CHANNEL_ERROR/TIMED_OUT/CLOSED instead of
+    // silently going stale on a dropped connection.
+    return createReconnectingSubscription((onStatus) => {
+      const ch = supabase.channel(`dm:${profileId}`)
+        .on("postgres_changes", {
+          event: "INSERT", schema: "public", table: "messages",
+          filter: `receiver_id=eq.${profileId}`,
+        }, async (payload) => {
+          const { data } = await (supabase.from("messages") as any)
+            .select("*, sender:profiles!messages_sender_id_fkey(id,full_name,avatar_url,role,email), receiver:profiles!messages_receiver_id_fkey(id,full_name,avatar_url,role,email)")
+            .eq("id", payload.new.id)
+            .single();
+          if (data) {
+            setMessages(prev => [...prev, data]);
+            setConversations(prev => {
+              const idx = prev.findIndex(c => c.other.id === data.sender.id);
+              if (idx >= 0) {
+                const updated = [...prev];
+                updated[idx] = { ...updated[idx], lastMsg: data, unread: updated[idx].unread + 1 };
+                return updated;
+              }
+              return [{ other: data.sender, lastMsg: data, unread: 1 }, ...prev];
+            });
+          }
+        })
+        .subscribe(onStatus);
+      return { remove: () => supabase.removeChannel(ch) };
+    }, setConnStatus);
   }
 
   const setupPresence = useCallback((other: Profile) => {
@@ -468,8 +474,8 @@ export function DirectMessages({ profileId, userRole, allowedRoles }: Props) {
         </div>
         <div style={{ flex: 1 }}>
           <p style={{ fontSize: 13, fontWeight: 600, color: S.text, margin: 0 }}>{selected.full_name}</p>
-          <p style={{ fontSize: 11, color: otherTyping ? S.accent : S.dim, textTransform: otherTyping ? "none" : "capitalize", margin: 0 }}>
-            {otherTyping ? "typing…" : otherOnline ? "Online" : selected.role.replace("_", " ")}
+          <p style={{ fontSize: 11, color: connStatus !== "connected" ? "#F5A623" : otherTyping ? S.accent : S.dim, textTransform: otherTyping ? "none" : "capitalize", margin: 0 }}>
+            {connStatus !== "connected" ? (connStatus === "connecting" ? "Connecting…" : "Reconnecting…") : otherTyping ? "typing…" : otherOnline ? "Online" : selected.role.replace("_", " ")}
           </p>
         </div>
         <button onClick={toggleMute} title={muted ? "Unmute notifications" : "Mute notifications"} style={{ background: "none", border: `1px solid ${S.border}`, borderRadius: 8, color: muted ? "#F5A623" : S.muted, cursor: "pointer", fontSize: 13, padding: "6px 8px", display: "flex", alignItems: "center" }}>

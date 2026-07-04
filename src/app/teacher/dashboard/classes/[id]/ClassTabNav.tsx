@@ -8,9 +8,11 @@ const S = { border: "rgba(255,255,255,0.07)", accent: "#4D7FFF", muted: "#8892B0
 const TABS = [
   { key: "chat", label: "Chat" },
   { key: "live", label: "Live" },
-  { key: "students", label: "Students" },
-  { key: "attendance", label: "Attendance" },
+  { key: "lessons", label: "Lessons" },
   { key: "assignments", label: "Assignments" },
+  { key: "attendance", label: "Attendance" },
+  { key: "students", label: "Students" },
+  { key: "resources", label: "Resources" },
 ];
 
 export function ClassTabNav({ classId, basePath }: { classId: string; basePath: string }) {

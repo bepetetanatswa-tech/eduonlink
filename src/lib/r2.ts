@@ -156,4 +156,9 @@ export const FILE_CATEGORIES: Record<string, FileCategory> = {
     maxBytes: 20 * 1024 * 1024,
     allowedTypes: ["application/pdf", "image/jpeg", "image/png", "image/webp"],
   },
+  "class-resource": {
+    folder: ({ classId }) => `class-resources/${classId}`,
+    maxBytes: 100 * 1024 * 1024,
+    allowedTypes: ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.ms-powerpoint", "application/vnd.openxmlformats-officedocument.presentationml.presentation", "image/jpeg", "image/png"],
+  },
 };

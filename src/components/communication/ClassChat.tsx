@@ -135,17 +135,21 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
   }, [messages]);
 
   async function loadMessages() {
+    // Fetch the most recent 100 (descending), then reverse to ascending for
+    // display — ordering ascending with a limit would return the oldest 100
+    // messages ever sent instead, hiding all recent activity once a class
+    // chat has grown past 100 messages.
     const { data } = await (supabase.from("messages") as any)
       .select(`*, sender:profiles!messages_sender_id_fkey(id,full_name,avatar_url,role), reactions:message_reactions(emoji,user_id), parent:messages!messages_parent_id_fkey(id,content,sender:profiles!messages_sender_id_fkey(full_name))`)
       .eq("class_id", classId)
       .eq("is_deleted", false)
-      .order("created_at", { ascending: true })
+      .order("created_at", { ascending: false })
       .limit(100);
 
     if (data) {
-      setMessages(data);
-      const p = [...data].reverse().find((m: ChatMessage) => m.is_pinned);
+      const p = data.find((m: ChatMessage) => m.is_pinned); // data is newest-first; take the most recent pin
       if (p) setPinned(p);
+      setMessages([...data].reverse());
     }
   }
 

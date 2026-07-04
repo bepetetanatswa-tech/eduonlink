@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
 
   const { data: link, error } = await (admin.from("parent_children") as any)
     .upsert(
-      { parent_id: parentProfile.id, child_id: child.id, relationship: relationship || "guardian", status: "verified" },
+      { parent_id: parentProfile.id, child_id: child.id, relationship: relationship || "guardian", status: "confirmed" },
       { onConflict: "parent_id,child_id" }
     )
     .select("id, relationship, status, child:child_id(id, full_name, email)")

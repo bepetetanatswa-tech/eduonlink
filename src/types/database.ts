@@ -53,7 +53,7 @@ export interface ParentChild {
   parent_id: string;
   child_id: string;
   relationship: "mother" | "father" | "guardian" | "uncle" | "aunt" | "grandparent" | "other";
-  status: "pending" | "verified" | "rejected";
+  status: "pending" | "confirmed" | "rejected";
   created_at: string;
 }
 

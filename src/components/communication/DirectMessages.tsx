@@ -296,13 +296,16 @@ export function DirectMessages({ profileId, userRole, allowedRoles }: Props) {
     setNewMessageCount(0);
     setDmRequestStatus("checking");
     prevMessageCount.current = 0;
+    // Fetch the most recent 100 (descending), then reverse to ascending —
+    // ordering ascending with a limit returns the oldest 100 messages ever
+    // sent instead, hiding all recent activity past 100 messages.
     const { data } = await (supabase.from("messages") as any)
       .select("*, sender:profiles!messages_sender_id_fkey(id,full_name,avatar_url,role,email), receiver:profiles!messages_receiver_id_fkey(id,full_name,avatar_url,role,email)")
       .is("class_id", null)
       .or(`and(sender_id.eq.${profileId},receiver_id.eq.${other.id}),and(sender_id.eq.${other.id},receiver_id.eq.${profileId})`)
-      .order("created_at", { ascending: true })
+      .order("created_at", { ascending: false })
       .limit(100);
-    if (data) setMessages(data);
+    if (data) setMessages([...data].reverse());
 
     await (supabase.from("messages") as any)
       .update({ read_at: new Date().toISOString() })

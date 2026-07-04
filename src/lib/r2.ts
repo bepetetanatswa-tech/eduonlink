@@ -161,4 +161,9 @@ export const FILE_CATEGORIES: Record<string, FileCategory> = {
     maxBytes: 100 * 1024 * 1024,
     allowedTypes: ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.ms-powerpoint", "application/vnd.openxmlformats-officedocument.presentationml.presentation", "image/jpeg", "image/png"],
   },
+  "library-resource": {
+    folder: ({ level, subject }) => `library/${level}/${subject}`,
+    maxBytes: 200 * 1024 * 1024,
+    allowedTypes: ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.ms-powerpoint", "application/vnd.openxmlformats-officedocument.presentationml.presentation", "video/mp4", "video/webm", "image/jpeg", "image/png"],
+  },
 };

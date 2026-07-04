@@ -12,10 +12,10 @@ const STATUS_COLORS: Record<string, string> = {
 };
 const S = { border: "rgba(255,255,255,0.07)", text: "#CDD6F4", muted: "#8892B0", dim: "#4A5170", accent: "#4D7FFF" };
 
-export function AttendanceMarker({ profileId }: { profileId: string }) {
+export function AttendanceMarker({ profileId, lockedClassId }: { profileId: string; lockedClassId?: string }) {
   const supabase = createClient();
   const [classes, setClasses] = useState<Cls[]>([]);
-  const [classId, setClassId] = useState("");
+  const [classId, setClassId] = useState(lockedClassId ?? "");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [students, setStudents] = useState<Student[]>([]);
   const [rows, setRows] = useState<Record<string, AttRow>>({});
@@ -25,13 +25,14 @@ export function AttendanceMarker({ profileId }: { profileId: string }) {
   const [tab, setTab] = useState<"mark"|"report">("mark");
 
   useEffect(() => {
+    if (lockedClassId) return; // embedded in a single class's detail page — no class picker needed
     (supabase.from("classes") as any).select("id,name,subject").eq("teacher_id", profileId).order("name")
       .then(({ data }: any) => {
         const list = data ?? [];
         setClasses(list);
         if (list.length > 0) setClassId(list[0].id);
       });
-  }, [profileId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [profileId, lockedClassId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!classId) return;
@@ -112,9 +113,11 @@ export function AttendanceMarker({ profileId }: { profileId: string }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Controls */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-        <select value={classId} onChange={e => setClassId(e.target.value)} style={inp}>
-          {classes.map(c => <option key={c.id} value={c.id} style={{ background: "#0E1117" }}>{c.name} — {c.subject}</option>)}
-        </select>
+        {!lockedClassId && (
+          <select value={classId} onChange={e => setClassId(e.target.value)} style={inp}>
+            {classes.map(c => <option key={c.id} value={c.id} style={{ background: "#0E1117" }}>{c.name} — {c.subject}</option>)}
+          </select>
+        )}
         <input type="date" value={date} onChange={e => setDate(e.target.value)} style={inp} />
         <div style={{ display: "flex", borderRadius: 9, overflow: "hidden", border: `1px solid ${S.border}` }}>
           {(["mark", "report"] as const).map(t => (

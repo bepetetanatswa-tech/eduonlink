@@ -22,10 +22,10 @@ interface Submission {
 const S = { border: "rgba(255,255,255,0.07)", text: "#CDD6F4", muted: "#8892B0", dim: "#4A5170", accent: "#4D7FFF" };
 const inp: React.CSSProperties = { width: "100%", padding: "9px 12px", background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}`, borderRadius: 9, color: S.text, fontSize: 13, outline: "none", boxSizing: "border-box" };
 
-export function AssignmentManager({ profileId }: { profileId: string }) {
+export function AssignmentManager({ profileId, lockedClassId }: { profileId: string; lockedClassId?: string }) {
   const supabase = createClient();
   const [classes, setClasses] = useState<Cls[]>([]);
-  const [selectedClass, setSelectedClass] = useState<string>("");
+  const [selectedClass, setSelectedClass] = useState<string>(lockedClassId ?? "");
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   const [view, setView] = useState<"list"|"create"|"grade">("list");
@@ -48,13 +48,14 @@ export function AssignmentManager({ profileId }: { profileId: string }) {
   const [grades, setGrades] = useState<Record<string, { score: string; feedback: string }>>({});
 
   useEffect(() => {
+    if (lockedClassId) return; // embedded in a single class's detail page — no class picker needed
     (supabase.from("classes") as any).select("id,name,subject").eq("teacher_id", profileId).order("name")
       .then(({ data }: any) => {
         const list = data ?? [];
         setClasses(list);
         if (list.length > 0) setSelectedClass(list[0].id);
       });
-  }, [profileId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [profileId, lockedClassId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { if (selectedClass) loadAssignments(); }, [selectedClass]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -148,10 +149,12 @@ export function AssignmentManager({ profileId }: { profileId: string }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Header controls */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-        <select value={selectedClass} onChange={e => { setSelectedClass(e.target.value); setView("list"); setSelectedAssignment(null); }}
-          style={{ ...inp, width: "auto", minWidth: 180 }}>
-          {classes.map(c => <option key={c.id} value={c.id} style={{ background: "#0E1117" }}>{c.name} — {c.subject}</option>)}
-        </select>
+        {!lockedClassId && (
+          <select value={selectedClass} onChange={e => { setSelectedClass(e.target.value); setView("list"); setSelectedAssignment(null); }}
+            style={{ ...inp, width: "auto", minWidth: 180 }}>
+            {classes.map(c => <option key={c.id} value={c.id} style={{ background: "#0E1117" }}>{c.name} — {c.subject}</option>)}
+          </select>
+        )}
         {view !== "create" && (
           <button onClick={() => setView("create")}
             style={{ padding: "9px 16px", borderRadius: 9, background: S.accent, border: "none", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>

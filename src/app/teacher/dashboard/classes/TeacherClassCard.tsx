@@ -76,10 +76,10 @@ export function TeacherClassCard({ c }: { c: ClassInfo }) {
           <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
           Live
         </Link>
-        <Link href="/teacher/dashboard/attendance" style={{ padding: "8px", borderRadius: 8, background: "rgba(245,166,35,0.08)", border: "1px solid rgba(245,166,35,0.2)", color: "#F5A623", fontSize: 12, fontWeight: 600, textAlign: "center", textDecoration: "none" }}>
+        <Link href={`/teacher/dashboard/classes/${c.id}/attendance`} style={{ padding: "8px", borderRadius: 8, background: "rgba(245,166,35,0.08)", border: "1px solid rgba(245,166,35,0.2)", color: "#F5A623", fontSize: 12, fontWeight: 600, textAlign: "center", textDecoration: "none" }}>
           Attendance
         </Link>
-        <Link href="/teacher/dashboard/assignments" style={{ padding: "8px", borderRadius: 8, background: "rgba(189,147,249,0.08)", border: "1px solid rgba(189,147,249,0.2)", color: "#BD93F9", fontSize: 12, fontWeight: 600, textAlign: "center", textDecoration: "none" }}>
+        <Link href={`/teacher/dashboard/classes/${c.id}/assignments`} style={{ padding: "8px", borderRadius: 8, background: "rgba(189,147,249,0.08)", border: "1px solid rgba(189,147,249,0.2)", color: "#BD93F9", fontSize: 12, fontWeight: 600, textAlign: "center", textDecoration: "none" }}>
           Assignments
         </Link>
       </div>

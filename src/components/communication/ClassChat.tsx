@@ -101,11 +101,12 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
   const [newMessageCount, setNewMessageCount] = useState(0);
   const prevMessageCount = useRef(0);
   const [showInfo, setShowInfo] = useState(false);
-  const [infoTab, setInfoTab] = useState<"members" | "media" | "files" | "links">("members");
+  const [infoTab, setInfoTab] = useState<"members" | "media" | "files" | "links" | "starred">("members");
   const [members, setMembers] = useState<{ id: string; full_name: string; avatar_url: string | null; role: string }[] | null>(null);
   const [isOnline, setIsOnline] = useState(true);
   const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
   const pendingMessagesRef = useRef<PendingMessage[]>([]);
+  const [starredIds, setStarredIds] = useState<Set<string>>(new Set());
 
   const scrollToBottom = useCallback((smooth = true) => {
     bottomRef.current?.scrollIntoView({ behavior: smooth ? "smooth" : "auto" });
@@ -124,10 +125,26 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
     loadMessages();
     checkMuted();
     checkNotifMuted();
+    loadStarred();
     const teardown = setupRealtime();
     return () => teardown();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classId]);
+
+  async function loadStarred() {
+    const { data } = await (supabase.from("message_stars") as any).select("message_id").eq("user_id", profileId);
+    setStarredIds(new Set((data ?? []).map((r: any) => r.message_id)));
+  }
+
+  async function toggleStar(messageId: string) {
+    if (starredIds.has(messageId)) {
+      await (supabase.from("message_stars") as any).delete().eq("message_id", messageId).eq("user_id", profileId);
+      setStarredIds(prev => { const next = new Set(prev); next.delete(messageId); return next; });
+    } else {
+      await (supabase.from("message_stars") as any).insert({ message_id: messageId, user_id: profileId });
+      setStarredIds(prev => new Set(prev).add(messageId));
+    }
+  }
 
   useEffect(() => { pendingMessagesRef.current = pendingMessages; }, [pendingMessages]);
 
@@ -650,7 +667,7 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
                       {url && <LinkPreviewCard url={url} />}
                     </>
                   )}
-                  <p style={{ fontSize: 10, color: isOwn ? "rgba(205,214,244,0.5)" : S.dim, marginTop: 4, textAlign: "right" }}>{fmt(msg.created_at)}{msg.is_pinned && " 📌"}</p>
+                  <p style={{ fontSize: 10, color: isOwn ? "rgba(205,214,244,0.5)" : S.dim, marginTop: 4, textAlign: "right" }}>{fmt(msg.created_at)}{msg.is_pinned && " 📌"}{starredIds.has(msg.id) && " ★"}</p>
 
                   {/* Hover action row */}
                   {showEmoji === msg.id && (
@@ -664,6 +681,7 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
                       ))}
                       <button onClick={() => setReplyTo(msg)} style={{ background: "none", border: "none", cursor: "pointer", padding: "3px", color: S.muted, fontSize: 11 }} title="Reply">↩</button>
                       <button onClick={() => openForward(msg)} style={{ background: "none", border: "none", cursor: "pointer", padding: "3px", color: S.muted, fontSize: 11 }} title="Forward">➦</button>
+                      <button onClick={() => toggleStar(msg.id)} style={{ background: "none", border: "none", cursor: "pointer", padding: "3px", color: starredIds.has(msg.id) ? "#F5A623" : S.muted, fontSize: 11 }} title={starredIds.has(msg.id) ? "Unstar" : "Star"}>{starredIds.has(msg.id) ? "★" : "☆"}</button>
                       {isOwn && <button onClick={() => deleteMessage(msg.id)} style={{ background: "none", border: "none", cursor: "pointer", padding: "3px", color: "#FF6B6B", fontSize: 11 }} title="Delete">✕</button>}
                       {isTeacher && !isOwn && (
                         <>
@@ -761,7 +779,7 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
               <button onClick={() => setShowInfo(false)} style={{ background: "none", border: "none", color: S.dim, cursor: "pointer", fontSize: 16 }}>✕</button>
             </div>
             <div style={{ display: "flex", gap: 4, marginBottom: 12, borderBottom: `1px solid ${S.border}`, paddingBottom: 8 }}>
-              {(["members", "media", "files", "links"] as const).map((t) => (
+              {(["members", "media", "files", "links", "starred"] as const).map((t) => (
                 <button key={t} onClick={() => setInfoTab(t)} style={{ padding: "5px 10px", borderRadius: 8, fontSize: 11, fontWeight: 600, textTransform: "capitalize", cursor: "pointer", background: infoTab === t ? `${S.accent}20` : "transparent", color: infoTab === t ? S.accent : S.muted, border: "none" }}>
                   {t}
                 </button>
@@ -816,6 +834,19 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
                       <div key={m.id}>
                         <p style={{ fontSize: 11, color: S.dim, margin: "0 0 3px" }}>{m.sender?.full_name}</p>
                         <LinkPreviewCard url={extractFirstUrl(m.content)!} />
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+              {infoTab === "starred" && (() => {
+                const starred = messages.filter((m) => starredIds.has(m.id));
+                return starred.length === 0 ? <p style={{ fontSize: 12, color: S.dim, textAlign: "center", padding: "12px 0" }}>No starred messages yet</p> : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {starred.map((m) => (
+                      <div key={m.id} style={{ padding: "8px 10px", borderRadius: 8, background: "rgba(255,255,255,0.03)", border: `1px solid ${S.border}` }}>
+                        <p style={{ fontSize: 11, color: "#F5A623", margin: "0 0 3px", fontWeight: 600 }}>{m.sender?.full_name}</p>
+                        <p style={{ fontSize: 12, color: S.text, margin: 0, wordBreak: "break-word" }}>{m.content}</p>
                       </div>
                     ))}
                   </div>

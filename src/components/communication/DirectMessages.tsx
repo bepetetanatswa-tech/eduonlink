@@ -98,6 +98,8 @@ export function DirectMessages({ profileId, userRole, allowedRoles }: Props) {
   const [isOnline, setIsOnline] = useState(true);
   const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
   const pendingMessagesRef = useRef<PendingMessage[]>([]);
+  const [starredIds, setStarredIds] = useState<Set<string>>(new Set());
+  const [showStarred, setShowStarred] = useState(false);
 
   const scrollToBottom = (smooth = true) => {
     bottomRef.current?.scrollIntoView({ behavior: smooth ? "smooth" : "auto" });
@@ -115,6 +117,7 @@ export function DirectMessages({ profileId, userRole, allowedRoles }: Props) {
   useEffect(() => {
     setIsMobile(window.innerWidth < 768);
     loadConversations();
+    loadStarred();
     const cleanupMsgs = setupRealtime();
     return () => {
       cleanupMsgs();
@@ -122,6 +125,21 @@ export function DirectMessages({ profileId, userRole, allowedRoles }: Props) {
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileId]);
+
+  async function loadStarred() {
+    const { data } = await (supabase.from("message_stars") as any).select("message_id").eq("user_id", profileId);
+    setStarredIds(new Set((data ?? []).map((r: any) => r.message_id)));
+  }
+
+  async function toggleStar(messageId: string) {
+    if (starredIds.has(messageId)) {
+      await (supabase.from("message_stars") as any).delete().eq("message_id", messageId).eq("user_id", profileId);
+      setStarredIds(prev => { const next = new Set(prev); next.delete(messageId); return next; });
+    } else {
+      await (supabase.from("message_stars") as any).insert({ message_id: messageId, user_id: profileId });
+      setStarredIds(prev => new Set(prev).add(messageId));
+    }
+  }
 
   useEffect(() => { pendingMessagesRef.current = pendingMessages; }, [pendingMessages]);
 
@@ -642,6 +660,9 @@ export function DirectMessages({ profileId, userRole, allowedRoles }: Props) {
         <button onClick={() => setShowSearch(!showSearch)} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${S.border}`, background: showSearch ? `${S.accent}20` : "transparent", color: showSearch ? S.accent : S.muted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" /></svg>
         </button>
+        <button onClick={() => setShowStarred(!showStarred)} title="Starred messages" style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${S.border}`, background: showStarred ? "rgba(245,166,35,0.15)" : "transparent", color: showStarred ? "#F5A623" : S.muted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 14 }}>
+          ★
+        </button>
         <button onClick={toggleMute} title={muted ? "Unmute notifications" : "Mute notifications"} style={{ background: "none", border: `1px solid ${S.border}`, borderRadius: 8, color: muted ? "#F5A623" : S.muted, cursor: "pointer", fontSize: 13, padding: "6px 8px", display: "flex", alignItems: "center" }}>
           {muted ? "🔕" : "🔔"}
         </button>
@@ -706,11 +727,12 @@ export function DirectMessages({ profileId, userRole, allowedRoles }: Props) {
                   </div>
                   <div className="dm-msg-actions" style={{ display: "none", gap: 4 }}>
                     <button onClick={() => setReplyTo(m)} title="Reply" style={{ background: "none", border: "none", cursor: "pointer", color: S.muted, fontSize: 13, padding: 2 }}>↩</button>
+                    <button onClick={() => toggleStar(m.id)} title={starredIds.has(m.id) ? "Unstar" : "Star"} style={{ background: "none", border: "none", cursor: "pointer", color: starredIds.has(m.id) ? "#F5A623" : S.muted, fontSize: 13, padding: 2 }}>{starredIds.has(m.id) ? "★" : "☆"}</button>
                     {isOwn && <button onClick={() => deleteMessage(m.id)} title="Delete" style={{ background: "none", border: "none", cursor: "pointer", color: "#FF6B6B", fontSize: 13, padding: 2 }}>✕</button>}
                   </div>
                 </div>
                 <p style={{ fontSize: 10, color: S.dim, marginTop: 2, textAlign: isOwn ? "right" : "left" }}>
-                  {fmt(m.created_at)}{isOwn && m.read_at && " ✓✓"}
+                  {fmt(m.created_at)}{isOwn && m.read_at && " ✓✓"}{starredIds.has(m.id) && " ★"}
                 </p>
               </div>
             </div>
@@ -886,12 +908,37 @@ export function DirectMessages({ profileId, userRole, allowedRoles }: Props) {
     </div>
   );
 
+  const StarredPanel = showStarred && (
+    <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}>
+      <div style={{ background: "#0E1117", border: `1px solid ${S.border}`, borderRadius: 14, padding: 20, width: 340, maxHeight: 440, display: "flex", flexDirection: "column" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: S.text }}>★ Starred Messages</span>
+          <button onClick={() => setShowStarred(false)} style={{ background: "none", border: "none", color: S.dim, cursor: "pointer", fontSize: 16 }}>✕</button>
+        </div>
+        <div style={{ overflowY: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
+          {(() => {
+            const starred = messages.filter(m => starredIds.has(m.id));
+            return starred.length === 0 ? (
+              <p style={{ fontSize: 12, color: S.dim, textAlign: "center", padding: "12px 0" }}>No starred messages in this conversation</p>
+            ) : starred.map(m => (
+              <div key={m.id} style={{ padding: "8px 10px", borderRadius: 8, background: "rgba(255,255,255,0.03)", border: `1px solid ${S.border}` }}>
+                <p style={{ fontSize: 11, color: "#F5A623", margin: "0 0 3px", fontWeight: 600 }}>{m.sender_id === profileId ? "You" : m.sender.full_name}</p>
+                <p style={{ fontSize: 12, color: S.text, margin: 0, wordBreak: "break-word" }}>{m.content}</p>
+              </div>
+            ));
+          })()}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div style={{ display: "flex", height: "calc(100vh - 80px)", background: S.bg, borderRadius: 16, border: `1px solid ${S.border}`, overflow: "hidden", position: "relative" }}>
       {ConversationList}
       {ChatPanel}
       {NewDmPanel}
       {BlockConfirm}
+      {StarredPanel}
       <style>{`
         @keyframes dm-bounce { 0%,80%,100% { transform: translateY(0); } 40% { transform: translateY(-4px); } }
         .dm-msg-row:hover .dm-msg-actions { display: flex !important; }

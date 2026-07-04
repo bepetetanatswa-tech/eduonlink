@@ -57,6 +57,7 @@ export default function BroadcastPage() {
       title: title.trim(),
       content: message.trim(),
       target_role: target === "all" ? null : target,
+      category: isEmergency ? "urgent" : "general",
       is_emergency: isEmergency,
       is_pinned: isEmergency,
     }).select("id").single();

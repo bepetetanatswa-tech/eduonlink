@@ -3,6 +3,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { renderSimpleMarkdown } from "@/lib/simpleMarkdown";
 
 interface Announcement {
   id: string;
@@ -12,15 +13,26 @@ interface Announcement {
   title: string;
   content: string;
   target_role: string | null;
+  category: string;
   is_pinned: boolean;
   file_url: string | null;
   is_emergency: boolean;
   scheduled_at: string | null;
   created_at: string;
+  edited_at: string | null;
   author: { full_name: string; avatar_url: string | null; role: string };
   reads?: number;
   is_read?: boolean;
 }
+
+const EDIT_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+const CATEGORY_COLOR: Record<string, string> = {
+  academic: "#4D7FFF", event: "#00B4D8", urgent: "#FF6B6B", general: "#8892B0",
+};
+const CATEGORY_LABEL: Record<string, string> = {
+  academic: "Academic", event: "Event", urgent: "Urgent", general: "General",
+};
 
 interface Props {
   profileId: string;
@@ -47,6 +59,11 @@ export function AnnouncementFeed({ profileId, schoolId, classId, showAuthorContr
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
+  const [editCategory, setEditCategory] = useState("general");
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -92,6 +109,7 @@ export function AnnouncementFeed({ profileId, schoolId, classId, showAuthorContr
     load();
     const ch = supabase.channel(`announcements:${classId ?? schoolId ?? "global"}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "announcements" }, load)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "announcements" }, load)
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [load, classId, schoolId, supabase]);
@@ -104,6 +122,28 @@ export function AnnouncementFeed({ profileId, schoolId, classId, showAuthorContr
 
   async function pinAnnouncement(id: string, pinned: boolean) {
     await (supabase.from("announcements") as any).update({ is_pinned: !pinned }).eq("id", id);
+    load();
+  }
+
+  function canEdit(a: Announcement) {
+    return a.author_id === profileId && Date.now() - new Date(a.created_at).getTime() < EDIT_WINDOW_MS;
+  }
+
+  function startEdit(a: Announcement) {
+    setEditingId(a.id);
+    setEditTitle(a.title);
+    setEditContent(a.content);
+    setEditCategory(a.category ?? "general");
+  }
+
+  async function saveEdit(id: string) {
+    if (!editTitle.trim() || !editContent.trim() || savingEdit) return;
+    setSavingEdit(true);
+    await (supabase.from("announcements") as any)
+      .update({ title: editTitle.trim(), content: editContent.trim(), category: editCategory, edited_at: new Date().toISOString() })
+      .eq("id", id);
+    setSavingEdit(false);
+    setEditingId(null);
     load();
   }
 
@@ -144,6 +184,9 @@ export function AnnouncementFeed({ profileId, schoolId, classId, showAuthorContr
               {a.is_pinned && !a.is_emergency && (
                 <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 20, background: `${S.accent}15`, color: S.accent }}>📌 Pinned</span>
               )}
+              <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 20, background: `${CATEGORY_COLOR[a.category] ?? S.muted}15`, color: CATEGORY_COLOR[a.category] ?? S.muted }}>
+                {CATEGORY_LABEL[a.category] ?? "General"}
+              </span>
               {a.target_role && (
                 <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 20, background: "rgba(255,255,255,0.06)", color: S.muted, textTransform: "capitalize" }}>
                   {a.target_role.replace("_", " ")}s only
@@ -152,8 +195,29 @@ export function AnnouncementFeed({ profileId, schoolId, classId, showAuthorContr
               {!isRead && <span style={{ width: 7, height: 7, borderRadius: "50%", background: S.accent, flexShrink: 0 }} />}
             </div>
 
-            <h4 style={{ fontSize: 14, fontWeight: 700, color: a.is_emergency ? "#FF6B6B" : S.text, fontFamily: "'Space Grotesk',sans-serif", margin: "0 0 8px" }}>{a.title}</h4>
-            <p style={{ fontSize: 13, color: S.muted, lineHeight: 1.6, margin: "0 0 12px", whiteSpace: "pre-wrap" }}>{a.content}</p>
+            {editingId === a.id ? (
+              <div onClick={e => e.stopPropagation()} style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
+                <input value={editTitle} onChange={e => setEditTitle(e.target.value)} style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}`, borderRadius: 8, padding: "8px 10px", fontSize: 13, color: S.text, outline: "none" }} />
+                <textarea value={editContent} onChange={e => setEditContent(e.target.value)} rows={3} style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}`, borderRadius: 8, padding: "8px 10px", fontSize: 13, color: S.text, outline: "none", resize: "vertical" }} />
+                <select value={editCategory} onChange={e => setEditCategory(e.target.value)} style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}`, borderRadius: 8, padding: "8px 10px", fontSize: 13, color: S.text, outline: "none", cursor: "pointer" }}>
+                  {Object.entries(CATEGORY_LABEL).map(([v, l]) => <option key={v} value={v} style={{ background: "#0E1117" }}>{l}</option>)}
+                </select>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => saveEdit(a.id)} disabled={savingEdit} style={{ padding: "6px 14px", borderRadius: 8, background: S.accent, border: "none", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                    {savingEdit ? "Saving…" : "Save"}
+                  </button>
+                  <button onClick={() => setEditingId(null)} style={{ padding: "6px 14px", borderRadius: 8, background: "rgba(255,255,255,0.06)", border: `1px solid ${S.border}`, color: S.muted, fontSize: 12, cursor: "pointer" }}>Cancel</button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <h4 style={{ fontSize: 14, fontWeight: 700, color: a.is_emergency ? "#FF6B6B" : S.text, fontFamily: "'Space Grotesk',sans-serif", margin: "0 0 8px" }}>{a.title}</h4>
+                <p style={{ fontSize: 13, color: S.muted, lineHeight: 1.6, margin: "0 0 12px" }}>
+                  {renderSimpleMarkdown(a.content)}
+                  {a.edited_at && <span style={{ fontSize: 11, color: S.dim, fontStyle: "italic" }}> (edited)</span>}
+                </p>
+              </>
+            )}
 
             {a.file_url && (
               <a href={a.file_url} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} style={{ display: "inline-flex", gap: 6, alignItems: "center", fontSize: 12, color: S.accent, marginBottom: 12, textDecoration: "none" }}>
@@ -170,6 +234,12 @@ export function AnnouncementFeed({ profileId, schoolId, classId, showAuthorContr
                 <span style={{ fontSize: 11, color: S.dim }}>{a.author?.full_name} · {timeAgo(a.created_at)}</span>
               </div>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                {canEdit(a) && editingId !== a.id && (
+                  <button onClick={(e) => { e.stopPropagation(); startEdit(a); }}
+                    style={{ fontSize: 11, color: S.dim, background: "none", border: "none", cursor: "pointer", padding: "2px 6px" }}>
+                    Edit
+                  </button>
+                )}
                 {showAuthorControls && (
                   <button onClick={(e) => { e.stopPropagation(); pinAnnouncement(a.id, a.is_pinned); }}
                     style={{ fontSize: 11, color: S.dim, background: "none", border: "none", cursor: "pointer", padding: "2px 6px" }}>

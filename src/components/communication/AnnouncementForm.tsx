@@ -23,6 +23,13 @@ const ROLES = [
   { value: "school_admin", label: "School admins only" },
 ];
 
+const CATEGORIES = [
+  { value: "general", label: "General" },
+  { value: "academic", label: "Academic" },
+  { value: "event", label: "Event" },
+  { value: "urgent", label: "Urgent" },
+];
+
 export function AnnouncementForm({ profileId, schoolId, classes = [], onPosted, allowEmergency = false }: Props) {
   const supabase = createClient();
   const S = { bg: "#07080C", border: "rgba(255,255,255,0.07)", accent: "#4D7FFF", text: "#CDD6F4", muted: "#8892B0", dim: "#4A5170" };
@@ -30,6 +37,7 @@ export function AnnouncementForm({ profileId, schoolId, classes = [], onPosted, 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [targetRole, setTargetRole] = useState("");
+  const [category, setCategory] = useState("general");
   const [classId, setClassId] = useState("");
   const [isEmergency, setIsEmergency] = useState(false);
   const [scheduledAt, setScheduledAt] = useState("");
@@ -39,6 +47,37 @@ export function AnnouncementForm({ profileId, schoolId, classes = [], onPosted, 
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const contentRef = useRef<HTMLTextAreaElement>(null);
+
+  // Wraps the current selection (or inserts a placeholder) with markdown
+  // syntax — kept deliberately minimal (bold/italic/list/link) rather than
+  // pulling in a full rich-text editor library.
+  function applyFormat(before: string, after: string, placeholder: string) {
+    const el = contentRef.current;
+    if (!el) return;
+    const start = el.selectionStart, end = el.selectionEnd;
+    const selected = content.slice(start, end) || placeholder;
+    const next = content.slice(0, start) + before + selected + after + content.slice(end);
+    setContent(next);
+    requestAnimationFrame(() => {
+      el.focus();
+      el.setSelectionRange(start + before.length, start + before.length + selected.length);
+    });
+  }
+
+  function insertListLine() {
+    const el = contentRef.current;
+    if (!el) return;
+    const start = el.selectionStart;
+    const needsNewline = start > 0 && content[start - 1] !== "\n";
+    const insert = `${needsNewline ? "\n" : ""}- `;
+    const next = content.slice(0, start) + insert + content.slice(start);
+    setContent(next);
+    requestAnimationFrame(() => {
+      el.focus();
+      el.setSelectionRange(start + insert.length, start + insert.length);
+    });
+  }
 
   async function uploadFile(file: File) {
     setUploading(true);
@@ -77,6 +116,7 @@ export function AnnouncementForm({ profileId, schoolId, classes = [], onPosted, 
       title: title.trim(),
       content: content.trim(),
       target_role: targetRole || null,
+      category,
       is_emergency: isEmergency,
       is_pinned: isEmergency,
       file_url: fileUrl,
@@ -100,7 +140,7 @@ export function AnnouncementForm({ profileId, schoolId, classes = [], onPosted, 
       await supabase.rpc("notify_announcement", { p_announcement_id: ann.id } as any);
     }
 
-    setTitle(""); setContent(""); setTargetRole(""); setClassId(""); setIsEmergency(false); setScheduledAt(""); setFileUrl(null); setFileName(null);
+    setTitle(""); setContent(""); setTargetRole(""); setCategory("general"); setClassId(""); setIsEmergency(false); setScheduledAt(""); setFileUrl(null); setFileName(null);
     setSuccess(true);
     setSaving(false);
     setTimeout(() => setSuccess(false), 3000);
@@ -138,14 +178,27 @@ export function AnnouncementForm({ profileId, schoolId, classes = [], onPosted, 
 
         <div>
           <label style={labelStyle}>Message *</label>
-          <textarea value={content} onChange={e => setContent(e.target.value)} placeholder="Write your announcement..." rows={4} style={{ ...inputStyle, resize: "vertical", lineHeight: 1.6 }} />
+          <div style={{ display: "flex", gap: 4, marginBottom: 6 }}>
+            <button type="button" onClick={() => applyFormat("**", "**", "bold text")} title="Bold" style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}`, color: S.muted, cursor: "pointer", fontSize: 12, fontWeight: 700 }}>B</button>
+            <button type="button" onClick={() => applyFormat("*", "*", "italic text")} title="Italic" style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}`, color: S.muted, cursor: "pointer", fontSize: 12, fontStyle: "italic" }}>I</button>
+            <button type="button" onClick={insertListLine} title="List item" style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}`, color: S.muted, cursor: "pointer", fontSize: 12 }}>•≡</button>
+            <button type="button" onClick={() => applyFormat("[", "](https://)", "link text")} title="Link" style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}`, color: S.muted, cursor: "pointer", fontSize: 12 }}>🔗</button>
+          </div>
+          <textarea ref={contentRef} value={content} onChange={e => setContent(e.target.value)} placeholder="Write your announcement..." rows={4} style={{ ...inputStyle, resize: "vertical", lineHeight: 1.6 }} />
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12 }}>
           <div>
             <label style={labelStyle}>Target Audience</label>
             <select value={targetRole} onChange={e => setTargetRole(e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}>
               {ROLES.map(r => <option key={r.value} value={r.value} style={{ background: "#0E1117" }}>{r.label}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label style={labelStyle}>Category</label>
+            <select value={category} onChange={e => setCategory(e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}>
+              {CATEGORIES.map(c => <option key={c.value} value={c.value} style={{ background: "#0E1117" }}>{c.label}</option>)}
             </select>
           </div>
 

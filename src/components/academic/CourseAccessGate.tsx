@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { CoursePurchase } from "@/components/academic/CoursePurchase";
+import { LessonQA } from "@/components/academic/LessonQA";
 
 interface Material {
   id: string; title: string; type: string; file_url: string | null; order_index: number;
@@ -18,13 +19,15 @@ interface Props {
   materials: Material[];
   completedIds: string[];
   accentColor: string;
+  profileId: string;
 }
 
-export function CourseAccessGate({ courseId, courseTitle, price, hasPurchased, materials, completedIds, accentColor }: Props) {
+export function CourseAccessGate({ courseId, courseTitle, price, hasPurchased, materials, completedIds, accentColor, profileId }: Props) {
   const supabase = createClient();
   const router = useRouter();
   const [showPurchase, setShowPurchase] = useState(false);
   const [pending, setPending] = useState<string | null>(null);
+  const [qaOpen, setQaOpen] = useState<string | null>(null);
   const done = new Set(completedIds);
   const locked = price > 0 && !hasPurchased;
 
@@ -68,20 +71,31 @@ export function CourseAccessGate({ courseId, courseTitle, price, hasPurchased, m
       {materials.sort((a, b) => a.order_index - b.order_index).map((m) => {
         const isDone = done.has(m.id);
         return (
-          <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <button
-              onClick={() => toggleComplete(m.id)}
-              disabled={pending === m.id}
-              title={isDone ? "Mark as not completed" : "Mark as completed"}
-              style={{ width: 20, height: 20, borderRadius: "5px", background: isDone ? "rgba(0,229,163,0.15)" : "rgba(255,255,255,0.04)", border: `1px solid ${isDone ? "rgba(0,229,163,0.3)" : "rgba(255,255,255,0.08)"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, flexShrink: 0, cursor: "pointer", padding: 0, opacity: pending === m.id ? 0.5 : 1, color: "#00E5A3" }}
-            >
-              {isDone ? "✓" : ""}
-            </button>
-            <span style={{ fontSize: 12, color: "#8892B0", flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{m.title}</span>
-            {m.file_url && (
-              <a href={m.file_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: accentColor, background: `${accentColor}10`, border: `1px solid ${accentColor}20`, padding: "2px 8px", borderRadius: 5, textDecoration: "none", flexShrink: 0 }}>
-                Open
-              </a>
+          <div key={m.id}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <button
+                onClick={() => toggleComplete(m.id)}
+                disabled={pending === m.id}
+                title={isDone ? "Mark as not completed" : "Mark as completed"}
+                style={{ width: 20, height: 20, borderRadius: "5px", background: isDone ? "rgba(0,229,163,0.15)" : "rgba(255,255,255,0.04)", border: `1px solid ${isDone ? "rgba(0,229,163,0.3)" : "rgba(255,255,255,0.08)"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, flexShrink: 0, cursor: "pointer", padding: 0, opacity: pending === m.id ? 0.5 : 1, color: "#00E5A3" }}
+              >
+                {isDone ? "✓" : ""}
+              </button>
+              <span style={{ fontSize: 12, color: "#8892B0", flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{m.title}</span>
+              <button onClick={() => setQaOpen(qaOpen === m.id ? null : m.id)}
+                style={{ fontSize: 10, color: "#00E5A3", background: "rgba(0,229,163,0.08)", border: "1px solid rgba(0,229,163,0.2)", padding: "2px 8px", borderRadius: 5, cursor: "pointer", flexShrink: 0 }}>
+                💬 Q&amp;A
+              </button>
+              {m.file_url && (
+                <a href={m.file_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: accentColor, background: `${accentColor}10`, border: `1px solid ${accentColor}20`, padding: "2px 8px", borderRadius: 5, textDecoration: "none", flexShrink: 0 }}>
+                  Open
+                </a>
+              )}
+            </div>
+            {qaOpen === m.id && (
+              <div style={{ marginLeft: 28, marginTop: 4, paddingLeft: 10, borderLeft: "1px solid rgba(255,255,255,0.06)" }}>
+                <LessonQA materialId={m.id} profileId={profileId} isTeacher={false} />
+              </div>
             )}
           </div>
         );

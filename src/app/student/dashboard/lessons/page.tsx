@@ -109,6 +109,7 @@ export default async function StudentLessonsPage() {
                       materials={mats}
                       completedIds={Array.from(completedIds) as string[]}
                       accentColor={accentColor}
+                      profileId={profile.id}
                     />
                   )}
                 </div>

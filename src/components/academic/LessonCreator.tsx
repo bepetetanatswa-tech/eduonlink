@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { uploadToR2 } from "@/lib/uploadToR2";
+import { LessonQA } from "@/components/academic/LessonQA";
 
 interface Course {
   id: string; title: string; description: string | null; subject: string;
@@ -38,6 +39,7 @@ export function LessonCreator({ profileId }: { profileId: string }) {
   const [uploading, setUploading] = useState(false);
   const [uploadPct, setUploadPct] = useState(0);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [qaOpen, setQaOpen] = useState<string | null>(null);
 
   // Course form
   const [cTitle, setCTitle] = useState("");
@@ -297,12 +299,19 @@ export function LessonCreator({ profileId }: { profileId: string }) {
                         </p>
                       </div>
                       <div style={{ display: "flex", gap: 8 }}>
+                        <button onClick={() => setQaOpen(qaOpen === m.id ? null : m.id)}
+                          style={{ fontSize: 11, padding: "5px 10px", borderRadius: 7, background: "rgba(0,229,163,0.08)", border: `1px solid rgba(0,229,163,0.2)`, color: "#00E5A3", cursor: "pointer" }}>💬 Q&amp;A</button>
                         <button onClick={() => openEditMaterial(m)}
                           style={{ fontSize: 11, padding: "5px 10px", borderRadius: 7, background: "rgba(77,127,255,0.1)", border: `1px solid rgba(77,127,255,0.2)`, color: "#4D7FFF", cursor: "pointer" }}>Edit</button>
                         <button onClick={() => deleteMaterial(m.id)}
                           style={{ fontSize: 11, padding: "5px 10px", borderRadius: 7, background: "rgba(255,107,107,0.08)", border: `1px solid rgba(255,107,107,0.2)`, color: "#FF6B6B", cursor: "pointer" }}>Delete</button>
                       </div>
                     </div>
+                    {qaOpen === m.id && (
+                      <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${S.border}` }}>
+                        <LessonQA materialId={m.id} profileId={profileId} isTeacher />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

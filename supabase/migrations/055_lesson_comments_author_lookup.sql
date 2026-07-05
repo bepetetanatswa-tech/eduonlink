@@ -32,4 +32,9 @@ AS $$
     AND EXISTS (SELECT 1 FROM lesson_comments lc WHERE lc.author_id = p.id);
 $$;
 
+-- Postgres grants EXECUTE to PUBLIC by default on function creation, which
+-- would let even a fully signed-out request call this — explicitly revoke
+-- before granting only to logged-in users.
+REVOKE EXECUTE ON FUNCTION public.get_comment_authors(uuid[]) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.get_comment_authors(uuid[]) FROM anon;
 GRANT EXECUTE ON FUNCTION public.get_comment_authors(uuid[]) TO authenticated;

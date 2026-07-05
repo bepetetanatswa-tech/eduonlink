@@ -36,11 +36,27 @@ function putWithProgress(url: string, file: File, onProgress?: (pct: number) => 
   });
 }
 
+async function verifyUploadSize(key: string, expectedSize: number): Promise<boolean> {
+  const res = await fetch("/api/uploads/verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ key }),
+  });
+  if (!res.ok) return false;
+  const { size } = await res.json();
+  return size === expectedSize;
+}
+
 /**
  * Uploads a file to Cloudflare R2 via a server-issued presigned PUT URL
  * (the browser talks directly to R2 — files never pass through our server,
  * which matters for the up-to-500MB video case). Retries the PUT once on
- * failure before giving up.
+ * failure, and also re-verifies the object landed with the full byte count
+ * — browsers can report a presigned PUT as successful while actually
+ * sending an empty/truncated body (seen with cloud-placeholder files like
+ * OneDrive Files On-Demand that haven't hydrated locally yet), which would
+ * otherwise silently produce a 0-byte file that uploads "successfully" but
+ * never opens.
  */
 export async function uploadToR2(
   file: File,
@@ -48,6 +64,10 @@ export async function uploadToR2(
   ids: Record<string, string>,
   onProgress?: (pct: number) => void
 ): Promise<UploadToR2Result> {
+  if (file.size === 0) {
+    throw new Error("This file is empty (0 bytes). If it's synced from OneDrive/Google Drive, make sure it's fully downloaded first.");
+  }
+
   const presignRes = await fetch("/api/uploads/presign", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -59,10 +79,26 @@ export async function uploadToR2(
   }
   const { uploadUrl, key, fileUrl } = await presignRes.json();
 
-  try {
+  const attempt = async () => {
     await putWithProgress(uploadUrl, file, onProgress);
+    return verifyUploadSize(key, file.size);
+  };
+
+  let ok = false;
+  try {
+    ok = await attempt();
   } catch {
-    await putWithProgress(uploadUrl, file, onProgress); // one retry
+    ok = false;
+  }
+  if (!ok) {
+    try {
+      ok = await attempt(); // one retry, covers both a failed PUT and a verified-empty PUT
+    } catch {
+      ok = false;
+    }
+  }
+  if (!ok) {
+    throw new Error("Upload did not complete correctly (file may be incomplete). Please try again.");
   }
 
   return { key, fileUrl };

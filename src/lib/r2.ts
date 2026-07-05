@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl as presignUrl } from "@aws-sdk/s3-request-presigner";
 
 const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID!;
@@ -50,6 +50,19 @@ export async function getSignedUrl(key: string, expiresIn = 3600): Promise<strin
 
 export async function deleteFromR2(key: string): Promise<void> {
   await r2Client.send(new DeleteObjectCommand({ Bucket: R2_BUCKET_NAME, Key: key }));
+}
+
+// Confirms a browser PUT actually landed intact — browsers can occasionally
+// report a presigned PUT as successful (200) while sending an empty or
+// truncated body (seen with cloud-placeholder files, e.g. OneDrive Files
+// On-Demand not yet hydrated). Returns null if the object doesn't exist.
+export async function getObjectSize(key: string): Promise<number | null> {
+  try {
+    const head = await r2Client.send(new HeadObjectCommand({ Bucket: R2_BUCKET_NAME, Key: key }));
+    return head.ContentLength ?? 0;
+  } catch {
+    return null;
+  }
 }
 
 export interface AccessorProfile {

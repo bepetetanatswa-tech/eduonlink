@@ -75,7 +75,7 @@ export function PricingPlans({ role, currentPlanKey, username }: Props) {
                     <h3 style={{ fontSize: 14, fontWeight: 700, color: S.text, fontFamily: "'Space Grotesk',sans-serif", margin: "0 0 6px" }}>{plan.name}</h3>
                     <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
                       <span style={{ fontSize: 26, fontWeight: 800, color: isFree ? "#4A5170" : S.accent, fontFamily: "'Space Grotesk',sans-serif" }}>
-                        {isFree ? "FREE" : `$${plan.price}`}
+                        {isFree ? "FREE" : `$${plan.price.toFixed(2)}`}
                       </span>
                       {!isFree && <span style={{ fontSize: 11, color: S.dim }}>/month</span>}
                     </div>
@@ -125,7 +125,7 @@ export function PricingPlans({ role, currentPlanKey, username }: Props) {
                   <p style={{ fontSize: 12, color: S.muted, margin: 0 }}>{pack.description}</p>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto" }}>
-                  <span style={{ fontSize: 22, fontWeight: 800, color: "#00E5A3", fontFamily: "'Space Grotesk',sans-serif" }}>${pack.price}</span>
+                  <span style={{ fontSize: 22, fontWeight: 800, color: "#00E5A3", fontFamily: "'Space Grotesk',sans-serif" }}>${pack.price.toFixed(2)}</span>
                   <button onClick={() => setSelected({ pack })}
                     style={{ padding: "8px 14px", borderRadius: 9, background: "rgba(0,229,163,0.1)", border: "1px solid rgba(0,229,163,0.25)", color: "#00E5A3", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
                     Buy via EcoCash

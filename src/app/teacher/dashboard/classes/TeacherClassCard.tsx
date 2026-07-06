@@ -48,7 +48,7 @@ export function TeacherClassCard({ c }: { c: ClassInfo }) {
           <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
             <h3 style={{ fontSize: 15, fontWeight: 700, color: S.text, fontFamily: "'Space Grotesk',sans-serif", margin: "0 0 4px" }}>{c.name}</h3>
             {!!c.price && (
-              <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 20, color: "#F5A623", background: "rgba(245,166,35,0.1)" }}>${c.price}</span>
+              <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 20, color: "#F5A623", background: "rgba(245,166,35,0.1)" }}>${c.price.toFixed(2)}</span>
             )}
           </div>
           {c.subject && <p style={{ fontSize: 12, color: S.muted, margin: 0 }}>{c.subject}{c.grade_level ? ` · Grade ${c.grade_level}` : ""}</p>}

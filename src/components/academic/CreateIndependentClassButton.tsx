@@ -77,7 +77,7 @@ export function CreateIndependentClassButton({ teacherId }: { teacherId: string 
                 {created.price > 0 ? (
                   <div style={{ background: "rgba(245,166,35,0.08)", border: "1px solid rgba(245,166,35,0.2)", borderRadius: 10, padding: 16, textAlign: "center" }}>
                     <p style={{ fontSize: 11, color: S.muted, margin: "0 0 6px" }}>Price per student</p>
-                    <p style={{ fontSize: 24, fontWeight: 700, color: "#F5A623", fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>${created.price}</p>
+                    <p style={{ fontSize: 24, fontWeight: 700, color: "#F5A623", fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>${created.price.toFixed(2)}</p>
                     <p style={{ fontSize: 11, color: S.dim, margin: "8px 0 0" }}>Students enroll and pay via the Browse Classes page — join codes don&apos;t work for paid classes.</p>
                   </div>
                 ) : (

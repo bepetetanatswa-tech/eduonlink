@@ -568,7 +568,7 @@ export default function OnboardingPage() {
                             <p className="text-sm font-semibold" style={{ color: active ? "#C4B5FD" : "#CDD6F4" }}>{p.name}</p>
                             <p className="text-xs" style={{ color: "#4A5170" }}>{p.features[0]}{p.features[1] ? ` · ${p.features[1]}` : ""}</p>
                           </div>
-                          <p className="text-sm font-bold" style={{ color: active ? "#C4B5FD" : "#8892B0" }}>{p.price === 0 ? "Free" : `$${p.price}/mo`}</p>
+                          <p className="text-sm font-bold" style={{ color: active ? "#C4B5FD" : "#8892B0" }}>{p.price === 0 ? "Free" : `$${p.price.toFixed(2)}/mo`}</p>
                         </button>
                       );
                     })}

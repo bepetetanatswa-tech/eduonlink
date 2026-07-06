@@ -76,7 +76,7 @@ export function SubscriptionDashboard({ onUpgrade }: { onUpgrade: () => void }) 
           </div>
           <div style={{ textAlign: "right" }}>
             <p style={{ fontSize: 28, fontWeight: 800, color: isFree ? S.dim : S.accent, fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>
-              {isFree ? "FREE" : `$${plan.price}/mo`}
+              {isFree ? "FREE" : `$${plan.price.toFixed(2)}/mo`}
             </p>
           </div>
         </div>

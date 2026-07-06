@@ -20,9 +20,12 @@ const SETTING_META: Record<string, {
   hbc_enabled:             { label: "HBC Project Workflow",     desc: "Enable or disable the Heritage-Based Curriculum project system", type: "toggle", group: "Features",   icon: "🏺" },
   free_ai_daily_limit:     { label: "Free AI Daily Limit",      desc: "Max questions per day for free-tier students",                   type: "number", group: "Limits",     icon: "📊" },
   maintenance_message:     { label: "Maintenance Message",      desc: "Message shown to users during maintenance",                      type: "text",   group: "Platform",   icon: "💬" },
+  ecocash_number:          { label: "EcoCash Number",           desc: "The number shown to users for manual EcoCash payments — update this the moment you switch to a dedicated business line", type: "text", group: "Payments", icon: "📱" },
+  ecocash_name:            { label: "EcoCash Recipient Name",   desc: "The registered name shown alongside the number on payment screens", type: "text", group: "Payments", icon: "🏷️" },
+  commission_rate_pct:     { label: "Marketplace Commission %", desc: "Platform's cut of teacher course/class sales — the rest goes to the teacher's earnings balance", type: "number", group: "Payments", icon: "💰" },
 };
 
-const GROUPS = ["Platform", "Features", "Limits"];
+const GROUPS = ["Platform", "Features", "Limits", "Payments"];
 
 function Toggle({ on, onChange, danger }: { on: boolean; onChange: (v: boolean) => void; danger?: boolean }) {
   const color = danger && on ? "#FF6B6B" : on ? "#00E5A3" : "#2A2D3E";

@@ -15,7 +15,7 @@ export function BrowseClassEnrollAction({ classId, className, price, joinCode }:
     <>
       <button onClick={() => setOpen(true)}
         style={{ width: "100%", padding: "8px", borderRadius: 8, background: `${S.accent}15`, border: `1px solid ${S.accent}30`, color: S.accent, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
-        Enroll — ${price}
+        Enroll — ${price.toFixed(2)}
       </button>
       {open && <ClassPurchase classId={classId} className={className} price={price} onClose={() => setOpen(false)} />}
     </>

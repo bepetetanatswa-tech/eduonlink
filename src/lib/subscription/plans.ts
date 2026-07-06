@@ -25,6 +25,12 @@ export interface PlanDefinition {
     gradesView?: boolean;
     mockExams?: number;
     examPrep?: boolean;
+    pastPapersIncluded?: boolean;
+    freeCertificates?: boolean;
+    marketplaceSplitPct?: number;
+    videoStorageGB?: number;
+    payoutSlaHours?: number;
+    featuredPlacement?: boolean;
   };
 }
 
@@ -44,7 +50,7 @@ export const PLANS: PlanDefinition[] = [
   {
     key: "student_pro",
     name: "Student Pro",
-    price: 5,
+    price: 4.99,
     role: "student",
     badge: "Most Popular",
     features: [
@@ -53,6 +59,18 @@ export const PLANS: PlanDefinition[] = [
     ],
     lockedFeatures: [],
     limits: { aiPerDay: 20, lessonsPerMonth: -1, liveClasses: true, pdfDownload: true, assignments: true, gradesView: true, mockExams: 3, examPrep: true, prioritySupport: true },
+  },
+  {
+    key: "student_pro_plus",
+    name: "Student Pro Plus",
+    price: 7.99,
+    role: "student",
+    badge: "Best Value",
+    features: [
+      "Everything in Student Pro", "All ZIMSEC past paper bundles included free", "Free completion certificates", "Priority human support queue",
+    ],
+    lockedFeatures: [],
+    limits: { aiPerDay: 20, lessonsPerMonth: -1, liveClasses: true, pdfDownload: true, assignments: true, gradesView: true, mockExams: 3, examPrep: true, prioritySupport: true, pastPapersIncluded: true, freeCertificates: true },
   },
   {
     key: "free_teacher",
@@ -69,7 +87,7 @@ export const PLANS: PlanDefinition[] = [
   {
     key: "teacher_pro",
     name: "Teacher Pro",
-    price: 10,
+    price: 9.99,
     role: "teacher",
     badge: "Best Value",
     features: [
@@ -77,7 +95,19 @@ export const PLANS: PlanDefinition[] = [
       "Full grade book", "Attendance system", "Assignment engine", "Earnings dashboard", "Advanced analytics", "Priority support",
     ],
     lockedFeatures: [],
-    limits: { maxClasses: -1, videoUpload: true, aiTools: true, earningsDashboard: true, analytics: true, prioritySupport: true },
+    limits: { maxClasses: -1, videoUpload: true, aiTools: true, earningsDashboard: true, analytics: true, prioritySupport: true, marketplaceSplitPct: 80, videoStorageGB: 2, payoutSlaHours: 48 },
+  },
+  {
+    key: "teacher_pro_plus",
+    name: "Teacher Pro Plus",
+    price: 14.99,
+    role: "teacher",
+    badge: "Top Earner",
+    features: [
+      "Everything in Teacher Pro", "85/15 marketplace split (vs 80/20)", "5GB video storage (vs 2GB)", "24h payout SLA (vs 48h)", "Featured teacher placement",
+    ],
+    lockedFeatures: [],
+    limits: { maxClasses: -1, videoUpload: true, aiTools: true, earningsDashboard: true, analytics: true, prioritySupport: true, marketplaceSplitPct: 85, videoStorageGB: 5, payoutSlaHours: 24, featuredPlacement: true },
   },
   {
     key: "free_school",
@@ -91,7 +121,7 @@ export const PLANS: PlanDefinition[] = [
   {
     key: "school_starter",
     name: "School Starter",
-    price: 30,
+    price: 29.99,
     role: "school",
     features: ["50 students", "5 teachers", "Core features", "Email support"],
     lockedFeatures: ["Analytics dashboard", "Priority support"],
@@ -100,7 +130,7 @@ export const PLANS: PlanDefinition[] = [
   {
     key: "school_standard",
     name: "School Standard",
-    price: 60,
+    price: 59.99,
     role: "school",
     badge: "Most Popular",
     features: ["200 students", "20 teachers", "All features", "Analytics dashboard", "Priority support"],
@@ -110,7 +140,7 @@ export const PLANS: PlanDefinition[] = [
   {
     key: "school_pro",
     name: "School Pro",
-    price: 100,
+    price: 99.99,
     role: "school",
     features: ["500 students", "Unlimited teachers", "All features", "Advanced analytics", "Priority support"],
     lockedFeatures: [],
@@ -119,7 +149,7 @@ export const PLANS: PlanDefinition[] = [
   {
     key: "school_enterprise",
     name: "School Enterprise",
-    price: 200,
+    price: 199.99,
     role: "school",
     features: ["Unlimited students & teachers", "Custom branding", "Dedicated support", "Custom integrations"],
     lockedFeatures: [],
@@ -138,14 +168,28 @@ export interface CreditPack {
 }
 
 export const CREDIT_PACKS: CreditPack[] = [
-  { key: "ai_50", name: "AI Top-Up", price: 1, description: "50 extra AI tutor questions", emoji: "🤖", creditType: "ai_questions", amount: 50 },
-  { key: "ai_200", name: "AI Bundle", price: 3, description: "200 extra AI tutor questions", emoji: "🤖", creditType: "ai_questions", amount: 200 },
-  { key: "mock_3", name: "Mock Exam Pack", price: 1, description: "3 timed ZIMSEC mock exams", emoji: "📝", creditType: "mock_exams", amount: 3 },
-  { key: "mock_10", name: "Mock Exam Bundle", price: 3, description: "10 timed ZIMSEC mock exams", emoji: "📝", creditType: "mock_exams", amount: 10 },
-  { key: "pdf_10", name: "PDF Download Pack", price: 1, description: "10 resource PDF downloads", emoji: "📄", creditType: "pdf_downloads", amount: 10 },
-  { key: "cert_1", name: "Achievement Certificate", price: 1, description: "Generate 1 verified achievement certificate", emoji: "🏆", creditType: "certificates", amount: 1 },
-  { key: "cert_5", name: "Certificate Bundle", price: 4, description: "5 achievement certificates", emoji: "🏆", creditType: "certificates", amount: 5 },
-  { key: "school_seats_10", name: "10 Extra Seats", price: 8, description: "Add 10 extra student seats to your school plan", emoji: "🏫", creditType: "school_seats", amount: 10 },
+  { key: "ai_50", name: "AI Top-Up", price: 0.99, description: "50 extra AI tutor questions", emoji: "🤖", creditType: "ai_questions", amount: 50 },
+  { key: "ai_150", name: "AI Bundle", price: 2.49, description: "150 extra AI tutor questions", emoji: "🤖", creditType: "ai_questions", amount: 150 },
+  { key: "ai_500", name: "AI Mega Bundle", price: 6.99, description: "500 extra AI tutor questions — best value", emoji: "🤖", creditType: "ai_questions", amount: 500 },
+  { key: "mock_3", name: "Mock Exam Pack", price: 0.99, description: "3 timed ZIMSEC mock exams", emoji: "📝", creditType: "mock_exams", amount: 3 },
+  { key: "mock_10", name: "Mock Exam Bundle", price: 2.99, description: "10 timed ZIMSEC mock exams", emoji: "📝", creditType: "mock_exams", amount: 10 },
+  { key: "pdf_10", name: "PDF Download Pack", price: 0.99, description: "10 resource PDF downloads", emoji: "📄", creditType: "pdf_downloads", amount: 10 },
+  { key: "cert_1", name: "Achievement Certificate", price: 0.99, description: "Generate 1 verified achievement certificate", emoji: "🏆", creditType: "certificates", amount: 1 },
+  { key: "cert_5", name: "Certificate Bundle", price: 3.99, description: "5 achievement certificates", emoji: "🏆", creditType: "certificates", amount: 5 },
+  { key: "school_seats_10", name: "10 Extra Seats", price: 7.99, description: "Add 10 extra student seats to your school plan", emoji: "🏫", creditType: "school_seats", amount: 10 },
+];
+
+export interface OneTimeFee {
+  key: string;
+  name: string;
+  price: number;
+  description: string;
+}
+
+export const ONE_TIME_FEES: OneTimeFee[] = [
+  { key: "school_setup", name: "School Setup Fee", price: 19.99, description: "One-time onboarding fee, includes initial staff training" },
+  { key: "report_card", name: "Report Card Generation", price: 0.49, description: "Generate one report card (non-subscribers only — included free for subscribers)" },
+  { key: "past_paper_bundle", name: "Premium Past Paper Bundle", price: 2.99, description: "Lifetime access to one subject's full ZIMSEC past paper bundle" },
 ];
 
 export function getPlan(key: string): PlanDefinition {
@@ -155,6 +199,3 @@ export function getPlan(key: string): PlanDefinition {
 export function getPlansForRole(role: "student" | "teacher" | "school"): PlanDefinition[] {
   return PLANS.filter((p) => p.role === role);
 }
-
-export const ECOCASH_NUMBER = "0785910379";
-export const ECOCASH_NAME = "Tanatswa Bepete";

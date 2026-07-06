@@ -1,8 +1,10 @@
 "use client";
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { PlanDefinition, CreditPack, ECOCASH_NUMBER, ECOCASH_NAME } from "@/lib/subscription/plans";
+import { PlanDefinition, CreditPack } from "@/lib/subscription/plans";
+import { useEcoCashCheckout } from "@/lib/subscription/useEcoCashCheckout";
+import { EcoCashQrLink } from "@/components/subscription/EcoCashQrLink";
 
 const S = { border: "rgba(255,255,255,0.07)", text: "#CDD6F4", muted: "#8892B0", dim: "#4A5170", accent: "#4D7FFF" };
 const inp: React.CSSProperties = { width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}`, borderRadius: 9, color: S.text, fontSize: 13, outline: "none", boxSizing: "border-box" };
@@ -17,13 +19,16 @@ interface Props {
 
 export function EcoCashPayment({ plan, creditPack, username, onSuccess, onBack }: Props) {
   const supabase = createClient();
-  const price = plan?.price ?? creditPack?.price ?? 0;
+  const basePrice = plan?.price ?? creditPack?.price ?? 0;
   const itemName = plan?.name ?? creditPack?.name ?? "";
-  const [form, setForm] = useState({ transactionId: "", phone: "", amount: price.toString() });
+  const { ecocashNumber, ecocashName, amount: price, ussdLink, loading: checkoutLoading } = useEcoCashCheckout(basePrice);
+  const [form, setForm] = useState({ transactionId: "", phone: "", amount: "" });
   const [file, setFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
+
+  useEffect(() => { setForm((f) => ({ ...f, amount: price.toString() })); }, [price]);
 
   const ref = `EDU-${username.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8)}`;
 
@@ -31,7 +36,7 @@ export function EcoCashPayment({ plan, creditPack, username, onSuccess, onBack }
     setError("");
     if (!form.transactionId.trim()) return setError("Transaction ID is required");
     if (!form.phone.trim()) return setError("Phone number is required");
-    if (Number(form.amount) !== price) return setError(`Amount must be exactly $${price}`);
+    if (Number(form.amount) !== price) return setError(`Amount must be exactly $${price.toFixed(2)}`);
 
     setSubmitting(true);
     const { data: { user } } = await supabase.auth.getUser();
@@ -86,7 +91,7 @@ export function EcoCashPayment({ plan, creditPack, username, onSuccess, onBack }
     await (supabase.from("notifications") as any).insert({
       user_id: profile?.id ?? null,
       title: "Payment submitted — awaiting approval",
-      message: `Your ${itemName} payment of $${price} is under review. You will be notified once approved (usually within a few hours).`,
+      message: `Your ${itemName} payment of $${price.toFixed(2)} is under review. You will be notified once approved (usually within a few hours).`,
       type: "info",
     });
 
@@ -98,7 +103,7 @@ export function EcoCashPayment({ plan, creditPack, username, onSuccess, onBack }
     <div style={{ background: "rgba(0,229,163,0.05)", border: "1px solid rgba(0,229,163,0.2)", borderRadius: 16, padding: 32, textAlign: "center" }}>
       <div style={{ fontSize: 52, marginBottom: 14 }}>✅</div>
       <h3 style={{ fontSize: 20, fontWeight: 700, color: "#00E5A3", fontFamily: "'Space Grotesk',sans-serif", margin: "0 0 10px" }}>Payment Submitted!</h3>
-      <p style={{ fontSize: 14, color: S.muted, margin: "0 0 4px" }}>Your {itemName} payment of <strong style={{ color: S.accent }}>${price}</strong> is being reviewed.</p>
+      <p style={{ fontSize: 14, color: S.muted, margin: "0 0 4px" }}>Your {itemName} payment of <strong style={{ color: S.accent }}>${price.toFixed(2)}</strong> is being reviewed.</p>
       <p style={{ fontSize: 13, color: S.dim }}>You will receive a notification once approved — usually within a few hours.</p>
       <button onClick={onSuccess} style={{ marginTop: 22, padding: "10px 28px", borderRadius: 10, background: S.accent, border: "none", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
         Back to Subscription
@@ -116,7 +121,7 @@ export function EcoCashPayment({ plan, creditPack, username, onSuccess, onBack }
       <div style={{ background: "rgba(0,229,163,0.04)", border: "1px solid rgba(0,229,163,0.15)", borderRadius: 16, padding: 20 }}>
         <h3 style={{ fontSize: 14, fontWeight: 700, color: "#00E5A3", fontFamily: "'Space Grotesk',sans-serif", margin: "0 0 14px" }}>EcoCash Payment Instructions</h3>
         {[
-          { n: "1", t: `Send $${price} to EcoCash number ${ECOCASH_NUMBER} (${ECOCASH_NAME})` },
+          { n: "1", t: `Send $${price.toFixed(2)} to EcoCash number ${ecocashNumber} (${ecocashName})` },
           { n: "2", t: `Use reference: ${ref}` },
           { n: "3", t: "Fill in the verification form below with your transaction details" },
           { n: "4", t: "Admin will approve within a few hours and your access activates instantly" },
@@ -129,10 +134,12 @@ export function EcoCashPayment({ plan, creditPack, username, onSuccess, onBack }
           </div>
         ))}
         <div style={{ marginTop: 10, padding: "10px 14px", background: "rgba(0,0,0,0.3)", borderRadius: 9, display: "flex", gap: 20, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 12 }}><span style={{ color: S.dim }}>Number: </span><strong style={{ color: "#00E5A3", fontFamily: "monospace" }}>{ECOCASH_NUMBER}</strong></span>
+          <span style={{ fontSize: 12 }}><span style={{ color: S.dim }}>Number: </span><strong style={{ color: "#00E5A3", fontFamily: "monospace" }}>{ecocashNumber}</strong></span>
           <span style={{ fontSize: 12 }}><span style={{ color: S.dim }}>Reference: </span><strong style={{ color: "#F5A623", fontFamily: "monospace" }}>{ref}</strong></span>
         </div>
       </div>
+
+      {!checkoutLoading && <EcoCashQrLink ussdLink={ussdLink} />}
 
       {/* Item summary */}
       <div style={{ background: "rgba(77,127,255,0.05)", border: "1px solid rgba(77,127,255,0.15)", borderRadius: 12, padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -140,7 +147,7 @@ export function EcoCashPayment({ plan, creditPack, username, onSuccess, onBack }
           <p style={{ fontSize: 13, fontWeight: 600, color: S.text, margin: 0 }}>{itemName}</p>
           <p style={{ fontSize: 11, color: S.dim, margin: "3px 0 0" }}>{plan ? "Monthly subscription" : creditPack?.description}</p>
         </div>
-        <p style={{ fontSize: 24, fontWeight: 800, color: S.accent, fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>${price}</p>
+        <p style={{ fontSize: 24, fontWeight: 800, color: S.accent, fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>${price.toFixed(2)}</p>
       </div>
 
       {/* Form fields */}
@@ -157,7 +164,7 @@ export function EcoCashPayment({ plan, creditPack, username, onSuccess, onBack }
         <div>
           <label style={{ fontSize: 11, fontWeight: 600, color: S.muted, display: "block", marginBottom: 6 }}>Amount Paid (USD) *</label>
           <input value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} type="number" min={0} style={inp} />
-          <p style={{ fontSize: 11, color: "#FF6B6B", marginTop: 4 }}>Must be exactly ${price} — no more, no less</p>
+          <p style={{ fontSize: 11, color: "#FF6B6B", marginTop: 4 }}>Must be exactly ${price.toFixed(2)} — no more, no less</p>
         </div>
         <div>
           <label style={{ fontSize: 11, fontWeight: 600, color: S.muted, display: "block", marginBottom: 6 }}>Screenshot Proof (optional but speeds up approval)</label>
@@ -169,9 +176,9 @@ export function EcoCashPayment({ plan, creditPack, username, onSuccess, onBack }
             <p style={{ fontSize: 13, color: "#FF6B6B", margin: 0 }}>{error}</p>
           </div>
         )}
-        <button onClick={handleSubmit} disabled={submitting}
-          style={{ padding: "13px", borderRadius: 10, background: submitting ? "rgba(77,127,255,0.4)" : S.accent, border: "none", color: "#fff", fontSize: 14, fontWeight: 700, cursor: submitting ? "not-allowed" : "pointer", letterSpacing: 0.3 }}>
-          {submitting ? "Submitting…" : "Submit Payment Verification"}
+        <button onClick={handleSubmit} disabled={submitting || checkoutLoading}
+          style={{ padding: "13px", borderRadius: 10, background: (submitting || checkoutLoading) ? "rgba(77,127,255,0.4)" : S.accent, border: "none", color: "#fff", fontSize: 14, fontWeight: 700, cursor: (submitting || checkoutLoading) ? "not-allowed" : "pointer", letterSpacing: 0.3 }}>
+          {submitting ? "Submitting…" : checkoutLoading ? "Preparing payment details…" : "Submit Payment Verification"}
         </button>
       </div>
     </div>

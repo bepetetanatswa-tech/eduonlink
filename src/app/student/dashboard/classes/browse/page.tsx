@@ -67,7 +67,7 @@ export default async function BrowseClassesPage() {
                   <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                     <h3 style={{ fontSize: 15, fontWeight: 700, color: S.text, fontFamily: "'Space Grotesk',sans-serif", margin: "0 0 3px" }}>{c.name}</h3>
                     <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 20, color: c.price > 0 ? "#F5A623" : "#00E5A3", background: c.price > 0 ? "rgba(245,166,35,0.1)" : "rgba(0,229,163,0.1)" }}>
-                      {c.price > 0 ? `$${c.price}` : "Free"}
+                      {c.price > 0 ? `$${c.price.toFixed(2)}` : "Free"}
                     </span>
                   </div>
                   {c.subject && <p style={{ fontSize: 12, color: S.muted, margin: 0 }}>{c.subject}{c.grade_level ? ` · ${c.grade_level}` : ""}</p>}

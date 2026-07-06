@@ -20,12 +20,15 @@ export function CreateIndependentClassButton({ teacherId }: { teacherId: string 
   const [subject, setSubject] = useState("");
   const [gradeLevel, setGradeLevel] = useState(GRADE_LEVELS[2]);
   const [academicYear, setAcademicYear] = useState(new Date().getFullYear().toString());
+  const [price, setPrice] = useState("0");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [createdCode, setCreatedCode] = useState<string | null>(null);
+  const [created, setCreated] = useState<{ joinCode: string; price: number } | null>(null);
 
   const create = async () => {
     if (!name.trim() || !subject.trim() || saving) return;
+    const priceNum = Number(price) || 0;
+    if (priceNum < 0) { setError("Price can't be negative."); return; }
     setSaving(true);
     setError(null);
     const { data, error: err } = await (supabase.from("classes") as any)
@@ -36,22 +39,23 @@ export function CreateIndependentClassButton({ teacherId }: { teacherId: string 
         grade_level: gradeLevel,
         teacher_id: teacherId,
         academic_year: academicYear.trim(),
+        price: priceNum,
       })
-      .select("id,join_code")
+      .select("id,join_code,price")
       .single();
     setSaving(false);
     if (err) {
       setError("Could not create class. Please try again.");
       return;
     }
-    setCreatedCode(data.join_code);
+    setCreated({ joinCode: data.join_code, price: data.price });
     router.refresh();
   };
 
   const close = () => {
     setOpen(false);
-    setName(""); setSubject(""); setGradeLevel(GRADE_LEVELS[2]); setAcademicYear(new Date().getFullYear().toString());
-    setError(null); setCreatedCode(null);
+    setName(""); setSubject(""); setGradeLevel(GRADE_LEVELS[2]); setAcademicYear(new Date().getFullYear().toString()); setPrice("0");
+    setError(null); setCreated(null);
   };
 
   return (
@@ -67,13 +71,21 @@ export function CreateIndependentClassButton({ teacherId }: { teacherId: string 
               <button onClick={close} style={{ background: "none", border: "none", color: S.dim, cursor: "pointer", fontSize: 18 }}>✕</button>
             </div>
 
-            {createdCode ? (
+            {created ? (
               <>
                 <p style={{ fontSize: 13, color: "#00E5A3", margin: 0 }}>✓ Class created</p>
-                <div style={{ background: "rgba(77,127,255,0.08)", border: "1px solid rgba(77,127,255,0.2)", borderRadius: 10, padding: 16, textAlign: "center" }}>
-                  <p style={{ fontSize: 11, color: S.muted, margin: "0 0 6px" }}>Student join code</p>
-                  <p style={{ fontSize: 24, fontWeight: 700, letterSpacing: "0.15em", color: S.accent, fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>{createdCode}</p>
-                </div>
+                {created.price > 0 ? (
+                  <div style={{ background: "rgba(245,166,35,0.08)", border: "1px solid rgba(245,166,35,0.2)", borderRadius: 10, padding: 16, textAlign: "center" }}>
+                    <p style={{ fontSize: 11, color: S.muted, margin: "0 0 6px" }}>Price per student</p>
+                    <p style={{ fontSize: 24, fontWeight: 700, color: "#F5A623", fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>${created.price}</p>
+                    <p style={{ fontSize: 11, color: S.dim, margin: "8px 0 0" }}>Students enroll and pay via the Browse Classes page — join codes don&apos;t work for paid classes.</p>
+                  </div>
+                ) : (
+                  <div style={{ background: "rgba(77,127,255,0.08)", border: "1px solid rgba(77,127,255,0.2)", borderRadius: 10, padding: 16, textAlign: "center" }}>
+                    <p style={{ fontSize: 11, color: S.muted, margin: "0 0 6px" }}>Student join code</p>
+                    <p style={{ fontSize: 24, fontWeight: 700, letterSpacing: "0.15em", color: S.accent, fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>{created.joinCode}</p>
+                  </div>
+                )}
                 <p style={{ fontSize: 11, color: S.dim, margin: 0 }}>Students can also find this class from the Browse Classes page.</p>
                 <button onClick={close} style={{ padding: "10px", borderRadius: 10, background: S.accent, border: "none", color: "#fff", cursor: "pointer", fontSize: 14, fontWeight: 600 }}>Done</button>
               </>
@@ -98,6 +110,11 @@ export function CreateIndependentClassButton({ teacherId }: { teacherId: string 
                     <label style={{ fontSize: 11, fontWeight: 600, color: S.muted, display: "block", marginBottom: 5 }}>Academic Year</label>
                     <input value={academicYear} onChange={e => setAcademicYear(e.target.value)} style={inp} />
                   </div>
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: S.muted, display: "block", marginBottom: 5 }}>Price (USD)</label>
+                  <input value={price} onChange={e => setPrice(e.target.value)} type="number" min={0} step="0.01" placeholder="0" style={inp} />
+                  <p style={{ fontSize: 11, color: S.dim, marginTop: 5 }}>Leave at 0 for a free class with instant join-code enrollment. A price requires students to pay and wait for approval.</p>
                 </div>
                 {error && <p style={{ fontSize: 12, color: "#FF6B6B", margin: 0 }}>{error}</p>}
                 <button onClick={create} disabled={!name.trim() || !subject.trim() || saving}

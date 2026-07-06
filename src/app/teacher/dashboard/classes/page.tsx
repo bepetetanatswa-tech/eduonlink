@@ -14,7 +14,7 @@ export default async function TeacherClassesPage() {
   if (!profile || (profile.role !== "teacher" && profile.role !== "super_admin")) redirect("/dashboard");
 
   const { data: classesRaw } = await (supabase.from("classes") as any)
-    .select("id,name,subject,grade_level")
+    .select("id,name,subject,grade_level,price")
     .eq("teacher_id", profile.id)
     .order("name");
   const classes = classesRaw ?? [];
@@ -90,7 +90,7 @@ export default async function TeacherClassesPage() {
         </div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 14 }}>
-          {classes.map((c: { id: string; name: string; subject: string | null; grade_level: string | null }) => (
+          {classes.map((c: { id: string; name: string; subject: string | null; grade_level: string | null; price: number }) => (
             <TeacherClassCard key={c.id} c={{
               ...c,
               studentCount: countByClass.get(c.id) ?? 0,

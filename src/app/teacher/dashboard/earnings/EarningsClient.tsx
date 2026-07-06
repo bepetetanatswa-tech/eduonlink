@@ -7,7 +7,7 @@ import { createReconnectingSubscription } from "@/lib/supabase/reconnect";
 
 interface Sale {
   id: string; amount_paid: number; platform_fee_pct: number; teacher_earning_amount: number;
-  created_at: string; courses: { title: string } | null;
+  created_at: string; label: string;
 }
 interface Withdrawal {
   id: string; amount: number; status: string; payout_phone: string;
@@ -52,7 +52,24 @@ export function EarningsClient({
           setLocalSales((prev) => [{
             id: row.id, amount_paid: row.amount_paid, platform_fee_pct: row.platform_fee_pct,
             teacher_earning_amount: row.teacher_earning_amount, created_at: row.created_at,
-            courses: course ?? null,
+            label: course?.title ?? "Course",
+          }, ...prev]);
+          setLocalGross((p) => p + row.amount_paid);
+          setLocalCommission((p) => p + (row.platform_fee_amount ?? 0));
+          setLocalEarned((p) => p + row.teacher_earning_amount);
+          setLocalAvailable((p) => p + row.teacher_earning_amount);
+        })
+        .on("postgres_changes", {
+          event: "INSERT", schema: "public", table: "class_purchases",
+          filter: `teacher_id=eq.${profileId}`,
+        }, async (payload: any) => {
+          const row = payload.new;
+          if (row.status !== "completed") return;
+          const { data: klass } = await (supabase.from("classes") as any).select("name").eq("id", row.class_id).maybeSingle();
+          setLocalSales((prev) => [{
+            id: row.id, amount_paid: row.amount_paid, platform_fee_pct: row.platform_fee_pct,
+            teacher_earning_amount: row.teacher_earning_amount, created_at: row.created_at,
+            label: klass?.name ?? "Class",
           }, ...prev]);
           setLocalGross((p) => p + row.amount_paid);
           setLocalCommission((p) => p + (row.platform_fee_amount ?? 0));
@@ -98,7 +115,7 @@ export function EarningsClient({
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div>
           <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", margin: 0 }}>Earnings</h2>
-          <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>Revenue from your paid courses, after the platform commission</p>
+          <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>Revenue from your paid courses and classes, after the platform commission</p>
         </div>
         <span style={{ fontSize: 11, color: live ? "#00E5A3" : "#4A5170", display: "flex", alignItems: "center", gap: 6 }}>
           <span style={{ width: 7, height: 7, borderRadius: "50%", background: live ? "#00E5A3" : "#4A5170" }} />
@@ -194,13 +211,13 @@ export function EarningsClient({
       <div>
         <p style={{ fontSize: 13, fontWeight: 600, color: "#8892B0", marginBottom: 8 }}>Recent sales</p>
         {localSales.length === 0 ? (
-          <p style={{ fontSize: 12, color: "#4A5170" }}>No sales yet. Set a price on a course to start earning.</p>
+          <p style={{ fontSize: 12, color: "#4A5170" }}>No sales yet. Set a price on a course or independent class to start earning.</p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {localSales.map((s) => (
               <div key={s.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10 }}>
                 <div>
-                  <p style={{ fontSize: 13, color: "#CDD6F4", margin: 0 }}>{s.courses?.title ?? "Course"}</p>
+                  <p style={{ fontSize: 13, color: "#CDD6F4", margin: 0 }}>{s.label}</p>
                   <p style={{ fontSize: 11, color: "#4A5170", margin: "2px 0 0" }}>{new Date(s.created_at).toLocaleDateString()} · sold for ${s.amount_paid.toFixed(2)}, {s.platform_fee_pct}% fee</p>
                 </div>
                 <p style={{ fontSize: 13, fontWeight: 700, color: "#00E5A3", margin: 0 }}>+${s.teacher_earning_amount.toFixed(2)}</p>

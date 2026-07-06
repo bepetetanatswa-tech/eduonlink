@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { BrowseClassJoinButton } from "@/components/academic/BrowseClassJoinButton";
+import { BrowseClassEnrollAction } from "@/components/academic/BrowseClassEnrollAction";
 
 const S = { border: "rgba(255,255,255,0.07)", accent: "#4D7FFF", text: "#CDD6F4", muted: "#8892B0", dim: "#4A5170" };
 
@@ -24,7 +24,7 @@ export default async function BrowseClassesPage() {
   const enrolledIds: string[] = (enrolled ?? []).map((e: { class_id: string }) => e.class_id);
 
   let query = (supabase.from("classes") as any)
-    .select("id,name,subject,grade_level,join_code,teacher_id,profiles!classes_teacher_id_fkey(full_name,avatar_url)")
+    .select("id,name,subject,grade_level,join_code,teacher_id,price,profiles!classes_teacher_id_fkey(full_name,avatar_url)")
     .is("school_id", null)
     .order("created_at", { ascending: false });
   if (enrolledIds.length) query = query.not("id", "in", `(${enrolledIds.join(",")})`);
@@ -41,7 +41,7 @@ export default async function BrowseClassesPage() {
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
         <div>
           <h2 style={{ fontSize: 20, fontWeight: 700, color: S.text, fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>Browse Classes</h2>
-          <p style={{ fontSize: 12, color: S.dim, marginTop: 4 }}>Free classes run by independent teachers — join instantly, no code needed</p>
+          <p style={{ fontSize: 12, color: S.dim, marginTop: 4 }}>Classes run by independent teachers — join free classes instantly, or enroll and pay for premium ones</p>
         </div>
         <Link href="/student/dashboard/classes" style={{ fontSize: 12, color: S.muted, textDecoration: "none" }}>← My Classes</Link>
       </div>
@@ -64,12 +64,17 @@ export default async function BrowseClassesPage() {
                   </div>
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <h3 style={{ fontSize: 15, fontWeight: 700, color: S.text, fontFamily: "'Space Grotesk',sans-serif", margin: "0 0 3px" }}>{c.name}</h3>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                    <h3 style={{ fontSize: 15, fontWeight: 700, color: S.text, fontFamily: "'Space Grotesk',sans-serif", margin: "0 0 3px" }}>{c.name}</h3>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 20, color: c.price > 0 ? "#F5A623" : "#00E5A3", background: c.price > 0 ? "rgba(245,166,35,0.1)" : "rgba(0,229,163,0.1)" }}>
+                      {c.price > 0 ? `$${c.price}` : "Free"}
+                    </span>
+                  </div>
                   {c.subject && <p style={{ fontSize: 12, color: S.muted, margin: 0 }}>{c.subject}{c.grade_level ? ` · ${c.grade_level}` : ""}</p>}
                   {c.teacherName && <p style={{ fontSize: 11, color: S.dim, marginTop: 3 }}>{c.teacherName}</p>}
                 </div>
               </div>
-              <BrowseClassJoinButton joinCode={c.join_code} />
+              <BrowseClassEnrollAction classId={c.id} className={c.name} price={c.price} joinCode={c.join_code} />
             </div>
           ))}
         </div>

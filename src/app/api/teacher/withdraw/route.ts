@@ -23,12 +23,14 @@ export async function POST(request: NextRequest) {
 
   // Recompute the available balance server-side — never trust the client's
   // number, since this determines how much real money gets paid out.
-  const [{ data: sales }, { data: withdrawals }] = await Promise.all([
+  const [{ data: courseSales }, { data: classSales }, { data: withdrawals }] = await Promise.all([
     (admin.from("course_purchases") as any).select("teacher_earning_amount").eq("teacher_id", profile.id).eq("status", "completed"),
+    (admin.from("class_purchases") as any).select("teacher_earning_amount").eq("teacher_id", profile.id).eq("status", "completed"),
     (admin.from("teacher_withdrawal_requests") as any).select("amount, status").eq("teacher_id", profile.id),
   ]);
 
-  const totalEarned = (sales ?? []).reduce((sum: number, s: { teacher_earning_amount: number }) => sum + s.teacher_earning_amount, 0);
+  const totalEarned = [...(courseSales ?? []), ...(classSales ?? [])]
+    .reduce((sum: number, s: { teacher_earning_amount: number }) => sum + s.teacher_earning_amount, 0);
   const reserved = (withdrawals ?? [])
     .filter((w: { status: string }) => w.status !== "rejected")
     .reduce((sum: number, w: { amount: number }) => sum + w.amount, 0);

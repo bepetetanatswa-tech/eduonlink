@@ -7,6 +7,7 @@ interface ClassInfo {
   name: string;
   subject: string | null;
   grade_level: string | null;
+  price?: number;
   studentCount: number;
   nextSessionAt?: string | null;
   lastActivityAt?: string | null;
@@ -44,7 +45,12 @@ export function TeacherClassCard({ c }: { c: ClassInfo }) {
       onMouseLeave={(e) => (e.currentTarget.style.borderColor = S.border)}>
       <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <h3 style={{ fontSize: 15, fontWeight: 700, color: S.text, fontFamily: "'Space Grotesk',sans-serif", margin: "0 0 4px" }}>{c.name}</h3>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+            <h3 style={{ fontSize: 15, fontWeight: 700, color: S.text, fontFamily: "'Space Grotesk',sans-serif", margin: "0 0 4px" }}>{c.name}</h3>
+            {!!c.price && (
+              <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 20, color: "#F5A623", background: "rgba(245,166,35,0.1)" }}>${c.price}</span>
+            )}
+          </div>
           {c.subject && <p style={{ fontSize: 12, color: S.muted, margin: 0 }}>{c.subject}{c.grade_level ? ` · Grade ${c.grade_level}` : ""}</p>}
           <p style={{ fontSize: 11, color: S.dim, marginTop: 4 }}>{c.studentCount} student{c.studentCount !== 1 ? "s" : ""} enrolled</p>
         </div>

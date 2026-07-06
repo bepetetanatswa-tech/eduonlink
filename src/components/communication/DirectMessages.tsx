@@ -21,6 +21,8 @@ interface Props {
   profileId: string;
   userRole: string;
   allowedRoles?: string[];
+  /** Extra vertical space to reserve beyond the default 80px chrome — e.g. a fixed bottom nav rendered by a parent (EduChatHub). */
+  heightOffset?: number;
 }
 
 function Avatar({ name, url, size = 32 }: { name: string; url?: string | null; size?: number }) {
@@ -54,7 +56,7 @@ function dmChannelKey(a: string, b: string) {
   return [a, b].sort().join(":");
 }
 
-export function DirectMessages({ profileId, userRole, allowedRoles }: Props) {
+export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset = 0 }: Props) {
   const supabase = createClient();
   const S = { bg: "#07080C", card: "#0A0B10", border: "rgba(255,255,255,0.07)", accent: "#4D7FFF", text: "#CDD6F4", muted: "#8892B0", dim: "#4A5170" };
 
@@ -933,7 +935,7 @@ export function DirectMessages({ profileId, userRole, allowedRoles }: Props) {
   );
 
   return (
-    <div style={{ display: "flex", height: "calc(100vh - 80px)", background: S.bg, borderRadius: 16, border: `1px solid ${S.border}`, overflow: "hidden", position: "relative" }}>
+    <div style={{ display: "flex", height: `calc(100vh - ${80 + heightOffset}px)`, background: S.bg, borderRadius: 16, border: `1px solid ${S.border}`, overflow: "hidden", position: "relative" }}>
       {ConversationList}
       {ChatPanel}
       {NewDmPanel}

@@ -5,14 +5,28 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
-const HBC_SUBJECTS = [
-  "Art & Craft", "Agriculture", "Home Economics", "Fashion & Fabrics",
+const SBP_SUBJECTS = [
+  // Sciences
+  "Biology", "Chemistry", "Physics", "Combined Science", "Environmental Science",
+  // Humanities
+  "History", "Geography", "Divinity / Religious Studies", "Heritage Studies",
+  // Commerce
+  "Accounting", "Business Studies", "Economics",
+  // Technical / Vocational
+  "Agriculture", "Food & Nutrition", "Fashion & Fabrics",
   "Building Technology", "Metal Technology", "Wood Technology",
-  "Environmental Science", "Music", "Heritage Studies", "General HBC",
+  // Languages
+  "English", "Shona", "Ndebele", "French",
+  // Arts
+  "Music", "Art & Craft", "Physical Education",
+  // Mathematics
+  "Mathematics",
+  // Catch-all
+  "Other ZIMSEC Subject",
 ];
 
-export function HBCNewProjectForm({ profileId }: { profileId: string }) {
-  const [open, setOpen] = useState(false);
+export function HBCNewProjectForm({ profileId, defaultOpen }: { profileId: string; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(!!defaultOpen);
   const [title, setTitle] = useState("");
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
@@ -61,8 +75,8 @@ export function HBCNewProjectForm({ profileId }: { profileId: string }) {
       >
         <span style={{ fontSize: 22 }}>🏺</span>
         <div style={{ textAlign: "left" }}>
-          <p style={{ fontSize: 14, fontWeight: 600, color: "#BD93F9", margin: 0, fontFamily: "'Space Grotesk', sans-serif" }}>Start New HBC Project</p>
-          <p style={{ fontSize: 11, color: "#6B7290", margin: 0 }}>6-stage workflow with AI blueprint guidance</p>
+          <p style={{ fontSize: 14, fontWeight: 600, color: "#BD93F9", margin: 0, fontFamily: "'Space Grotesk', sans-serif" }}>Start New SBP Project</p>
+          <p style={{ fontSize: 11, color: "#6B7290", margin: 0 }}>6-stage workflow with AI blueprint guidance — any ZIMSEC subject</p>
         </div>
         <span style={{ marginLeft: "auto", fontSize: 18, color: "#BD93F9" }}>+</span>
       </button>
@@ -72,7 +86,7 @@ export function HBCNewProjectForm({ profileId }: { profileId: string }) {
   return (
     <div style={{ background: "rgba(189,147,249,0.06)", border: "1px solid rgba(189,147,249,0.2)", borderRadius: 16, padding: 20, display: "flex", flexDirection: "column", gap: 14 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h3 style={{ fontSize: 15, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", margin: 0 }}>New HBC Project</h3>
+        <h3 style={{ fontSize: 15, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", margin: 0 }}>New SBP Project</h3>
         <button onClick={() => setOpen(false)} style={{ background: "none", border: "none", color: "#6B7290", fontSize: 18, cursor: "pointer", padding: 4 }}>✕</button>
       </div>
 
@@ -90,14 +104,14 @@ export function HBCNewProjectForm({ profileId }: { profileId: string }) {
         </div>
 
         <div>
-          <label style={{ fontSize: 11, fontWeight: 600, color: "#6B7290", display: "block", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.06em" }}>HBC Subject Area *</label>
+          <label style={{ fontSize: 11, fontWeight: 600, color: "#6B7290", display: "block", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.06em" }}>Subject Area *</label>
           <select
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             style={{ width: "100%", padding: "10px 14px", background: "rgba(10,12,20,0.9)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, fontSize: 13, color: subject ? "#CDD6F4" : "#4A5170", outline: "none", boxSizing: "border-box" }}
           >
             <option value="">Select subject area...</option>
-            {HBC_SUBJECTS.map((s) => <option key={s} value={s}>{s}</option>)}
+            {SBP_SUBJECTS.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
 

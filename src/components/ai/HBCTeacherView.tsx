@@ -73,7 +73,7 @@ export function HBCTeacherView({ teacherId, projects, hasSchool }: { teacherId: 
   if (!hasSchool) {
     return (
       <div style={{ maxWidth: 700 }}>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", marginBottom: 8 }}>HBC Projects</h2>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", marginBottom: 8 }}>SBP Generator</h2>
         <div style={{ background: "rgba(245,166,35,0.08)", border: "1px solid rgba(245,166,35,0.2)", borderRadius: 12, padding: 16, color: "#F5A623", fontSize: 13 }}>
           You are not linked to a school yet. Contact your school admin to be added as a teacher.
         </div>
@@ -85,7 +85,7 @@ export function HBCTeacherView({ teacherId, projects, hasSchool }: { teacherId: 
     <div style={{ maxWidth: 900, display: "flex", flexDirection: "column", gap: 20 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 8 }}>
         <div>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", margin: 0 }}>HBC Projects</h2>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", margin: 0 }}>SBP Generator</h2>
           <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>Review, comment, and approve student project stages</p>
         </div>
         {notification && (
@@ -98,7 +98,7 @@ export function HBCTeacherView({ teacherId, projects, hasSchool }: { teacherId: 
       {projects.length === 0 ? (
         <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: "40px 24px", textAlign: "center" }}>
           <div style={{ fontSize: 36, marginBottom: 10 }}>🏺</div>
-          <p style={{ fontSize: 14, color: "#6B7290", margin: 0 }}>No student projects yet. Projects will appear here once students start their HBC work.</p>
+          <p style={{ fontSize: 14, color: "#6B7290", margin: 0 }}>No student projects yet. Projects will appear here once students start their SBP work.</p>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>

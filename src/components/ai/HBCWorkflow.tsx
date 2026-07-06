@@ -250,9 +250,9 @@ export function HBCWorkflow({ project, stages: initialStages, profileId }: Props
     : currentStage.ai_feedback ?? "";
 
   return (
-    <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 20, alignItems: "flex-start" }}>
       {/* Stage Sidebar */}
-      <div style={{ width: 220, flexShrink: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ flex: "1 1 220px", maxWidth: 280, display: "flex", flexDirection: "column", gap: 8 }}>
         <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14, padding: "14px 16px", marginBottom: 4 }}>
           <p style={{ fontSize: 11, color: "#4A5170", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>Progress</p>
           <p style={{ fontSize: 22, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", margin: "0 0 8px" }}>{completedCount}/6</p>
@@ -299,7 +299,7 @@ export function HBCWorkflow({ project, stages: initialStages, profileId }: Props
       </div>
 
       {/* Stage Content */}
-      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ flex: "3 1 320px", minWidth: 0, display: "flex", flexDirection: "column", gap: 16 }}>
         {/* Stage Header */}
         <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: "16px 20px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
@@ -326,7 +326,7 @@ export function HBCWorkflow({ project, stages: initialStages, profileId }: Props
         </div>
 
         {/* AI Action Buttons */}
-        <div style={{ display: "flex", gap: 10 }}>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <button
             onClick={getBlueprint}
             disabled={!!aiLoading}
@@ -429,7 +429,7 @@ export function HBCWorkflow({ project, stages: initialStages, profileId }: Props
         )}
 
         {/* Action Buttons */}
-        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "flex-end" }}>
           <button
             onClick={saveStage}
             disabled={saving}
@@ -453,6 +453,34 @@ export function HBCWorkflow({ project, stages: initialStages, profileId }: Props
             }}
           >
             {currentStage.submitted_at ? "✓ Submitted" : currentStageDef.num < 6 ? `Submit Stage ${currentStageDef.num} →` : "Submit Final Project →"}
+          </button>
+        </div>
+
+        {/* Stage Navigation — Previous / Next */}
+        <div style={{ display: "flex", gap: 10, justifyContent: "space-between", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 16 }}>
+          <button
+            onClick={() => setActiveStage((i) => Math.max(0, i - 1))}
+            disabled={activeStage === 0}
+            style={{
+              padding: "10px 18px", borderRadius: 12, fontSize: 13, fontWeight: 600,
+              cursor: activeStage === 0 ? "not-allowed" : "pointer",
+              background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
+              color: activeStage === 0 ? "#3A3D4E" : "#8892B0",
+            }}
+          >
+            ← Previous Stage
+          </button>
+          <button
+            onClick={() => setActiveStage((i) => Math.min(STAGE_DEFS.length - 1, i + 1))}
+            disabled={activeStage === STAGE_DEFS.length - 1}
+            style={{
+              padding: "10px 18px", borderRadius: 12, fontSize: 13, fontWeight: 600,
+              cursor: activeStage === STAGE_DEFS.length - 1 ? "not-allowed" : "pointer",
+              background: "rgba(77,127,255,0.1)", border: "1px solid rgba(77,127,255,0.25)",
+              color: activeStage === STAGE_DEFS.length - 1 ? "#3A3D4E" : "#4D7FFF",
+            }}
+          >
+            Next Stage →
           </button>
         </div>
       </div>

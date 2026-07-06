@@ -2,6 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { HBCWorkflow } from "@/components/ai/HBCWorkflow";
+import { SbpBottomNav } from "@/components/ai/SbpBottomNav";
 
 export default async function HBCProjectPage({ params }: { params: { id: string } }) {
   const supabase = await createClient();
@@ -29,10 +30,10 @@ export default async function HBCProjectPage({ params }: { params: { id: string 
     .order("stage_number");
 
   return (
-    <div style={{ maxWidth: 1100, display: "flex", flexDirection: "column", gap: 20 }}>
+    <div style={{ maxWidth: 1100, display: "flex", flexDirection: "column", gap: 20, paddingBottom: 76 }}>
       {/* Breadcrumb */}
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <Link href="/student/dashboard/hbc" style={{ fontSize: 12, color: "#4A5170", textDecoration: "none" }}>HBC Projects</Link>
+        <Link href="/student/dashboard/hbc" style={{ fontSize: 12, color: "#4A5170", textDecoration: "none" }}>SBP Generator</Link>
         <span style={{ color: "#2A2D3E" }}>→</span>
         <span style={{ fontSize: 12, color: "#6B7290", maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{project.title}</span>
       </div>
@@ -43,7 +44,7 @@ export default async function HBCProjectPage({ params }: { params: { id: string 
           <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", margin: "0 0 4px" }}>{project.title}</h2>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
             <span style={{ fontSize: 11, color: "#6B7290" }}>{project.subject}</span>
-            <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 6, background: "rgba(189,147,249,0.1)", border: "1px solid rgba(189,147,249,0.2)", color: "#BD93F9", fontWeight: 600 }}>HBC Project</span>
+            <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 6, background: "rgba(189,147,249,0.1)", border: "1px solid rgba(189,147,249,0.2)", color: "#BD93F9", fontWeight: 600 }}>SBP Project</span>
           </div>
           {project.description && <p style={{ fontSize: 12, color: "#4A5170", marginTop: 6 }}>{project.description}</p>}
         </div>
@@ -59,6 +60,12 @@ export default async function HBCProjectPage({ params }: { params: { id: string 
         project={project}
         stages={stages ?? []}
         profileId={profile.id}
+      />
+
+      <SbpBottomNav
+        basePath="/student/dashboard/hbc"
+        activeProjectId={project.id}
+        profilePath="/student/dashboard/profile"
       />
     </div>
   );

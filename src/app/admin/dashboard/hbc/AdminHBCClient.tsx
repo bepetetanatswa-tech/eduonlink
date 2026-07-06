@@ -53,8 +53,8 @@ export function AdminHBCClient({
   return (
     <div style={{ maxWidth: 900, display: "flex", flexDirection: "column", gap: 24 }}>
       <div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", margin: 0 }}>HBC Projects</h2>
-        <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>Heritage-Based Curriculum (SBP) projects across the platform</p>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", margin: 0 }}>SBP Generator</h2>
+        <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>School-Based Projects across the platform, any ZIMSEC subject</p>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12 }}>
@@ -104,7 +104,7 @@ export function AdminHBCClient({
 
         {filtered.length === 0 ? (
           <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14, padding: "36px", textAlign: "center", color: "#4A5170", fontSize: 13 }}>
-            No HBC projects {statusFilter === "all" ? "yet" : `with status "${statusFilter.replace("_", " ")}"`}.
+            No SBP projects {statusFilter === "all" ? "yet" : `with status "${statusFilter.replace("_", " ")}"`}.
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>

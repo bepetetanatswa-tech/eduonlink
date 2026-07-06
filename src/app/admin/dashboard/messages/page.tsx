@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { DirectMessages } from "@/components/communication/DirectMessages";
+import { EduChatHub } from "@/components/communication/EduChatHub";
 
 export default async function AdminMessagesPage() {
   const supabase = await createClient();
@@ -13,16 +13,11 @@ export default async function AdminMessagesPage() {
   if (!profile || profile.role !== "super_admin") redirect("/dashboard");
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-      <div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>Messages</h2>
-        <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>Direct messages with school admins and users</p>
-      </div>
-      <DirectMessages
-        profileId={profile.id}
-        userRole={profile.role}
-        allowedRoles={["school_admin", "teacher", "parent", "student", "super_admin"]}
-      />
-    </div>
+    <EduChatHub
+      profileId={profile.id}
+      userRole={profile.role}
+      allowedRoles={["school_admin", "teacher", "parent", "student", "super_admin"]}
+      basePath="/admin/dashboard"
+    />
   );
 }

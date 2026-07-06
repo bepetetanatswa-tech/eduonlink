@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { DirectMessages } from "@/components/communication/DirectMessages";
+import { EduChatHub } from "@/components/communication/EduChatHub";
 
 export default async function ParentMessagesPage() {
   const supabase = await createClient();
@@ -9,14 +9,16 @@ export default async function ParentMessagesPage() {
   if (!user) redirect("/auth/login");
 
   const { data: profile } = await (supabase.from("profiles") as any)
-    .select("id,full_name,email,role,avatar_url").eq("user_id", user.id).single();
+    .select("id,full_name,email,role,avatar_url,school_members(school_id)").eq("user_id", user.id).single();
   if (!profile || (profile.role !== "parent" && profile.role !== "super_admin")) redirect("/dashboard");
 
   return (
-    <DirectMessages
+    <EduChatHub
       profileId={profile.id}
       userRole="parent"
       allowedRoles={["teacher", "school_admin"]}
+      schoolId={profile.school_members?.[0]?.school_id ?? null}
+      basePath="/parent/dashboard"
     />
   );
 }

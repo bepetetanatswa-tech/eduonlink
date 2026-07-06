@@ -76,7 +76,7 @@ export default async function TeacherClassesPage() {
           <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>{classes.length} class{classes.length !== 1 ? "es" : ""} assigned to you</p>
         </div>
         {(profile.role === "super_admin" || profile.is_approved) && (
-          <CreateIndependentClassButton teacherId={profile.id} />
+          <CreateIndependentClassButton />
         )}
       </div>
 

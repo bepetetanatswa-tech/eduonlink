@@ -38,6 +38,7 @@ export function ExamPrepHub({ profileId, isStaff }: { profileId: string; isStaff
   const [mockSubject, setMockSubject] = useState("Mathematics");
   const [mockSession, setMockSession] = useState<MockSession | null>(null);
   const [mockLoading, setMockLoading] = useState(false);
+  const [mockError, setMockError] = useState<string | null>(null);
   const [sessions, setSessions] = useState<any[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -82,7 +83,7 @@ export function ExamPrepHub({ profileId, isStaff }: { profileId: string; isStaff
     setPracticeChecked(false);
     setPracticeAnswers({});
     try {
-      const res = await fetch("/api/ai", {
+      const res = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -92,11 +93,10 @@ export function ExamPrepHub({ profileId, isStaff }: { profileId: string; isStaff
 [{"question":"...","options":["A...","B...","C...","D..."],"answer":"A","explanation":"...","type":"mcq"},
 {"question":"...","options":[],"answer":"...","explanation":"...","type":"essay"}]`
           }],
-          systemPrompt: "You are a ZIMSEC curriculum expert. Return ONLY valid JSON, no markdown fences.",
+          topic: `${practiceSubject} ZIMSEC practice questions`,
         }),
       });
-      const data = await res.json();
-      const text = data.content ?? "";
+      const text = await res.text();
       const jsonMatch = text.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
         const qs = JSON.parse(jsonMatch[0]);
@@ -110,8 +110,9 @@ export function ExamPrepHub({ profileId, isStaff }: { profileId: string; isStaff
 
   const startMock = async () => {
     setMockLoading(true);
+    setMockError(null);
     try {
-      const res = await fetch("/api/ai", {
+      const res = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -120,29 +121,39 @@ export function ExamPrepHub({ profileId, isStaff }: { profileId: string; isStaff
             content: `Generate 10 ZIMSEC ${mockSubject} MCQ exam questions. Return ONLY valid JSON:
 [{"question":"...","options":["A...","B...","C...","D..."],"answer":"A","explanation":"...","type":"mcq"}]`
           }],
-          systemPrompt: "You are a ZIMSEC curriculum expert. Return ONLY valid JSON array, no markdown.",
+          topic: `${mockSubject} ZIMSEC mock exam`,
         }),
       });
-      const data = await res.json();
-      const text = data.content ?? "";
+      const text = await res.text();
       const jsonMatch = text.match(/\[[\s\S]*\]/);
-      if (jsonMatch) {
-        const qs = JSON.parse(jsonMatch[0]);
-        const session: MockSession = { questions: qs, answers: {}, submitted: false, timeLeft: 30 * 60 };
-        setMockSession(session);
-        // Save to DB
-        await (supabase.from("exam_sessions") as any).insert({
-          student_id: profileId, subject: mockSubject,
-          questions_json: qs, answers_json: {}, total: qs.length,
-        });
-        timerRef.current = setInterval(() => {
-          setMockSession(prev => {
-            if (!prev || prev.submitted) { clearInterval(timerRef.current!); return prev; }
-            if (prev.timeLeft <= 1) { clearInterval(timerRef.current!); submitMock(prev); return prev; }
-            return { ...prev, timeLeft: prev.timeLeft - 1 };
-          });
-        }, 1000);
+      if (!jsonMatch) { setMockSession(null); setMockLoading(false); return; }
+      const qs = JSON.parse(jsonMatch[0]);
+
+      // The monthly mock-exam cap is checked and the session row is created
+      // server-side (exam_sessions INSERT is revoked from authenticated) —
+      // this is the only place a new mock attempt can be recorded.
+      const startRes = await fetch("/api/exam-prep/start-mock", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subject: mockSubject, questions: qs }),
+      });
+      const startData = await startRes.json().catch(() => null);
+      if (!startRes.ok) {
+        setMockError(startData?.error ?? "Could not start mock exam.");
+        setMockSession(null);
+        setMockLoading(false);
+        return;
       }
+
+      const session: MockSession = { questions: qs, answers: {}, submitted: false, timeLeft: 30 * 60 };
+      setMockSession(session);
+      timerRef.current = setInterval(() => {
+        setMockSession(prev => {
+          if (!prev || prev.submitted) { clearInterval(timerRef.current!); return prev; }
+          if (prev.timeLeft <= 1) { clearInterval(timerRef.current!); submitMock(prev); return prev; }
+          return { ...prev, timeLeft: prev.timeLeft - 1 };
+        });
+      }, 1000);
     } catch {
       setMockSession(null);
     }
@@ -339,6 +350,7 @@ export function ExamPrepHub({ profileId, isStaff }: { profileId: string; isStaff
                   </button>
                 </div>
                 <p style={{ fontSize: 12, color: S.dim, margin: "12px 0 0" }}>10 ZIMSEC-style MCQ questions · 30 minute timer · Auto-graded</p>
+                {mockError && <p style={{ fontSize: 12, color: "#FF6B6B", margin: "10px 0 0" }}>{mockError}</p>}
               </div>
 
               {sessions.length > 0 && (

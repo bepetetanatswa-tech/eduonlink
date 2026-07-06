@@ -1,8 +1,6 @@
 "use client";
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 
 const GRADE_LEVELS = [
   "ECD A", "ECD B", "Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6", "Grade 7",
@@ -12,8 +10,7 @@ const GRADE_LEVELS = [
 const S = { border: "rgba(255,255,255,0.07)", accent: "#4D7FFF", text: "#CDD6F4", muted: "#8892B0", dim: "#4A5170" };
 const inp: React.CSSProperties = { width: "100%", padding: "9px 12px", background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}`, borderRadius: 9, color: S.text, fontSize: 13, outline: "none", boxSizing: "border-box" };
 
-export function CreateIndependentClassButton({ teacherId }: { teacherId: string }) {
-  const supabase = createClient();
+export function CreateIndependentClassButton() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -31,21 +28,21 @@ export function CreateIndependentClassButton({ teacherId }: { teacherId: string 
     if (priceNum < 0) { setError("Price can't be negative."); return; }
     setSaving(true);
     setError(null);
-    const { data, error: err } = await (supabase.from("classes") as any)
-      .insert({
-        school_id: null,
+    const res = await fetch("/api/classes/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
         name: name.trim(),
         subject: subject.trim(),
-        grade_level: gradeLevel,
-        teacher_id: teacherId,
-        academic_year: academicYear.trim(),
+        gradeLevel,
+        academicYear: academicYear.trim(),
         price: priceNum,
-      })
-      .select("id,join_code,price")
-      .single();
+      }),
+    });
+    const data = await res.json().catch(() => null);
     setSaving(false);
-    if (err) {
-      setError("Could not create class. Please try again.");
+    if (!res.ok) {
+      setError(data?.error ?? "Could not create class. Please try again.");
       return;
     }
     setCreated({ joinCode: data.join_code, price: data.price });

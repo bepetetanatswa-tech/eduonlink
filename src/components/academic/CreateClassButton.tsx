@@ -44,20 +44,22 @@ export function CreateClassButton({ schoolId }: { schoolId: string }) {
     if (!name.trim() || !subject.trim() || saving) return;
     setSaving(true);
     setError(null);
-    const { data, error: err } = await (supabase.from("classes") as any)
-      .insert({
-        school_id: schoolId,
+    const res = await fetch("/api/classes/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        schoolId,
         name: name.trim(),
         subject: subject.trim(),
-        grade_level: gradeLevel,
-        teacher_id: teacherId || null,
-        academic_year: academicYear.trim(),
-      })
-      .select("id,join_code")
-      .single();
+        gradeLevel,
+        teacherId: teacherId || null,
+        academicYear: academicYear.trim(),
+      }),
+    });
+    const data = await res.json().catch(() => null);
     setSaving(false);
-    if (err) {
-      setError("Could not create class. Please try again.");
+    if (!res.ok) {
+      setError(data?.error ?? "Could not create class. Please try again.");
       return;
     }
     setCreatedCode(data.join_code);

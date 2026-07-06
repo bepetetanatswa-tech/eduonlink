@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { buildR2Key, fileUrlForKey, getUploadUrl, FILE_CATEGORIES } from "@/lib/r2";
+import { resolveEffectivePlan } from "@/lib/subscription/resolvePlan";
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -14,6 +16,17 @@ export async function POST(request: NextRequest) {
   if (!spec) return NextResponse.json({ error: "Unknown upload category" }, { status: 400 });
   if (!filename || !contentType || typeof fileSize !== "number") {
     return NextResponse.json({ error: "filename, contentType and fileSize are required" }, { status: 400 });
+  }
+
+  if (category === "lesson-video") {
+    const { data: profile } = await (supabase.from("profiles") as any)
+      .select("id, role").eq("user_id", user.id).single();
+    if (profile?.role === "teacher") {
+      const plan = await resolveEffectivePlan(supabase, profile.id, profile.role);
+      if (plan.limits.videoUpload === false) {
+        return NextResponse.json({ error: "Video lesson uploads require Teacher Pro.", upgradeRequired: true }, { status: 403 });
+      }
+    }
   }
   if (!spec.allowedTypes.includes(contentType)) {
     return NextResponse.json({ error: `File type ${contentType} not allowed for ${category}` }, { status: 400 });

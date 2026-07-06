@@ -48,7 +48,7 @@ export async function resolveAiQuota(admin: any, profileId: string, role: string
 
   const used: number = usageRow?.questions_used ?? 0;
 
-  if (personalSub?.plan_key === "student_pro") {
+  if (personalSub?.plan_key === "student_pro" || personalSub?.plan_key === "student_pro_plus") {
     return { limit: STUDENT_PRO_DAILY_LIMIT, used, usageRow: usageRow ?? null };
   }
 

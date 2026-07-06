@@ -39,6 +39,7 @@ export function SubmissionPortal({ profileId, lockedClassId }: { profileId: stri
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [filter, setFilter] = useState<"all"|"pending"|"submitted"|"graded">("all");
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => { load(); }, [profileId, lockedClassId]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -77,6 +78,7 @@ export function SubmissionPortal({ profileId, lockedClassId }: { profileId: stri
   const submit = async () => {
     if (!selected) return;
     setSubmitting(true);
+    setSubmitError(null);
     let fileUrl: string | null = selected.mySubmission?.file_url ?? null;
     if (file) {
       setUploadError(null);
@@ -93,17 +95,17 @@ export function SubmissionPortal({ profileId, lockedClassId }: { profileId: stri
       }
     }
     const isLate = selected.due_date ? new Date(selected.due_date) < new Date() : false;
-    const payload = { assignment_id: selected.id, student_id: profileId, content: content.trim() || null, file_url: fileUrl, is_late: isLate, status: "submitted", submitted_at: new Date().toISOString() };
-    if (selected.mySubmission) {
-      await (supabase.from("submissions") as any).update(payload).eq("id", selected.mySubmission.id);
-    } else {
-      await (supabase.from("submissions") as any).insert(payload);
-    }
-    // Client can't insert a notification row for another user under RLS —
-    // this RPC (migration 034) runs SECURITY DEFINER and re-checks that a
-    // submission actually exists for this caller server-side.
-    await supabase.rpc("notify_assignment_submitted", { p_assignment_id: selected.id } as any);
+    const res = await fetch("/api/assignments/submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ assignmentId: selected.id, content: content.trim() || null, fileUrl, isLate }),
+    });
     setSubmitting(false);
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      setSubmitError(data?.error ?? "Could not submit. Please try again.");
+      return;
+    }
     setSubmitted(true);
     load();
     setTimeout(() => { setSelected(null); setSubmitted(false); }, 1500);
@@ -222,6 +224,7 @@ export function SubmissionPortal({ profileId, lockedClassId }: { profileId: stri
                 {isOverdue(selected) && !selected.allow_late && (
                   <p style={{ fontSize: 12, color: "#FF6B6B", margin: 0 }}>⚠ This assignment is past due and does not accept late submissions.</p>
                 )}
+                {submitError && <p style={{ fontSize: 12, color: "#FF6B6B", margin: 0 }}>{submitError}</p>}
                 <button onClick={submit} disabled={submitting || (!content.trim() && !file) || (isOverdue(selected) && !selected.allow_late)}
                   style={{ padding: "10px 20px", borderRadius: 9, background: S.accent, border: "none", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", alignSelf: "flex-start", opacity: (submitting || (!content.trim() && !file)) ? 0.5 : 1 }}>
                   {submitting ? "Submitting…" : selected.mySubmission ? "Update Submission" : "Submit"}

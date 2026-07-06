@@ -47,120 +47,33 @@ export function AdminPaymentQueue({ statusFilter = "pending", onCountChange }: {
     setLoading(false);
   };
 
-  const approve = async (pv: PV) => {
+  const decide = async (pv: PV, decision: "approved" | "rejected", rejectionReason?: string) => {
     setProcessing(pv.id);
-    const { data: { user } } = await supabase.auth.getUser();
-    const { data: adminProfile } = await (supabase.from("profiles") as any).select("id").eq("user_id", user?.id).single();
-
-    const { error: statusErr } = await (supabase.from("payment_verifications") as any).update({
-      status: "approved",
-      verified_by: adminProfile?.id ?? null,
-      verified_at: new Date().toISOString(),
-    }).eq("id", pv.id);
-
-    if (statusErr) {
-      notify("error", `Could not mark payment approved: ${statusErr.message}`);
-      setProcessing(null);
-      return;
-    }
-
-    if (pv.purchase_type === "credits" && pv.credit_type && pv.credit_amount) {
-      // Top up credits
-      const col = pv.credit_type === "ai_questions" ? "ai_questions"
-        : pv.credit_type === "mock_exams" ? "mock_exams"
-        : pv.credit_type === "pdf_downloads" ? "pdf_downloads"
-        : pv.credit_type === "certificates" ? "certificates"
-        : "school_seats";
-
-      // user_credits.user_id references auth.users(id), unlike payment_verifications.user_id (profiles.id)
-      const authUserId = pv.profile?.user_id;
-      const { data: existing } = await (supabase.from("user_credits") as any).select(col).eq("user_id", authUserId).maybeSingle();
-      const current = existing?.[col] ?? 0;
-      const { error: creditErr } = await (supabase.from("user_credits") as any).upsert({ user_id: authUserId, [col]: current + pv.credit_amount }, { onConflict: "user_id" });
-
-      if (creditErr) {
-        notify("error", `Payment marked approved, but crediting the account failed: ${creditErr.message}. Fix manually.`);
-        setProcessing(null);
-        load();
-        return;
-      }
-
-      await (supabase.from("notifications") as any).insert({
-        user_id: pv.user_id,
-        title: "Credits added to your account! 🎉",
-        message: `${pv.credit_amount} ${pv.credit_type?.replace(/_/g, " ")} credits have been added to your account.`,
-        type: "payment",
-      });
-    } else if (pv.purchase_type === "course") {
-      // course_purchases is created automatically by the activate_course_purchase
-      // DB trigger the moment status flips to 'approved' above (which also
-      // notifies the teacher) - nothing else to activate here. This branch
-      // used to fall through to the subscription-activation code below,
-      // which inserted a bogus subscription with a null plan_key on every
-      // single course purchase approval.
-      await (supabase.from("notifications") as any).insert({
-        user_id: pv.user_id,
-        title: "Purchase confirmed! 🎉",
-        message: `Your payment for "${pv.course?.title ?? "the course"}" was approved. You now have full access.`,
-        type: "payment",
-      });
-    } else {
-      // Activate subscription
-      const now = new Date();
-      const end = new Date(now);
-      end.setMonth(end.getMonth() + 1);
-      const planName = getPlan(pv.plan_key ?? "free_student").name;
-
-      const { error: subErr } = await (supabase.from("subscriptions") as any).insert({
-        user_id: pv.user_id,
-        plan_key: pv.plan_key,
-        plan_price: pv.amount,
-        status: "active",
-        start_date: now.toISOString(),
-        end_date: end.toISOString(),
-        amount_paid: pv.amount,
-        payment_id: pv.id,
-      });
-
-      if (subErr) {
-        notify("error", `Payment marked approved, but activating the subscription failed: ${subErr.message}. Fix manually.`);
-        setProcessing(null);
-        load();
-        return;
-      }
-
-      await (supabase.from("notifications") as any).insert({
-        user_id: pv.user_id,
-        title: `Payment approved! Your ${planName} is now active 🎉`,
-        message: `Welcome to EduOnLink Pro! Your subscription runs until ${end.toLocaleDateString()}. Enjoy full access!`,
-        type: "payment",
-      });
-    }
-
-    notify("success", "Payment approved ✓");
-    setProcessing(null);
-    load();
-  };
-
-  const reject = async (pv: PV, reason: string) => {
-    setProcessing(pv.id);
-    const { error } = await (supabase.from("payment_verifications") as any).update({ status: "rejected", rejection_reason: reason }).eq("id", pv.id);
-    if (error) {
-      notify("error", `Could not reject payment: ${error.message}`);
-      setProcessing(null);
-      return;
-    }
-    await (supabase.from("notifications") as any).insert({
-      user_id: pv.user_id,
-      title: "Payment verification failed",
-      message: `Your payment of $${pv.amount} was not approved. Reason: ${reason}. Please contact support if you believe this is an error.`,
-      type: "payment",
+    const res = await fetch("/api/admin/payments/decide", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ paymentId: pv.id, decision, rejectionReason }),
     });
-    notify("success", "Payment rejected");
-    setRejectModal(null);
+    const data = await res.json().catch(() => null);
     setProcessing(null);
+    if (!res.ok) {
+      notify("error", data?.error ?? `Could not ${decision === "approved" ? "approve" : "reject"} payment.`);
+      return;
+    }
+    if (data?.error) {
+      // 200 with an error field = status changed but a downstream step
+      // (crediting/subscription activation) failed — surface it, don't
+      // silently report success.
+      notify("error", data.error);
+    } else {
+      notify("success", decision === "approved" ? "Payment approved ✓" : "Payment rejected");
+    }
+    setRejectModal(null);
     load();
   };
+
+  const approve = (pv: PV) => decide(pv, "approved");
+  const reject = (pv: PV, reason: string) => decide(pv, "rejected", reason);
 
   const doBlacklist = async (phone: string) => {
     const { error } = await (supabase.from("blacklisted_phones") as any).upsert({ phone_number: phone, reason: "Blacklisted by admin" }, { onConflict: "phone_number" });

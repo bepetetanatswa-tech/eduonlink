@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { resolveEffectivePlan } from "@/lib/subscription/resolvePlan";
+import { tryConsumeCredit } from "@/lib/subscription/credits";
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -36,10 +37,13 @@ export async function POST(request: NextRequest) {
       .gte("created_at", startOfMonth.toISOString());
 
     if ((count ?? 0) >= monthlyLimit) {
-      return NextResponse.json({
-        error: `You've used all ${monthlyLimit} mock exam${monthlyLimit === 1 ? "" : "s"} for this month. Upgrade to Student Pro for more.`,
-        upgradeRequired: true,
-      }, { status: 403 });
+      const usedCredit = await tryConsumeCredit(admin, user.id, "mock_exams");
+      if (!usedCredit) {
+        return NextResponse.json({
+          error: `You've used all ${monthlyLimit} mock exam${monthlyLimit === 1 ? "" : "s"} for this month. Upgrade to Student Pro or buy a Mock Exam Pack for more.`,
+          upgradeRequired: true,
+        }, { status: 403 });
+      }
     }
   }
 

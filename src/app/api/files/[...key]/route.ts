@@ -1,8 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getSignedUrl, canAccessFileKey } from "@/lib/r2";
 import { resolveEffectivePlan } from "@/lib/subscription/resolvePlan";
+import { tryConsumeCredit } from "@/lib/subscription/credits";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ key: string[] }> }) {
   const supabase = await createClient();
@@ -27,7 +29,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if (wantsDownload && profile.role === "student") {
     const plan = await resolveEffectivePlan(supabase, profile.id, profile.role);
     if (plan.limits.pdfDownload === false) {
-      return NextResponse.json({ error: "Downloads require Student Pro.", upgradeRequired: true }, { status: 403 });
+      const admin = createAdminClient();
+      const usedCredit = await tryConsumeCredit(admin, user.id, "pdf_downloads");
+      if (!usedCredit) {
+        return NextResponse.json({ error: "Downloads require Student Pro or a PDF Download Pack.", upgradeRequired: true }, { status: 403 });
+      }
     }
   }
 

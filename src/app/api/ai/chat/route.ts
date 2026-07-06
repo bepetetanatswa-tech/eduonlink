@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { streamWithFallback } from "@/lib/ai/providers";
 import { resolveAiQuota, recordAiUsage } from "@/lib/ai/usageLimit";
 import { countSimilarPriorQuestions } from "@/lib/ai/repeatDetection";
+import { tryConsumeCredit } from "@/lib/subscription/credits";
 
 type UserRole = "student" | "teacher" | "parent" | "school_admin" | "super_admin";
 
@@ -177,11 +178,15 @@ export async function POST(req: Request) {
     const dailyLimit = quota.limit ?? 0;
     const questionsUsed = quota.used;
 
+    let usingPurchasedCredit = false;
     if (isLimited && questionsUsed >= dailyLimit) {
-      return new Response(
-        JSON.stringify({ error: "limit_reached", used: questionsUsed, limit: dailyLimit }),
-        { status: 429, headers: { "Content-Type": "application/json" } }
-      );
+      usingPurchasedCredit = await tryConsumeCredit(admin, user.id, "ai_questions");
+      if (!usingPurchasedCredit) {
+        return new Response(
+          JSON.stringify({ error: "limit_reached", used: questionsUsed, limit: dailyLimit }),
+          { status: 429, headers: { "Content-Type": "application/json" } }
+        );
+      }
     }
 
     let systemPrompt = SYSTEM_PROMPTS[userRole]?.(topic, userName) ?? SYSTEM_PROMPTS.student(topic, userName);
@@ -246,7 +251,11 @@ export async function POST(req: Request) {
           try {
             const usage = await getUsage();
             const tokensUsed = usage ? usage.promptTokens + usage.completionTokens : 0;
-            await recordAiUsage(admin, profileId, quota.usageRow, tokensUsed);
+            // A purchased credit was already decremented up front (before the
+            // AI call) — don't also count this question against the daily
+            // quota, or a credit-pack question would silently cost the user
+            // both a credit AND their next day's free/plan allowance.
+            if (!usingPurchasedCredit) await recordAiUsage(admin, profileId, quota.usageRow, tokensUsed);
           } catch (trackErr) {
             console.warn("[AI Chat] Usage tracking failed:", trackErr);
           }

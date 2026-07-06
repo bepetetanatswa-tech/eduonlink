@@ -4,6 +4,7 @@
 import { useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { uploadToR2, deleteR2File } from "@/lib/uploadToR2";
+import { FileActions } from "@/components/academic/FileActions";
 
 interface Material {
   id: string;
@@ -328,15 +329,13 @@ export function CourseManager({ initialCourses, adminId }: { initialCourses: Cou
                       <p style={{ fontSize: 12, color: "#4A5170", fontStyle: "italic" }}>No materials yet. Add a PDF or text lesson above.</p>
                     )}
                     {mats.map((m, idx) => (
-                      <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 10 }}>
+                      <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 10, flexWrap: "wrap" }}>
                         <span style={{ fontSize: 16, flexShrink: 0 }}>{m.type === "pdf" ? "📄" : "📝"}</span>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <p style={{ fontSize: 13, color: "#CDD6F4", margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{idx + 1}. {m.title}</p>
                           <p style={{ fontSize: 10, color: "#4A5170", margin: "2px 0 0" }}>{m.type.toUpperCase()}</p>
                         </div>
-                        {m.file_url && (
-                          <a href={m.file_url} target="_blank" rel="noopener noreferrer" style={{ padding: "4px 10px", borderRadius: 7, fontSize: 11, color: "#4D7FFF", background: "rgba(77,127,255,0.08)", border: "1px solid rgba(77,127,255,0.2)", textDecoration: "none", flexShrink: 0 }}>View</a>
-                        )}
+                        {m.file_url && <FileActions fileUrl={m.file_url} />}
                         <button onClick={() => deleteMaterial(c.id, m.id, m.file_url)} style={{ padding: "4px 10px", borderRadius: 7, fontSize: 11, background: "rgba(255,107,107,0.06)", border: "1px solid rgba(255,107,107,0.15)", color: "#FF6B6B", cursor: "pointer", flexShrink: 0 }}>Remove</button>
                       </div>
                     ))}

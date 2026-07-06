@@ -21,6 +21,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const signedUrl = await getSignedUrl(objectKey, 3600);
+  const wantsDownload = request.nextUrl.searchParams.get("download") !== null;
+  const filename = objectKey.split("/").pop()?.replace(/^\d+-/, "") ?? "download";
+  const signedUrl = await getSignedUrl(objectKey, 3600, wantsDownload ? filename : undefined);
   return NextResponse.redirect(signedUrl);
 }

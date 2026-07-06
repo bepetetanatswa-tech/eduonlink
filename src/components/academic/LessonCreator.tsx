@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { uploadToR2 } from "@/lib/uploadToR2";
 import { LessonQA } from "@/components/academic/LessonQA";
+import { FileActions } from "@/components/academic/FileActions";
 
 interface Course {
   id: string; title: string; description: string | null; subject: string;
@@ -298,7 +299,8 @@ export function LessonCreator({ profileId }: { profileId: string }) {
                           {m.file_url ? ` · file attached` : ""}
                         </p>
                       </div>
-                      <div style={{ display: "flex", gap: 8 }}>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        {m.file_url && <FileActions fileUrl={m.file_url} />}
                         <button onClick={() => setQaOpen(qaOpen === m.id ? null : m.id)}
                           style={{ fontSize: 11, padding: "5px 10px", borderRadius: 7, background: "rgba(0,229,163,0.08)", border: `1px solid rgba(0,229,163,0.2)`, color: "#00E5A3", cursor: "pointer" }}>💬 Q&amp;A</button>
                         <button onClick={() => openEditMaterial(m)}

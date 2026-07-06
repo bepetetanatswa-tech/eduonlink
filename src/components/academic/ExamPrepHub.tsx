@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { uploadToR2 } from "@/lib/uploadToR2";
+import { FileActions } from "@/components/academic/FileActions";
 
 interface Paper { id: string; title: string; subject: string; year: number | null; level: string | null; description: string | null; file_url: string | null }
 interface Question { question: string; options: string[]; answer: string; explanation: string; type: "mcq" | "essay" }
@@ -233,10 +234,7 @@ export function ExamPrepHub({ profileId, isStaff }: { profileId: string; isStaff
                 </div>
                 {p.description && <p style={{ fontSize: 12, color: S.muted, margin: "0 0 10px", lineHeight: 1.4 }}>{p.description}</p>}
                 {p.file_url ? (
-                  <a href={p.file_url} target="_blank" rel="noreferrer"
-                    style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 9, background: "rgba(77,127,255,0.1)", border: "1px solid rgba(77,127,255,0.2)", color: "#4D7FFF", fontSize: 12, fontWeight: 600, textDecoration: "none" }}>
-                    📄 Download Paper
-                  </a>
+                  <FileActions fileUrl={p.file_url} />
                 ) : (
                   <span style={{ fontSize: 11, color: S.dim }}>No file attached</span>
                 )}

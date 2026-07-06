@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { CoursePurchase } from "@/components/academic/CoursePurchase";
 import { LessonQA } from "@/components/academic/LessonQA";
+import { FileActions } from "@/components/academic/FileActions";
 
 interface Material {
   id: string; title: string; type: string; file_url: string | null; order_index: number;
@@ -72,7 +73,7 @@ export function CourseAccessGate({ courseId, courseTitle, price, hasPurchased, m
         const isDone = done.has(m.id);
         return (
           <div key={m.id}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               <button
                 onClick={() => toggleComplete(m.id)}
                 disabled={pending === m.id}
@@ -86,11 +87,7 @@ export function CourseAccessGate({ courseId, courseTitle, price, hasPurchased, m
                 style={{ fontSize: 10, color: "#00E5A3", background: "rgba(0,229,163,0.08)", border: "1px solid rgba(0,229,163,0.2)", padding: "2px 8px", borderRadius: 5, cursor: "pointer", flexShrink: 0 }}>
                 💬 Q&amp;A
               </button>
-              {m.file_url && (
-                <a href={m.file_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: accentColor, background: `${accentColor}10`, border: `1px solid ${accentColor}20`, padding: "2px 8px", borderRadius: 5, textDecoration: "none", flexShrink: 0 }}>
-                  Open
-                </a>
-              )}
+              {m.file_url && <FileActions fileUrl={m.file_url} accentColor={accentColor} />}
             </div>
             {qaOpen === m.id && (
               <div style={{ marginLeft: 28, marginTop: 4, paddingLeft: 10, borderLeft: "1px solid rgba(255,255,255,0.06)" }}>

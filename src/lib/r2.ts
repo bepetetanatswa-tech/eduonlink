@@ -43,8 +43,12 @@ export async function uploadToR2(buffer: Buffer, key: string, contentType: strin
   return { key, fileUrl: fileUrlForKey(key) };
 }
 
-export async function getSignedUrl(key: string, expiresIn = 3600): Promise<string> {
-  const command = new GetObjectCommand({ Bucket: R2_BUCKET_NAME, Key: key });
+export async function getSignedUrl(key: string, expiresIn = 3600, downloadFilename?: string): Promise<string> {
+  const command = new GetObjectCommand({
+    Bucket: R2_BUCKET_NAME,
+    Key: key,
+    ...(downloadFilename && { ResponseContentDisposition: `attachment; filename="${downloadFilename.replace(/"/g, "")}"` }),
+  });
   return presignUrl(r2Client, command, { expiresIn });
 }
 

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { uploadToR2 } from "@/lib/uploadToR2";
+import { FileActions } from "@/components/academic/FileActions";
 
 interface Resource {
   id: string; title: string; description: string | null; subject: string; level: string; topic: string | null;
@@ -61,10 +62,9 @@ export function LibraryBrowser({ profileId, canUpload }: { profileId: string; ca
     }
   };
 
-  const openResource = async (r: Resource) => {
-    await supabase.rpc("increment_library_download", { p_resource_id: r.id } as any);
+  const trackDownload = (r: Resource) => {
+    supabase.rpc("increment_library_download", { p_resource_id: r.id } as any);
     setResources((prev) => prev.map((x) => x.id === r.id ? { ...x, download_count: x.download_count + 1 } : x));
-    window.open(r.file_url, "_blank", "noopener,noreferrer");
   };
 
   const upload = async () => {
@@ -180,9 +180,7 @@ export function LibraryBrowser({ profileId, canUpload }: { profileId: string; ca
                 {r.description && <p style={{ fontSize: 12, color: S.muted, margin: 0, lineHeight: 1.4 }}>{r.description}</p>}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
                   <span style={{ fontSize: 10, color: S.dim }}>{r.download_count} download{r.download_count !== 1 ? "s" : ""}</span>
-                  <button onClick={() => openResource(r)} style={{ padding: "6px 14px", borderRadius: 8, background: "rgba(77,127,255,0.1)", border: `1px solid rgba(77,127,255,0.25)`, color: S.accent, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-                    Download
-                  </button>
+                  <FileActions fileUrl={r.file_url} onView={() => trackDownload(r)} />
                 </div>
               </div>
             );

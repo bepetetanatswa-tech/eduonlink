@@ -37,10 +37,6 @@ export function CoursePurchase({ courseId, courseTitle, price: basePrice, onClos
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setError("Not signed in"); setSubmitting(false); return; }
 
-    const { data: bl } = await (supabase.from("blacklisted_phones") as any)
-      .select("id").eq("phone_number", form.phone.trim()).maybeSingle();
-    if (bl) { setError("This phone number has been blocked from making payments. Contact support."); setSubmitting(false); return; }
-
     let screenshotUrl: string | null = null;
     if (file) {
       const ext = file.name.split(".").pop();
@@ -52,24 +48,21 @@ export function CoursePurchase({ courseId, courseTitle, price: basePrice, onClos
       }
     }
 
-    const { data: profile } = await (supabase.from("profiles") as any).select("id").eq("user_id", user.id).single();
-
-    const { error: insertErr } = await (supabase.from("payment_verifications") as any).insert({
-      user_id: profile?.id ?? null,
-      profile_id: profile?.id ?? null,
-      transaction_id: form.transactionId.trim(),
-      phone_number: form.phone.trim(),
-      amount: price,
-      screenshot_url: screenshotUrl,
-      status: "pending",
-      purchase_type: "course",
-      course_id: courseId,
+    const res = await fetch("/api/payments/submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        transactionId: form.transactionId.trim(),
+        phoneNumber: form.phone.trim(),
+        amount: price,
+        screenshotUrl,
+        purchaseType: "course",
+        courseId,
+      }),
     });
-
-    if (insertErr) {
-      setError(insertErr.code === "23505"
-        ? "This transaction ID has already been used."
-        : insertErr.message ?? "Submission failed. Please try again.");
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      setError(data?.error ?? "Submission failed. Please try again.");
       setSubmitting(false);
       return;
     }

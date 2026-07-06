@@ -42,11 +42,6 @@ export function EcoCashPayment({ plan, creditPack, username, onSuccess, onBack }
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setError("Not signed in"); setSubmitting(false); return; }
 
-    // Check blacklist
-    const { data: bl } = await (supabase.from("blacklisted_phones") as any)
-      .select("id").eq("phone_number", form.phone.trim()).maybeSingle();
-    if (bl) { setError("This phone number has been blocked from making payments. Contact support."); setSubmitting(false); return; }
-
     let screenshotUrl: string | null = null;
     if (file) {
       const ext = file.name.split(".").pop();
@@ -58,42 +53,27 @@ export function EcoCashPayment({ plan, creditPack, username, onSuccess, onBack }
       }
     }
 
-    const { data: profile } = await (supabase.from("profiles") as any).select("id").eq("user_id", user.id).single();
-
-    const payload: Record<string, unknown> = {
-      user_id: profile?.id ?? null,
-      profile_id: profile?.id ?? null,
-      transaction_id: form.transactionId.trim(),
-      phone_number: form.phone.trim(),
-      amount: price,
-      screenshot_url: screenshotUrl,
-      status: "pending",
-      purchase_type: plan ? "subscription" : "credits",
-    };
-    if (plan) payload.plan_key = plan.key;
-    if (creditPack) {
-      payload.credit_pack_key = creditPack.key;
-      payload.credit_type = creditPack.creditType;
-      payload.credit_amount = creditPack.amount;
-    }
-
-    const { error: insertErr } = await (supabase.from("payment_verifications") as any).insert(payload);
-    if (insertErr) {
-      if (insertErr.code === "23505") {
-        setError("This transaction ID has already been used. Each EcoCash transaction can only be submitted once.");
-      } else {
-        setError(insertErr.message ?? "Submission failed. Please try again.");
-      }
+    const res = await fetch("/api/payments/submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        transactionId: form.transactionId.trim(),
+        phoneNumber: form.phone.trim(),
+        amount: price,
+        screenshotUrl,
+        purchaseType: plan ? "subscription" : "credits",
+        planKey: plan?.key,
+        creditPackKey: creditPack?.key,
+        creditType: creditPack?.creditType,
+        creditAmount: creditPack?.amount,
+      }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      setError(data?.error ?? "Submission failed. Please try again.");
       setSubmitting(false);
       return;
     }
-
-    await (supabase.from("notifications") as any).insert({
-      user_id: profile?.id ?? null,
-      title: "Payment submitted — awaiting approval",
-      message: `Your ${itemName} payment of $${price.toFixed(2)} is under review. You will be notified once approved (usually within a few hours).`,
-      type: "info",
-    });
 
     setSubmitting(false);
     setDone(true);

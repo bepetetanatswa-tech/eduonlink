@@ -76,9 +76,14 @@ export function AdminPaymentQueue({ statusFilter = "pending", onCountChange }: {
   const reject = (pv: PV, reason: string) => decide(pv, "rejected", reason);
 
   const doBlacklist = async (phone: string) => {
-    const { error } = await (supabase.from("blacklisted_phones") as any).upsert({ phone_number: phone, reason: "Blacklisted by admin" }, { onConflict: "phone_number" });
-    if (error) {
-      notify("error", `Could not blacklist number: ${error.message}`);
+    const res = await fetch("/api/admin/blacklist", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phoneNumber: phone }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      notify("error", data?.error ?? "Could not blacklist number");
       return;
     }
     notify("success", "Number blacklisted");

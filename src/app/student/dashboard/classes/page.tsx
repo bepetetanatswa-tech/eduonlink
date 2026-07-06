@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import Link from "next/link";
 import { ClassCard } from "./ClassCard";
 import { JoinClassButton } from "@/components/academic/JoinClassButton";
 
@@ -86,7 +87,12 @@ export default async function StudentClassesPage() {
           <h2 style={{ fontSize: 20, fontWeight: 700, color: S.text, fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>My Classes</h2>
           <p style={{ fontSize: 12, color: S.dim, marginTop: 4 }}>{classes.length} class{classes.length !== 1 ? "es" : ""} enrolled</p>
         </div>
-        <JoinClassButton />
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <Link href="/student/dashboard/classes/browse" style={{ padding: "8px 16px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}`, color: S.text, fontSize: 13, fontWeight: 600, textDecoration: "none" }}>
+            Browse Classes
+          </Link>
+          <JoinClassButton />
+        </div>
       </div>
 
       {enriched.length === 0 ? (

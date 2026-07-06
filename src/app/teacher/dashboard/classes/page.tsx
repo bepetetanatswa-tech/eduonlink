@@ -2,6 +2,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { TeacherClassCard } from "./TeacherClassCard";
+import { CreateIndependentClassButton } from "@/components/academic/CreateIndependentClassButton";
 
 export default async function TeacherClassesPage() {
   const supabase = await createClient();
@@ -9,7 +10,7 @@ export default async function TeacherClassesPage() {
   if (!user) redirect("/auth/login");
 
   const { data: profile } = await (supabase.from("profiles") as any)
-    .select("id,role").eq("user_id", user.id).single();
+    .select("id,role,is_approved").eq("user_id", user.id).single();
   if (!profile || (profile.role !== "teacher" && profile.role !== "super_admin")) redirect("/dashboard");
 
   const { data: classesRaw } = await (supabase.from("classes") as any)
@@ -69,14 +70,23 @@ export default async function TeacherClassesPage() {
 
   return (
     <div style={{ maxWidth: 900, display: "flex", flexDirection: "column", gap: 20 }}>
-      <div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", margin: 0 }}>My Classes</h2>
-        <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>{classes.length} class{classes.length !== 1 ? "es" : ""} assigned to you</p>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", margin: 0 }}>My Classes</h2>
+          <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>{classes.length} class{classes.length !== 1 ? "es" : ""} assigned to you</p>
+        </div>
+        {(profile.role === "super_admin" || profile.is_approved) && (
+          <CreateIndependentClassButton teacherId={profile.id} />
+        )}
       </div>
 
       {classes.length === 0 ? (
         <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: "48px", textAlign: "center" }}>
-          <p style={{ fontSize: 14, color: "#4A5170" }}>No classes assigned to you yet. Ask your school administrator.</p>
+          <p style={{ fontSize: 14, color: "#4A5170" }}>
+            {profile.role === "super_admin" || profile.is_approved
+              ? "No classes yet. Ask your school administrator to assign one, or create your own above."
+              : "No classes assigned to you yet. Ask your school administrator."}
+          </p>
         </div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 14 }}>

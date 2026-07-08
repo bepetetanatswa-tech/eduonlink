@@ -10,7 +10,7 @@ import { useChatAttachmentUrls } from "@/lib/supabase/chatAttachments";
 interface Profile { id: string; full_name: string; avatar_url: string | null; role: string; email: string }
 interface ParentMsg { id: string; content: string; sender: { full_name: string } }
 interface DMsg {
-  id: string; sender_id: string; receiver_id: string; content: string; read_at: string | null; created_at: string;
+  id: string; sender_id: string; receiver_id: string; content: string; read_at: string | null; delivered_at: string | null; created_at: string;
   message_type: string; file_url: string | null; attachment_name: string | null;
   parent_id: string | null; is_deleted: boolean;
   sender: Profile; receiver: Profile;
@@ -107,6 +107,8 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
     supabase,
     messages.filter((m) => (m.message_type === "image" || m.message_type === "file") && m.file_url).map((m) => m.file_url as string)
   );
+  const selectedRef = useRef<Profile | null>(null);
+  useEffect(() => { selectedRef.current = selected; }, [selected]);
 
   const scrollToBottom = (smooth = true) => {
     bottomRef.current?.scrollIntoView({ behavior: smooth ? "smooth" : "auto" });
@@ -247,18 +249,42 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
             .select("*, sender:profiles!messages_sender_id_fkey(id,full_name,avatar_url,role,email), receiver:profiles!messages_receiver_id_fkey(id,full_name,avatar_url,role,email), parent:messages!messages_parent_id_fkey(id,content,sender:profiles!messages_sender_id_fkey(full_name))")
             .eq("id", payload.new.id)
             .single();
-          if (data) {
+          if (!data) return;
+
+          // If this sender's thread is the one currently open, mark it read
+          // immediately (the user is actively looking at it) instead of just
+          // delivered — matches every mainstream chat app's behavior and
+          // avoids a stale unread badge on a conversation being viewed live.
+          const isOpenThread = selectedRef.current?.id === data.sender_id;
+          const now = new Date().toISOString();
+          if (isOpenThread) {
+            data.read_at = now;
+            data.delivered_at = data.delivered_at ?? now;
             setMessages(prev => [...prev, data]);
-            setConversations(prev => {
-              const idx = prev.findIndex(c => c.other.id === data.sender.id);
-              if (idx >= 0) {
-                const updated = [...prev];
-                updated[idx] = { ...updated[idx], lastMsg: data, unread: updated[idx].unread + 1 };
-                return updated;
-              }
-              return [{ other: data.sender, lastMsg: data, unread: 1 }, ...prev];
-            });
+            await (supabase.from("messages") as any).update({ read_at: now, delivered_at: now }).eq("id", data.id);
+          } else if (!data.delivered_at) {
+            data.delivered_at = now;
+            await (supabase.from("messages") as any).update({ delivered_at: now }).eq("id", data.id).is("delivered_at", null);
           }
+
+          setConversations(prev => {
+            const idx = prev.findIndex(c => c.other.id === data.sender.id);
+            if (idx >= 0) {
+              const updated = [...prev];
+              updated[idx] = { ...updated[idx], lastMsg: data, unread: isOpenThread ? 0 : updated[idx].unread + 1 };
+              return updated;
+            }
+            return [{ other: data.sender, lastMsg: data, unread: isOpenThread ? 0 : 1 }, ...prev];
+          });
+        })
+        .on("postgres_changes", {
+          event: "UPDATE", schema: "public", table: "messages",
+          filter: `sender_id=eq.${profileId}`,
+        }, (payload) => {
+          // Keeps sent-message tick state (delivered/read) live without a refresh.
+          setMessages(prev => prev.map(m => m.id === payload.new.id
+            ? { ...m, read_at: payload.new.read_at, delivered_at: payload.new.delivered_at }
+            : m));
         })
         .subscribe(onStatus);
       return { remove: () => supabase.removeChannel(ch) };
@@ -374,7 +400,7 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
     if (data) setMessages([...data].reverse());
 
     await (supabase.from("messages") as any)
-      .update({ read_at: new Date().toISOString() })
+      .update({ read_at: new Date().toISOString(), delivered_at: new Date().toISOString() })
       .eq("receiver_id", profileId)
       .eq("sender_id", other.id)
       .is("read_at", null);
@@ -612,9 +638,8 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
 
   const ConversationList = (
     <div style={{ width: isMobile && selected ? 0 : 280, minWidth: isMobile && selected ? 0 : 280, borderRight: `1px solid ${S.border}`, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      <div style={{ padding: "12px 14px", borderBottom: `1px solid ${S.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div style={{ padding: "12px 14px", borderBottom: `1px solid ${S.border}` }}>
         <span style={{ fontSize: 13, fontWeight: 600, color: S.text }}>Messages</span>
-        <button onClick={() => setShowNewDm(true)} style={{ width: 28, height: 28, borderRadius: 8, background: S.accent, border: "none", color: "#fff", cursor: "pointer", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
       </div>
       <div style={{ flex: 1, overflowY: "auto" }}>
         {loading ? (
@@ -745,7 +770,13 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
                   </div>
                 </div>
                 <p style={{ fontSize: 10, color: S.dim, marginTop: 2, textAlign: isOwn ? "right" : "left" }}>
-                  {fmt(m.created_at)}{isOwn && m.read_at && " ✓✓"}{starredIds.has(m.id) && " ★"}
+                  {fmt(m.created_at)}
+                  {isOwn && (
+                    <span style={{ color: m.read_at ? "#34B7F1" : S.dim, marginLeft: 3 }}>
+                      {(m.delivered_at || m.read_at) ? " ✓✓" : " ✓"}
+                    </span>
+                  )}
+                  {starredIds.has(m.id) && " ★"}
                 </p>
               </div>
             </div>
@@ -952,6 +983,21 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
       {NewDmPanel}
       {BlockConfirm}
       {StarredPanel}
+      {!selected && (
+        <button
+          onClick={() => setShowNewDm(true)}
+          aria-label="New conversation"
+          style={{
+            position: "fixed", right: 20, bottom: heightOffset + 20,
+            width: 56, height: 56, borderRadius: "50%",
+            background: S.accent, border: "none", color: "#fff",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 4px 16px rgba(0,0,0,0.35)", cursor: "pointer", zIndex: 45,
+          }}
+        >
+          <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.5v15m7.5-7.5h-15" /></svg>
+        </button>
+      )}
       <style>{`
         @keyframes dm-bounce { 0%,80%,100% { transform: translateY(0); } 40% { transform: translateY(-4px); } }
         .dm-msg-row:hover .dm-msg-actions { display: flex !important; }

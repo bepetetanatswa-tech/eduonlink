@@ -2,6 +2,13 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getPlan, CREDIT_PACKS, PLANS } from "@/lib/subscription/plans";
+
+// Cents-fingerprinting (generate_payment_fingerprint_amount) nudges the
+// displayed amount by up to 4 cents from the canonical price so pending
+// payments can be matched by exact amount alone — so the server-side
+// price check below allows a small tolerance rather than an exact match.
+const PRICE_TOLERANCE = 0.06;
 
 const ZW_PHONE = /^0(71|73|77|78)\d{7}$/;
 const PHONE_VELOCITY_LIMIT = 3; // same phone submitting more than this in 24h is suspicious
@@ -41,6 +48,35 @@ export async function POST(request: NextRequest) {
   }
 
   const admin = createAdminClient();
+
+  // Never trust the client's amount — verify it actually matches the real
+  // price of whatever is being purchased. Without this, a direct API call
+  // could submit any low amount for a high-value item and, if an admin
+  // approved without manually cross-checking the item's price, get full
+  // access for a fraction of the real cost.
+  let expectedPrice: number | null = null;
+  if (purchaseType === "subscription") {
+    if (!PLANS.some((p) => p.key === planKey)) return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
+    expectedPrice = getPlan(planKey).price;
+  } else if (purchaseType === "credits") {
+    const pack = CREDIT_PACKS.find((p) => p.key === creditPackKey);
+    if (!pack) return NextResponse.json({ error: "Invalid credit pack" }, { status: 400 });
+    expectedPrice = pack.price;
+  } else if (purchaseType === "course") {
+    if (!courseId) return NextResponse.json({ error: "courseId is required" }, { status: 400 });
+    const { data: course } = await admin.from("courses").select("price").eq("id", courseId).maybeSingle();
+    if (!course) return NextResponse.json({ error: "Course not found" }, { status: 404 });
+    expectedPrice = course.price;
+  } else if (purchaseType === "class") {
+    if (!classId) return NextResponse.json({ error: "classId is required" }, { status: 400 });
+    const { data: klass } = await admin.from("classes").select("price").eq("id", classId).maybeSingle();
+    if (!klass) return NextResponse.json({ error: "Class not found" }, { status: 404 });
+    expectedPrice = klass.price;
+  }
+
+  if (expectedPrice !== null && Math.abs(amountNum - expectedPrice) > PRICE_TOLERANCE) {
+    return NextResponse.json({ error: `Amount must match the price of $${expectedPrice.toFixed(2)}` }, { status: 400 });
+  }
 
   const { data: blocked } = await admin.from("blacklisted_phones").select("id").eq("phone_number", phone).maybeSingle();
   if (blocked) {

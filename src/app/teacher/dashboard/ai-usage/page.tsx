@@ -14,24 +14,30 @@ export default async function TeacherAIUsagePage() {
 
   const { data: membership } = await (supabase.from("school_members") as any)
     .select("school_id").eq("user_id", profile.id).eq("role", "teacher").maybeSingle();
-  const hasSchool = !!membership?.school_id;
+  const { data: ownClass } = await (supabase.from("classes") as any)
+    .select("id").eq("teacher_id", profile.id).limit(1).maybeSingle();
+  // An independent (schoolless) teacher reaches their students through a
+  // class, not school_members — RLS grants that access too (migration 071),
+  // so gate the empty-state message on either path, not school alone.
+  const hasAccess = !!membership?.school_id || !!ownClass;
 
   // RLS ("Teachers view school ai usage" / "... student conversations") scopes
-  // both queries to students who share this teacher's school automatically.
+  // both queries to students who share this teacher's school OR are enrolled
+  // in a class this teacher teaches, automatically.
   const today = new Date().toISOString().split("T")[0];
-  const { data: usageRows } = hasSchool ? await (supabase.from("ai_usage") as any)
+  const { data: usageRows } = hasAccess ? await (supabase.from("ai_usage") as any)
     .select("user_id, questions_used, profiles!user_id(full_name, email)")
     .eq("date", today)
     .order("questions_used", { ascending: false }) : { data: [] };
 
-  const { data: convos } = hasSchool ? await (supabase.from("ai_conversations") as any)
+  const { data: convos } = hasAccess ? await (supabase.from("ai_conversations") as any)
     .select("id, student_id, subject, title, messages, created_at, profiles!student_id(full_name, email)")
     .order("created_at", { ascending: false })
     .limit(30) : { data: [] };
 
   return (
     <TeacherAIUsageView
-      hasSchool={hasSchool}
+      hasSchool={hasAccess}
       usageRows={usageRows ?? []}
       convos={convos ?? []}
     />

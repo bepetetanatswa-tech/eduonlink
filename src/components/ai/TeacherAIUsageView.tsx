@@ -20,7 +20,7 @@ export function TeacherAIUsageView({ hasSchool, usageRows, convos }: {
       <div style={{ maxWidth: 700 }}>
         <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", marginBottom: 8 }}>Student AI Activity</h2>
         <div style={{ background: "rgba(245,166,35,0.08)", border: "1px solid rgba(245,166,35,0.2)", borderRadius: 12, padding: 16, color: "#F5A623", fontSize: 13 }}>
-          You are not linked to a school yet. Contact your school admin to be added as a teacher.
+          You&apos;re not linked to a school and don&apos;t teach any classes yet — join a school or create a class to see your students&apos; AI activity here.
         </div>
       </div>
     );

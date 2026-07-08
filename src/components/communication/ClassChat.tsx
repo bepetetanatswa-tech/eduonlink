@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { LinkPreviewCard, extractFirstUrl } from "./LinkPreviewCard";
 import { createReconnectingSubscription, type ConnStatus } from "@/lib/supabase/reconnect";
+import { useChatAttachmentUrls } from "@/lib/supabase/chatAttachments";
 
 interface Sender { id: string; full_name: string; avatar_url: string | null; role: string }
 interface Reaction { emoji: string; user_id: string }
@@ -107,6 +108,10 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
   const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
   const pendingMessagesRef = useRef<PendingMessage[]>([]);
   const [starredIds, setStarredIds] = useState<Set<string>>(new Set());
+  const signedUrls = useChatAttachmentUrls(
+    supabase,
+    messages.filter((m) => (m.message_type === "image" || m.message_type === "file") && m.file_url).map((m) => m.file_url as string)
+  );
 
   const scrollToBottom = useCallback((smooth = true) => {
     bottomRef.current?.scrollIntoView({ behavior: smooth ? "smooth" : "auto" });
@@ -370,14 +375,16 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
     const path = `class/${classId}/${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("chat-attachments").upload(path, file);
     if (!error) {
-      const { data: { publicUrl } } = supabase.storage.from("chat-attachments").getPublicUrl(path);
+      // chat-attachments is a private bucket — store the object path, not a
+      // (non-functional) public URL; resolved to a signed URL for display by
+      // useChatAttachmentUrls.
       const type = file.type.startsWith("image/") ? "image" : "file";
       await (supabase.from("messages") as any).insert({
         sender_id: profileId,
         class_id: classId,
         content: file.name,
         message_type: type,
-        file_url: publicUrl,
+        file_url: path,
         attachment_name: file.name,
         parent_id: replyTo?.id ?? null,
       });
@@ -648,13 +655,17 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
                 >
                   {/* File/image */}
                   {msg.message_type === "image" && msg.file_url && (
-                    <img src={msg.file_url} alt={msg.attachment_name ?? "image"} style={{ maxWidth: 220, borderRadius: 8, display: "block", marginBottom: 4 }} />
+                    signedUrls[msg.file_url]
+                      ? <img src={signedUrls[msg.file_url]} alt={msg.attachment_name ?? "image"} style={{ maxWidth: 220, borderRadius: 8, display: "block", marginBottom: 4 }} />
+                      : <div style={{ width: 220, height: 120, borderRadius: 8, background: "rgba(255,255,255,0.04)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: S.dim, marginBottom: 4 }}>Loading image…</div>
                   )}
                   {msg.message_type === "file" && msg.file_url && (
-                    <a href={msg.file_url} target="_blank" rel="noreferrer" style={{ display: "flex", gap: 8, alignItems: "center", color: S.accent, textDecoration: "none", fontSize: 13, marginBottom: 4 }}>
-                      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                      {msg.attachment_name}
-                    </a>
+                    signedUrls[msg.file_url]
+                      ? <a href={signedUrls[msg.file_url]} target="_blank" rel="noreferrer" style={{ display: "flex", gap: 8, alignItems: "center", color: S.accent, textDecoration: "none", fontSize: 13, marginBottom: 4 }}>
+                          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                          {msg.attachment_name}
+                        </a>
+                      : <span style={{ fontSize: 12, color: S.dim, marginBottom: 4 }}>Loading {msg.attachment_name}…</span>
                   )}
                   {msg.message_type === "voice" && msg.file_url && (
                     <div style={{ marginBottom: 4 }}>
@@ -806,9 +817,13 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
                 return media.length === 0 ? <p style={{ fontSize: 12, color: S.dim, textAlign: "center", padding: "12px 0" }}>No shared media yet</p> : (
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
                     {media.map((m) => (
-                      <a key={m.id} href={m.file_url!} target="_blank" rel="noreferrer">
-                        <img src={m.file_url!} alt="" style={{ width: "100%", aspectRatio: "1", objectFit: "cover", borderRadius: 8 }} />
-                      </a>
+                      signedUrls[m.file_url!] ? (
+                        <a key={m.id} href={signedUrls[m.file_url!]} target="_blank" rel="noreferrer">
+                          <img src={signedUrls[m.file_url!]} alt="" style={{ width: "100%", aspectRatio: "1", objectFit: "cover", borderRadius: 8 }} />
+                        </a>
+                      ) : (
+                        <div key={m.id} style={{ width: "100%", aspectRatio: "1", borderRadius: 8, background: "rgba(255,255,255,0.04)" }} />
+                      )
                     ))}
                   </div>
                 );
@@ -818,7 +833,7 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
                 return files.length === 0 ? <p style={{ fontSize: 12, color: S.dim, textAlign: "center", padding: "12px 0" }}>No shared files yet</p> : (
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {files.map((m) => (
-                      <a key={m.id} href={m.file_url!} target="_blank" rel="noreferrer" style={{ display: "flex", gap: 8, alignItems: "center", color: S.accent, textDecoration: "none", fontSize: 12, padding: "6px 8px", borderRadius: 8, background: "rgba(255,255,255,0.03)" }}>
+                      <a key={m.id} href={signedUrls[m.file_url!] ?? "#"} target="_blank" rel="noreferrer" style={{ display: "flex", gap: 8, alignItems: "center", color: signedUrls[m.file_url!] ? S.accent : S.dim, textDecoration: "none", fontSize: 12, padding: "6px 8px", borderRadius: 8, background: "rgba(255,255,255,0.03)" }}>
                         <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                         {m.attachment_name}
                       </a>

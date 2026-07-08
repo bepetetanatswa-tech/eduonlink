@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { createReconnectingSubscription, type ConnStatus } from "@/lib/supabase/reconnect";
+import { useChatAttachmentUrls } from "@/lib/supabase/chatAttachments";
 
 interface Profile { id: string; full_name: string; avatar_url: string | null; role: string; email: string }
 interface ParentMsg { id: string; content: string; sender: { full_name: string } }
@@ -102,6 +103,10 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
   const pendingMessagesRef = useRef<PendingMessage[]>([]);
   const [starredIds, setStarredIds] = useState<Set<string>>(new Set());
   const [showStarred, setShowStarred] = useState(false);
+  const signedUrls = useChatAttachmentUrls(
+    supabase,
+    messages.filter((m) => (m.message_type === "image" || m.message_type === "file") && m.file_url).map((m) => m.file_url as string)
+  );
 
   const scrollToBottom = (smooth = true) => {
     bottomRef.current?.scrollIntoView({ behavior: smooth ? "smooth" : "auto" });
@@ -479,12 +484,14 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
       setUploading(false);
       return;
     }
-    const { data: { publicUrl } } = supabase.storage.from("chat-attachments").getPublicUrl(path);
+    // chat-attachments is a private bucket — store the object path, not a
+    // (non-functional) public URL; resolved to a signed URL for display by
+    // useChatAttachmentUrls.
     const type = file.type.startsWith("image/") ? "image" : "file";
     const { data, error } = await (supabase.from("messages") as any)
       .insert({
         sender_id: profileId, receiver_id: selected.id, class_id: null,
-        content: file.name, message_type: type, file_url: publicUrl, attachment_name: file.name,
+        content: file.name, message_type: type, file_url: path, attachment_name: file.name,
         parent_id: replyTo?.id ?? null,
       })
       .select("*, sender:profiles!messages_sender_id_fkey(id,full_name,avatar_url,role,email), receiver:profiles!messages_receiver_id_fkey(id,full_name,avatar_url,role,email), parent:messages!messages_parent_id_fkey(id,content,sender:profiles!messages_sender_id_fkey(full_name))")
@@ -712,13 +719,17 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
                 <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 6, flexDirection: isOwn ? "row-reverse" : "row" }} className="dm-msg-bubble-wrap">
                   <div style={{ background: isOwn ? "linear-gradient(135deg,#1E3A6E,#1A3060)" : "rgba(255,255,255,0.05)", border: `1px solid ${isOwn ? "rgba(77,127,255,0.3)" : S.border}`, borderRadius: isOwn ? (m.parent ? "12px 4px 12px 12px" : "12px 4px 12px 12px") : (m.parent ? "4px 12px 12px 12px" : "4px 12px 12px 12px"), padding: "8px 12px" }}>
                     {m.message_type === "image" && m.file_url && (
-                      <img src={m.file_url} alt={m.attachment_name ?? "image"} style={{ maxWidth: 220, borderRadius: 8, display: "block", marginBottom: 4 }} />
+                      signedUrls[m.file_url]
+                        ? <img src={signedUrls[m.file_url]} alt={m.attachment_name ?? "image"} style={{ maxWidth: 220, borderRadius: 8, display: "block", marginBottom: 4 }} />
+                        : <div style={{ width: 220, height: 120, borderRadius: 8, background: "rgba(255,255,255,0.04)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: S.dim, marginBottom: 4 }}>Loading image…</div>
                     )}
                     {m.message_type === "file" && m.file_url && (
-                      <a href={m.file_url} target="_blank" rel="noreferrer" style={{ display: "flex", gap: 8, alignItems: "center", color: S.accent, textDecoration: "none", fontSize: 13, marginBottom: 4 }}>
-                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                        {m.attachment_name}
-                      </a>
+                      signedUrls[m.file_url]
+                        ? <a href={signedUrls[m.file_url]} target="_blank" rel="noreferrer" style={{ display: "flex", gap: 8, alignItems: "center", color: S.accent, textDecoration: "none", fontSize: 13, marginBottom: 4 }}>
+                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                            {m.attachment_name}
+                          </a>
+                        : <span style={{ fontSize: 12, color: S.dim, marginBottom: 4 }}>Loading {m.attachment_name}…</span>
                     )}
                     {m.message_type === "voice" && m.file_url && (
                       <div style={{ marginBottom: 4 }}>

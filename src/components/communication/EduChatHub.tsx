@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { DirectMessages } from "@/components/communication/DirectMessages";
@@ -35,12 +35,46 @@ export function EduChatHub({
   const [liveSessions, setLiveSessions] = useState<any[]>([]);
   const [loadingGroups, setLoadingGroups] = useState(false);
   const [loadingCalls, setLoadingCalls] = useState(false);
+  const [unreadDm, setUnreadDm] = useState(0);
+  const tabRef = useRef<Tab>("chats");
+  useEffect(() => { tabRef.current = tab; }, [tab]);
 
   useEffect(() => {
     if (tab === "groups" && classes.length === 0) loadClasses();
     if (tab === "calls" && liveSessions.length === 0) loadCalls();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
+
+  // Badge on the Chats tab icon, WhatsApp-style — hidden while that tab is
+  // actually open (the user is already looking at their chats).
+  useEffect(() => {
+    if (tab === "chats") { setUnreadDm(0); return; }
+    loadUnreadDmCount();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
+
+  useEffect(() => {
+    const ch = supabase.channel(`edu-chat-hub-unread:${profileId}`)
+      .on("postgres_changes", {
+        event: "INSERT", schema: "public", table: "messages",
+        filter: `receiver_id=eq.${profileId}`,
+      }, () => {
+        if (tabRef.current !== "chats") setUnreadDm((n) => n + 1);
+      })
+      .subscribe();
+    loadUnreadDmCount();
+    return () => { supabase.removeChannel(ch); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileId]);
+
+  async function loadUnreadDmCount() {
+    const { count } = await (supabase.from("messages") as any)
+      .select("id", { count: "exact", head: true })
+      .eq("receiver_id", profileId)
+      .is("class_id", null)
+      .is("read_at", null);
+    setUnreadDm(count ?? 0);
+  }
 
   const loadClasses = async () => {
     setLoadingGroups(true);
@@ -148,9 +182,20 @@ export function EduChatHub({
             style={{
               flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
               padding: "9px 4px", background: "none", border: "none", cursor: "pointer",
-              color: tab === t.key ? S.accent : S.dim,
+              color: tab === t.key ? S.accent : S.dim, position: "relative",
             }}>
-            <span style={{ fontSize: 18 }}>{t.icon}</span>
+            <span style={{ fontSize: 18, position: "relative" }}>
+              {t.icon}
+              {t.key === "chats" && unreadDm > 0 && (
+                <span style={{
+                  position: "absolute", top: -4, right: -8, minWidth: 16, height: 16, padding: "0 3px",
+                  borderRadius: 8, background: "#FF3B30", color: "#fff", fontSize: 9, fontWeight: 700,
+                  display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid #0E1117",
+                }}>
+                  {unreadDm > 99 ? "99+" : unreadDm}
+                </span>
+              )}
+            </span>
             <span style={{ fontSize: 10, fontWeight: tab === t.key ? 700 : 500 }}>{t.label}</span>
           </button>
         ))}

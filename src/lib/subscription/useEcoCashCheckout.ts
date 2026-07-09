@@ -46,7 +46,14 @@ export function useEcoCashCheckout(basePrice: number): EcoCashCheckout {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [basePrice]);
 
-  const ussdLink = `tel:*151*1*1*${ecocashNumber}*${amount}%23`;
+  // `.` is not a valid MMI/dial character — phone dialers silently strip it
+  // when normalizing a `tel:` link for dialing (the same behavior that lets
+  // you save a number as "555.123.4567"), which turned "4.98" into "498" and
+  // sent the wrong amount. EcoCash's own USSD amount field expects "*" in
+  // place of the decimal point (e.g. "4*98" for $4.98) — that's the only
+  // character besides digits/# that survives MMI dialing.
+  const dialAmount = amount.toFixed(2).replace(".", "*");
+  const ussdLink = `tel:*151*1*1*${ecocashNumber}*${dialAmount}%23`;
 
   return { ecocashNumber, ecocashName, amount, ussdLink, loading };
 }

@@ -5,7 +5,7 @@ import QRCode from "qrcode";
 
 const S = { border: "rgba(255,255,255,0.07)", muted: "#8892B0", dim: "#4A5170" };
 
-export function EcoCashQrLink({ ussdLink }: { ussdLink: string }) {
+export function EcoCashQrLink({ ussdLink, amount }: { ussdLink: string; amount: number }) {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -30,6 +30,7 @@ export function EcoCashQrLink({ ussdLink }: { ussdLink: string }) {
           📞 Dial EcoCash
         </a>
         <p style={{ fontSize: 10, color: S.dim, margin: "6px 0 0" }}>Or scan the code from another phone. You&apos;ll still confirm and enter your PIN inside EcoCash itself.</p>
+        <p style={{ fontSize: 10, color: "#F5A623", margin: "6px 0 0" }}>Before sending, confirm EcoCash shows <strong>${amount.toFixed(2)}</strong> as the amount — if it looks wrong, cancel and enter it manually.</p>
       </div>
     </div>
   );

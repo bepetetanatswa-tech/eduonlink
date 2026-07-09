@@ -90,7 +90,7 @@ export function CoursePurchase({ courseId, courseTitle, price: basePrice, onClos
             <div style={{ background: "rgba(245,166,35,0.06)", border: "1px solid rgba(245,166,35,0.2)", borderRadius: 12, padding: 14 }}>
               <p style={{ fontSize: 12, color: S.muted, margin: "0 0 6px" }}>Send <strong style={{ color: S.accent }}>${price.toFixed(2)}</strong> to EcoCash <strong style={{ color: S.accent, fontFamily: "monospace" }}>{ecocashNumber}</strong> ({ecocashName}), then fill in the details below.</p>
             </div>
-            {!checkoutLoading && <EcoCashQrLink ussdLink={ussdLink} />}
+            {!checkoutLoading && <EcoCashQrLink ussdLink={ussdLink} amount={price} />}
             <div>
               <label style={{ fontSize: 11, fontWeight: 600, color: S.muted, display: "block", marginBottom: 5 }}>EcoCash Transaction ID *</label>
               <input value={form.transactionId} onChange={e => setForm(f => ({ ...f, transactionId: e.target.value }))} placeholder="e.g. MP250101.1234.A12345" style={inp} />

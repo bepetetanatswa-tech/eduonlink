@@ -119,7 +119,7 @@ export function EcoCashPayment({ plan, creditPack, username, onSuccess, onBack }
         </div>
       </div>
 
-      {!checkoutLoading && <EcoCashQrLink ussdLink={ussdLink} />}
+      {!checkoutLoading && <EcoCashQrLink ussdLink={ussdLink} amount={price} />}
 
       {/* Item summary */}
       <div style={{ background: "rgba(77,127,255,0.05)", border: "1px solid rgba(77,127,255,0.15)", borderRadius: 12, padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>

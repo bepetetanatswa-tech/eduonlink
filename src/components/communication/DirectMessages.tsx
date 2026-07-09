@@ -80,7 +80,6 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
   const [dmRequestStatus, setDmRequestStatus] = useState<"checking" | "none" | "pending_sent" | "pending_received" | "accepted" | "declined">("accepted");
   const bottomRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const [isMobile, setIsMobile] = useState(false);
   const presenceChannelRef = useRef<any>(null);
   const typingTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const [connStatus, setConnStatus] = useState<ConnStatus>("connecting");
@@ -124,7 +123,6 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
   }
 
   useEffect(() => {
-    setIsMobile(window.innerWidth < 768);
     loadConversations();
     loadStarred();
     const cleanupMsgs = setupRealtime();
@@ -637,31 +635,35 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
   }
 
   const ConversationList = (
-    <div style={{ width: isMobile && selected ? 0 : 280, minWidth: isMobile && selected ? 0 : 280, borderRight: `1px solid ${S.border}`, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      <div style={{ padding: "12px 14px", borderBottom: `1px solid ${S.border}` }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: S.text }}>Messages</span>
+    <div style={{ position: "fixed", top: 56, left: 0, right: 0, bottom: heightOffset, background: S.bg, display: "flex", flexDirection: "column", overflow: "hidden", zIndex: 20 }}>
+      <div style={{ padding: "12px 16px", borderBottom: `1px solid ${S.border}`, flexShrink: 0 }}>
+        <span style={{ fontSize: 15, fontWeight: 700, color: S.text }}>Messages</span>
       </div>
       <div style={{ flex: 1, overflowY: "auto" }}>
         {loading ? (
           <p style={{ padding: "20px", textAlign: "center", fontSize: 12, color: S.dim }}>Loading…</p>
         ) : conversations.length === 0 ? (
-          <p style={{ padding: "20px", textAlign: "center", fontSize: 12, color: S.dim }}>No conversations yet</p>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, padding: "48px 20px", textAlign: "center" }}>
+            <svg width="40" height="40" fill="none" stroke={S.dim} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+            <p style={{ fontSize: 13, color: S.muted, margin: 0 }}>No conversations yet</p>
+            <p style={{ fontSize: 12, color: S.dim, margin: 0 }}>Tap the pencil below to message someone</p>
+          </div>
         ) : (
           conversations.map(conv => (
             <div key={conv.other.id} onClick={() => openConversation(conv.other)}
-              style={{ padding: "10px 14px", cursor: "pointer", display: "flex", gap: 10, alignItems: "center", borderBottom: `1px solid ${S.border}`, background: selected?.id === conv.other.id ? `${S.accent}10` : "transparent", transition: "background 0.1s" }}>
+              style={{ padding: "12px 16px", cursor: "pointer", display: "flex", gap: 12, alignItems: "center", borderBottom: `1px solid ${S.border}`, transition: "background 0.1s" }}>
               <div style={{ position: "relative" }}>
-                <Avatar name={conv.other.full_name} url={conv.other.avatar_url} size={38} />
+                <Avatar name={conv.other.full_name} url={conv.other.avatar_url} size={44} />
                 {conv.unread > 0 && (
                   <span style={{ position: "absolute", top: -2, right: -2, width: 16, height: 16, borderRadius: "50%", background: S.accent, color: "#fff", fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", border: `2px solid ${S.bg}` }}>{conv.unread}</span>
                 )}
               </div>
               <div style={{ flex: 1, overflow: "hidden" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: S.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{conv.other.full_name}</span>
-                  <span style={{ fontSize: 10, color: S.dim, flexShrink: 0, marginLeft: 4 }}>{timeAgo(conv.lastMsg.created_at)}</span>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: S.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{conv.other.full_name}</span>
+                  <span style={{ fontSize: 11, color: S.dim, flexShrink: 0, marginLeft: 4 }}>{timeAgo(conv.lastMsg.created_at)}</span>
                 </div>
-                <p style={{ fontSize: 11, color: S.muted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: "2px 0 0" }}>
+                <p style={{ fontSize: 12, color: S.muted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: "3px 0 0" }}>
                   {conv.lastMsg.sender_id === profileId ? "You: " : ""}{conv.lastMsg.message_type === "text" ? conv.lastMsg.content : conv.lastMsg.message_type === "voice" ? "🎤 Voice message" : `📎 ${conv.lastMsg.attachment_name ?? "Attachment"}`}
                 </p>
               </div>
@@ -669,18 +671,30 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
           ))
         )}
       </div>
+      <button
+        onClick={() => setShowNewDm(true)}
+        aria-label="New conversation"
+        style={{
+          position: "fixed", right: 20, bottom: heightOffset + 20,
+          width: 56, height: 56, borderRadius: "50%",
+          background: S.accent, border: "none", color: "#fff",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 22,
+          boxShadow: "0 4px 16px rgba(0,0,0,0.35)", cursor: "pointer", zIndex: 41,
+        }}
+      >
+        ✏️
+      </button>
     </div>
   );
 
   const isBlocked = blockedByMe || blockedMe;
 
-  const ChatPanel = selected ? (
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+  const ChatPanel = selected && (
+    <div style={{ position: "fixed", inset: 0, background: S.bg, display: "flex", flexDirection: "column", overflow: "hidden", zIndex: 45 }}>
       {/* Header */}
-      <div style={{ padding: "10px 16px", borderBottom: `1px solid ${S.border}`, display: "flex", alignItems: "center", gap: 10, background: S.card, flexShrink: 0 }}>
-        {isMobile && (
-          <button onClick={() => setSelected(null)} style={{ background: "none", border: "none", color: S.muted, cursor: "pointer", fontSize: 18 }}>←</button>
-        )}
+      <div style={{ padding: "10px 16px", borderBottom: `1px solid ${S.border}`, display: "flex", alignItems: "center", gap: 10, background: S.card, flexShrink: 0, paddingTop: "calc(10px + env(safe-area-inset-top))" }}>
+        <button onClick={() => setSelected(null)} aria-label="Back to conversations" style={{ background: "none", border: "none", color: S.muted, cursor: "pointer", fontSize: 20, padding: 4, flexShrink: 0 }}>←</button>
         <div style={{ position: "relative" }}>
           <Avatar name={selected.full_name} url={selected.avatar_url} size={34} />
           <span style={{ position: "absolute", bottom: -1, right: -1, width: 10, height: 10, borderRadius: "50%", background: otherOnline ? "#00E5A3" : "#4A5170", border: `2px solid ${S.card}` }} />
@@ -903,16 +917,10 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
         </div>
       </div>
     </div>
-  ) : (
-    <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12, color: S.dim }}>
-      <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
-      <p style={{ fontSize: 13 }}>Select a conversation or start a new one</p>
-      <button onClick={() => setShowNewDm(true)} style={{ padding: "8px 18px", borderRadius: 8, background: S.accent, border: "none", color: "#fff", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>New Message</button>
-    </div>
   );
 
   const NewDmPanel = showNewDm && (
-    <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}>
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}>
       <div style={{ background: "#0E1117", border: `1px solid ${S.border}`, borderRadius: 16, padding: 20, width: 320, maxHeight: 480 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
           <span style={{ fontSize: 14, fontWeight: 600, color: S.text }}>New Message</span>
@@ -937,7 +945,7 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
   );
 
   const BlockConfirm = showBlockConfirm && selected && (
-    <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}>
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}>
       <div style={{ background: "#0E1117", border: `1px solid ${S.border}`, borderRadius: 14, padding: 24, width: 300 }}>
         <p style={{ fontSize: 14, color: S.text, marginBottom: 16 }}>
           {blockedByMe ? `Unblock ${selected.full_name}? They will be able to message you again.` : `Block ${selected.full_name} from messaging you?`}
@@ -953,7 +961,7 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
   );
 
   const StarredPanel = showStarred && (
-    <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}>
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}>
       <div style={{ background: "#0E1117", border: `1px solid ${S.border}`, borderRadius: 14, padding: 20, width: 340, maxHeight: 440, display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
           <span style={{ fontSize: 14, fontWeight: 600, color: S.text }}>★ Starred Messages</span>
@@ -977,31 +985,15 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
   );
 
   return (
-    <div style={{ display: "flex", height: `calc(100vh - ${80 + heightOffset}px)`, background: S.bg, borderRadius: 16, border: `1px solid ${S.border}`, overflow: "hidden", position: "relative" }}>
-      {ConversationList}
-      {ChatPanel}
+    <>
+      {selected ? ChatPanel : ConversationList}
       {NewDmPanel}
       {BlockConfirm}
       {StarredPanel}
-      {!selected && (
-        <button
-          onClick={() => setShowNewDm(true)}
-          aria-label="New conversation"
-          style={{
-            position: "fixed", right: 20, bottom: heightOffset + 20,
-            width: 56, height: 56, borderRadius: "50%",
-            background: S.accent, border: "none", color: "#fff",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 4px 16px rgba(0,0,0,0.35)", cursor: "pointer", zIndex: 45,
-          }}
-        >
-          <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.5v15m7.5-7.5h-15" /></svg>
-        </button>
-      )}
       <style>{`
         @keyframes dm-bounce { 0%,80%,100% { transform: translateY(0); } 40% { transform: translateY(-4px); } }
         .dm-msg-row:hover .dm-msg-actions { display: flex !important; }
       `}</style>
-    </div>
+    </>
   );
 }

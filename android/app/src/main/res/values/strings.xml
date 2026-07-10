@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">EduOnLink</string>
+    <string name="title_activity_main">EduOnLink</string>
+    <string name="package_name">com.vavhimithreads.eduonlink</string>
+    <string name="custom_url_scheme">com.vavhimithreads.eduonlink</string>
+</resources>

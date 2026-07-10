@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { IdleLogout } from "@/components/auth/IdleLogout";
+import { NativeBridge } from "@/components/capacitor/NativeBridge";
 
 export const metadata: Metadata = {
   title: "EduOnLink — The Intelligence Behind Zimbabwe's Education",
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <meta name="theme-color" content="#4D7FFF" />
       </head>
       <body className="antialiased">
+        <NativeBridge />
         <IdleLogout />
         {children}
       </body>

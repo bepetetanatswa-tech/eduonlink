@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Capacitor } from "@capacitor/core";
 import { subscribeToPush } from "@/lib/push/subscribe";
+import { registerPushNotifications } from "@/lib/capacitor/native";
 
 const DISMISS_KEY = "educonnect-push-prompt-dismissed";
 
@@ -9,13 +11,18 @@ export function PushPermissionPrompt() {
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isNative = typeof window !== "undefined" && Capacitor.isNativePlatform();
 
   useEffect(() => {
-    if (typeof window === "undefined" || typeof Notification === "undefined") return;
+    if (typeof window === "undefined") return;
     if (localStorage.getItem(DISMISS_KEY)) return;
-    if (Notification.permission !== "default") return;
+    // Web: only prompt if the browser hasn't already been asked. Native app:
+    // there's no equivalent synchronous check, so just offer it once — the
+    // dismiss flag still prevents repeat nagging either way.
+    if (!isNative && (typeof Notification === "undefined" || Notification.permission !== "default")) return;
     const t = setTimeout(() => setShow(true), 1500);
     return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const dismiss = () => {
@@ -26,7 +33,7 @@ export function PushPermissionPrompt() {
   const allow = async () => {
     setBusy(true);
     setError(null);
-    const result = await subscribeToPush();
+    const result = isNative ? await registerPushNotifications() : await subscribeToPush();
     setBusy(false);
     if (result.ok) {
       dismiss();

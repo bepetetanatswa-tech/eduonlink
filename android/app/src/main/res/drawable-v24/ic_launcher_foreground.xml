@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pixel-accurate reproduction of the EduOnLink logo mark (pencil + 3D "E")
+     from src/components/logo/VoaLogoMark.tsx / src/app/icon.tsx, scaled
+     0.85x and centered in the 108dp adaptive-icon canvas to stay inside the
+     safe zone. Replaces Android Studio's default template artwork. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportHeight="108"
+    android:viewportWidth="108">
+    <group
+        android:translateX="20"
+        android:translateY="20"
+        android:scaleX="0.85"
+        android:scaleY="0.85">
+
+        <!-- Pencil -->
+        <group android:pivotX="17" android:pivotY="46" android:rotation="-28">
+            <path android:pathData="M15.5,18 H18.5 A2.5,2.5 0 0 1 21,20.5 V24.5 A2.5,2.5 0 0 1 18.5,27 H15.5 A2.5,2.5 0 0 1 13,24.5 V20.5 A2.5,2.5 0 0 1 15.5,18 Z">
+                <aapt:attr name="android:fillColor">
+                    <gradient android:startX="10" android:startY="20" android:endX="24" android:endY="20" android:type="linear">
+                        <item android:color="#FFE08A" android:offset="0.0" />
+                        <item android:color="#F5A623" android:offset="1.0" />
+                    </gradient>
+                </aapt:attr>
+            </path>
+            <path android:fillColor="#C7CDDA" android:pathData="M13,26 H21 V30 H13 Z" />
+            <path android:pathData="M13,29 H21 V64 H13 Z">
+                <aapt:attr name="android:fillColor">
+                    <gradient android:startX="10" android:startY="20" android:endX="24" android:endY="20" android:type="linear">
+                        <item android:color="#F5A623" android:offset="0.0" />
+                        <item android:color="#CC7D12" android:offset="1.0" />
+                    </gradient>
+                </aapt:attr>
+            </path>
+            <path android:fillColor="#E8C89A" android:pathData="M13,64 L21,64 L17,75 Z" />
+            <path android:pathData="M15.3,69 L18.7,69 L17,75 Z">
+                <aapt:attr name="android:fillColor">
+                    <gradient android:startX="34" android:startY="10" android:endX="70" android:endY="70" android:type="linear">
+                        <item android:color="#0D1E4A" android:offset="0.0" />
+                        <item android:color="#1A3575" android:offset="1.0" />
+                    </gradient>
+                </aapt:attr>
+            </path>
+        </group>
+
+        <!-- 3D "E": back/dark layer -->
+        <path android:fillType="nonZero" android:pathData="M40.5,14.5 H47.5 A2,2 0 0 1 49.5,16.5 V72.5 A2,2 0 0 1 47.5,74.5 H40.5 A2,2 0 0 1 38.5,72.5 V16.5 A2,2 0 0 1 40.5,14.5 Z
+                M40.5,14.5 H71.5 A2,2 0 0 1 73.5,16.5 V23.5 A2,2 0 0 1 71.5,25.5 H40.5 A2,2 0 0 1 38.5,23.5 V16.5 A2,2 0 0 1 40.5,14.5 Z
+                M40.5,39 H63.5 A2,2 0 0 1 65.5,41 V48 A2,2 0 0 1 63.5,50 H40.5 A2,2 0 0 1 38.5,48 V41 A2,2 0 0 1 40.5,39 Z
+                M40.5,63.5 H71.5 A2,2 0 0 1 73.5,65.5 V72.5 A2,2 0 0 1 71.5,74.5 H40.5 A2,2 0 0 1 38.5,72.5 V65.5 A2,2 0 0 1 40.5,63.5 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient android:startX="34" android:startY="10" android:endX="70" android:endY="70" android:type="linear">
+                    <item android:color="#0D1E4A" android:offset="0.0" />
+                    <item android:color="#1A3575" android:offset="1.0" />
+                </gradient>
+            </aapt:attr>
+        </path>
+
+        <!-- 3D "E": front/light layer -->
+        <path android:fillType="nonZero" android:pathData="M36.5,10.5 H43.5 A2,2 0 0 1 45.5,12.5 V68.5 A2,2 0 0 1 43.5,70.5 H36.5 A2,2 0 0 1 34.5,68.5 V12.5 A2,2 0 0 1 36.5,10.5 Z
+                M36.5,10.5 H67.5 A2,2 0 0 1 69.5,12.5 V19.5 A2,2 0 0 1 67.5,21.5 H36.5 A2,2 0 0 1 34.5,19.5 V12.5 A2,2 0 0 1 36.5,10.5 Z
+                M36.5,35 H59.5 A2,2 0 0 1 61.5,37 V44 A2,2 0 0 1 59.5,46 H36.5 A2,2 0 0 1 34.5,44 V37 A2,2 0 0 1 36.5,35 Z
+                M36.5,59.5 H67.5 A2,2 0 0 1 69.5,61.5 V68.5 A2,2 0 0 1 67.5,70.5 H36.5 A2,2 0 0 1 34.5,68.5 V61.5 A2,2 0 0 1 36.5,59.5 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient android:startX="34" android:startY="10" android:endX="70" android:endY="70" android:type="linear">
+                    <item android:color="#5B8EFF" android:offset="0.0" />
+                    <item android:color="#2855D0" android:offset="1.0" />
+                </gradient>
+            </aapt:attr>
+        </path>
+    </group>
+</vector>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { getPlan } from "@/lib/subscription/plans";
 import { IconChip, IconFileText, IconBook, IconCheck } from "@/components/icons";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 
 const S = { border: "rgba(28,38,32,0.07)", text: "#1C2620", muted: "#566257", dim: "#6E7A6C", accent: "#B1502B" };
 
@@ -12,6 +13,7 @@ interface Payment { id: string; plan_key: string | null; credit_pack_key: string
 interface Credits { ai_questions: number; mock_exams: number; pdf_downloads: number; certificates: number; }
 
 export function SubscriptionDashboard({ onUpgrade }: { onUpgrade: () => void }) {
+  const confirmDialog = useConfirm();
  const supabase = createClient();
  const [sub, setSub] = useState<Sub | null>(null);
  const [credits, setCredits] = useState<Credits | null>(null);
@@ -40,7 +42,8 @@ export function SubscriptionDashboard({ onUpgrade }: { onUpgrade: () => void }) 
 
  const cancel = async () => {
  if (!sub) return;
- if (!confirm("Cancel your subscription? You will keep access until the expiry date.")) return;
+ const ok = await confirmDialog({ title: "Cancel your subscription?", message: "You'll keep access until the expiry date.", danger: true, confirmLabel: "Cancel subscription", cancelLabel: "Keep it" });
+    if (!ok) return;
  await (supabase.from("subscriptions") as any).update({ status: "cancelled", cancelled_at: new Date().toISOString() }).eq("id", sub.id);
  load();
  };

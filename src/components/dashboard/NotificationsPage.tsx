@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Notification } from "@/types/database";
 import { createReconnectingSubscription } from "@/lib/supabase/reconnect";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 
 function timeAgo(iso: string) {
  const diff = Date.now() - new Date(iso).getTime();
@@ -53,6 +54,7 @@ function matchesTab(n: Notification, tab: Tab): boolean {
 const S = { bg: "#F2EEE3", card: "#F2EEE3", border: "rgba(28,38,32,0.07)", text: "#1C2620", muted: "#566257", dim: "#6E7A6C", accent: "#B1502B" };
 
 export function NotificationsPage({ profileId }: { profileId: string }) {
+  const confirmDialog = useConfirm();
  const [notifications, setNotifications] = useState<Notification[]>([]);
  const [loading, setLoading] = useState(true);
  const [tab, setTab] = useState<Tab>("All");
@@ -125,7 +127,8 @@ export function NotificationsPage({ profileId }: { profileId: string }) {
  };
 
  const clearAll = async () => {
- if (!confirm("Delete all notifications? This can't be undone.")) return;
+ const ok = await confirmDialog({ title: "Delete all notifications?", message: "This can't be undone.", danger: true, confirmLabel: "Delete all" });
+    if (!ok) return;
  const ids = notifications.map((n) => n.id);
  if (!ids.length) return;
  // eslint-disable-next-line @typescript-eslint/no-explicit-any

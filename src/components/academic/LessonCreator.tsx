@@ -7,6 +7,7 @@ import { uploadToR2 } from "@/lib/uploadToR2";
 import { LessonQA } from "@/components/academic/LessonQA";
 import { FileActions } from "@/components/academic/FileActions";
 import { IconFileText, IconRadio } from "@/components/icons";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 
 interface Course {
  id: string; title: string; description: string | null; subject: string;
@@ -31,6 +32,7 @@ const inp: React.CSSProperties = {
 };
 
 export function LessonCreator({ profileId }: { profileId: string }) {
+  const confirmDialog = useConfirm();
  const supabase = createClient();
  const [courses, setCourses] = useState<Course[]>([]);
  const [selected, setSelected] = useState<Course | null>(null);
@@ -167,7 +169,8 @@ export function LessonCreator({ profileId }: { profileId: string }) {
  };
 
  const deleteMaterial = async (id: string) => {
- if (!confirm("Delete this lesson material?")) return;
+ const ok = await confirmDialog({ title: "Delete this lesson material?", danger: true, confirmLabel: "Delete" });
+    if (!ok) return;
  await (supabase.from("course_materials") as any).delete().eq("id", id);
  load();
  };

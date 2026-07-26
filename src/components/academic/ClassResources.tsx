@@ -4,6 +4,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { uploadToR2 } from "@/lib/uploadToR2";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 
 interface Resource {
  id: string;
@@ -26,6 +27,7 @@ function fileIcon(name: string | null) {
 }
 
 export function ClassResources({ classId, profileId, isTeacher }: { classId: string; profileId: string; isTeacher: boolean }) {
+  const confirmDialog = useConfirm();
  const supabase = createClient();
  const [resources, setResources] = useState<Resource[]>([]);
  const [loading, setLoading] = useState(true);
@@ -66,7 +68,8 @@ export function ClassResources({ classId, profileId, isTeacher }: { classId: str
  };
 
  const deleteResource = async (id: string) => {
- if (!confirm("Delete this resource?")) return;
+ const ok = await confirmDialog({ title: "Delete this resource?", danger: true, confirmLabel: "Delete" });
+    if (!ok) return;
  await (supabase.from("class_resources") as any).delete().eq("id", id);
  setResources((prev) => prev.filter((r) => r.id !== id));
  };

@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 
 interface School {
   id: string;
@@ -26,6 +27,7 @@ const PLANS = ["free_school", "school_starter", "school_standard", "school_pro",
 const PROVINCES = ["Harare","Bulawayo","Manicaland","Mashonaland Central","Mashonaland East","Mashonaland West","Masvingo","Matabeleland North","Matabeleland South","Midlands"];
 
 export function SchoolsClient({ initialSchools }: { initialSchools: School[] }) {
+  const confirmDialog = useConfirm();
   const [schools, setSchools] = useState(initialSchools);
   const [editing, setEditing] = useState<School | null>(null);
   const [editForm, setEditForm] = useState<Partial<School>>({});
@@ -98,7 +100,8 @@ export function SchoolsClient({ initialSchools }: { initialSchools: School[] }) 
   };
 
   const deleteSchool = async (id: string) => {
-    if (!confirm("Delete this school? This cannot be undone.")) return;
+    const ok = await confirmDialog({ title: "Delete this school?", message: "This can't be undone.", danger: true, confirmLabel: "Delete" });
+    if (!ok) return;
     const { error } = await (supabase.from("schools") as any).delete().eq("id", id);
     if (error) { notify(`Could not delete school: ${error.message}`); return; }
     setSchools((p) => p.filter((s) => s.id !== id));

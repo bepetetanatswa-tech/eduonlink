@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { uploadToR2 } from "@/lib/uploadToR2";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { gradeForScore, levelFromGradeLevel } from "@/lib/grading";
 import { parseRubric, type RubricCriterion } from "@/lib/rubric";
 
@@ -32,6 +33,7 @@ const S = { border: "rgba(28,38,32,0.07)", text: "#1C2620", muted: "#566257", di
 const inp: React.CSSProperties = { width: "100%", padding: "9px 12px", background: "rgba(28,38,32,0.04)", border: `1px solid ${S.border}`, borderRadius: 9, color: S.text, fontSize: 13, outline: "none", boxSizing: "border-box" };
 
 export function AssignmentManager({ profileId, lockedClassId }: { profileId: string; lockedClassId?: string }) {
+  const confirmDialog = useConfirm();
  const supabase = createClient();
  const [classes, setClasses] = useState<Cls[]>([]);
  const [selectedClass, setSelectedClass] = useState<string>(lockedClassId ?? "");
@@ -158,7 +160,8 @@ export function AssignmentManager({ profileId, lockedClassId }: { profileId: str
  };
 
  const deleteAssignment = async (id: string) => {
- if (!confirm("Delete this assignment and all submissions?")) return;
+ const ok = await confirmDialog({ title: "Delete this assignment?", message: "All student submissions will be deleted too. This can't be undone.", danger: true, confirmLabel: "Delete" });
+    if (!ok) return;
  await (supabase.from("assignments") as any).delete().eq("id", id);
  loadAssignments();
  setView("list");

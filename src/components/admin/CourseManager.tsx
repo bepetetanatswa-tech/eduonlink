@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { uploadToR2, deleteR2File } from "@/lib/uploadToR2";
 import { IconFileText, IconBook } from "@/components/icons";
 import { FileActions } from "@/components/academic/FileActions";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 
 interface Material {
  id: string;
@@ -36,6 +37,7 @@ const GRADES = ["Form 1","Form 2","Form 3","Form 4","Form 5","Form 6","ECD","Gra
 const EMOJIS = ["📚","📐","🔬","⚗","🌍","📖","🏛","🧬","⚡","💡","🎨","🏺","💼","📊","💻","🌾","✝","🎓","📝","🔭"];
 
 export function CourseManager({ initialCourses, adminId }: { initialCourses: Course[]; adminId: string }) {
+  const confirmDialog = useConfirm();
  const [courses, setCourses] = useState<Course[]>(initialCourses);
  const [view, setView] = useState<"list" | "create" | "edit">("list");
  const [editTarget, setEditTarget] = useState<Course | null>(null);
@@ -96,7 +98,8 @@ export function CourseManager({ initialCourses, adminId }: { initialCourses: Cou
  };
 
  const deleteCourse = async (id: string) => {
- if (!confirm("Delete this course and all its materials?")) return;
+ const ok = await confirmDialog({ title: "Delete this course?", message: "All its materials will be deleted too. This can't be undone.", danger: true, confirmLabel: "Delete" });
+    if (!ok) return;
  const { error } = await (supabase.from("courses") as any).delete().eq("id", id);
  if (error) { notify(`Could not delete course: ${error.message}`); return; }
  setCourses((p) => p.filter((c) => c.id !== id));

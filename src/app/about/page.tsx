@@ -63,12 +63,12 @@ export default function AboutPage() {
 
       <section className="section-sm">
         <div className="container-edu max-w-4xl">
-          <div className="border border-edu-copper-300 rounded p-8 lg:p-12">
-            <p className="text-xs font-semibold uppercase tracking-[0.08em] mb-5 text-edu-copper-dark">Our mission</p>
+          <div className="border border-edu-gold-300 rounded p-8 lg:p-12">
+            <p className="text-xs font-semibold uppercase tracking-[0.08em] mb-5 text-edu-gold-dark">Our mission</p>
             <blockquote className="font-display font-semibold text-edu-ink leading-tight mb-5" style={{ fontSize: "clamp(22px, 4vw, 34px)" }}>
               &ldquo;Every Zimbabwean student — regardless of where they live, what school they attend, or what their family earns — deserves a world-class education. EduOnLink is how we make that happen.&rdquo;
             </blockquote>
-            <p className="text-sm font-semibold text-edu-copper">— Tanatswa Bepete, Founder</p>
+            <p className="text-sm font-semibold text-edu-gold">— Tanatswa Bepete, Founder</p>
           </div>
         </div>
       </section>
@@ -97,7 +97,7 @@ export default function AboutPage() {
                 { stat: "Free",   desc: "For every student. No credit card. No commitment." },
               ].map((s) => (
                 <div key={s.stat} className="flex items-center gap-5 p-5 border border-edu-slate-200 rounded">
-                  <span className="font-display font-semibold text-2xl flex-shrink-0 w-20 text-edu-copper">{s.stat}</span>
+                  <span className="font-display font-semibold text-2xl flex-shrink-0 w-20 text-edu-gold">{s.stat}</span>
                   <p className="text-sm text-edu-slate-600">{s.desc}</p>
                 </div>
               ))}
@@ -116,7 +116,7 @@ export default function AboutPage() {
           <div className="grid sm:grid-cols-2 gap-3">
             {VALUES.map((v) => (
               <div key={v.title} className="p-6 border border-edu-slate-200 rounded h-full">
-                <div className="w-10 h-10 rounded flex items-center justify-center mb-4 bg-edu-slate-100 text-edu-copper">
+                <div className="w-10 h-10 rounded flex items-center justify-center mb-4 bg-edu-slate-100 text-edu-gold">
                   <v.Icon size={20} />
                 </div>
                 <h3 className="font-display font-semibold text-edu-ink text-lg mb-2">{v.title}</h3>
@@ -140,7 +140,7 @@ export default function AboutPage() {
               {TIMELINE.map((t) => (
                 <div key={t.year} className="relative">
                   <div className="absolute -left-[33px] top-1 w-3.5 h-3.5 rounded-full border-2 border-edu-clay bg-edu-paper" />
-                  <p className="text-xs font-semibold mb-1 text-edu-copper">{t.year}</p>
+                  <p className="text-xs font-semibold mb-1 text-edu-gold">{t.year}</p>
                   <p className="text-sm leading-relaxed text-edu-slate-600">{t.event}</p>
                 </div>
               ))}
@@ -159,22 +159,22 @@ export default function AboutPage() {
           <div className="flex flex-col gap-3">
             {TEAM.map((m) => (
               <div key={m.name} className="flex flex-col sm:flex-row gap-5 p-6 border border-edu-slate-200 rounded">
-                <div className="w-14 h-14 rounded flex items-center justify-center font-display font-semibold text-xl flex-shrink-0 bg-edu-copper-100 border border-edu-copper-300 text-edu-copper-dark">
+                <div className="w-14 h-14 rounded flex items-center justify-center font-display font-semibold text-xl flex-shrink-0 bg-edu-gold-100 border border-edu-gold-300 text-edu-gold-dark">
                   {m.initial}
                 </div>
                 <div>
                   <p className="font-display font-semibold text-edu-ink text-lg">{m.name}</p>
-                  <p className="text-xs mb-2.5 text-edu-copper">{m.role}</p>
+                  <p className="text-xs mb-2.5 text-edu-gold">{m.role}</p>
                   <p className="text-sm leading-relaxed text-edu-slate-600">{m.bio}</p>
                 </div>
               </div>
             ))}
 
-            <div className="p-6 border border-edu-copper-200 bg-edu-copper-50 rounded text-center">
+            <div className="p-6 border border-edu-gold-200 bg-edu-gold-50 rounded text-center">
               <p className="text-sm mb-3 text-edu-slate-600">
                 EduOnLink is growing. We&apos;re looking for educators, engineers, and people who believe in what we&apos;re building.
               </p>
-              <a href="mailto:vavhimiacademy@gmail.com" className="text-sm font-semibold text-edu-copper inline-flex items-center gap-1">
+              <a href="mailto:vavhimiacademy@gmail.com" className="text-sm font-semibold text-edu-gold inline-flex items-center gap-1">
                 Get in touch about joining the team <IconChevronRight size={13} />
               </a>
             </div>

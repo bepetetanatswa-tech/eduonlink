@@ -71,7 +71,7 @@ export default function ContactPage() {
       <section className="pb-16">
         <div className="container-edu max-w-2xl grid grid-cols-1 sm:grid-cols-2 gap-3">
           <a href={`mailto:${EMAIL}`} className="flex items-center gap-4 p-5 rounded border border-edu-slate-200 hover:border-edu-slate-400 transition-colors duration-150">
-            <div className="w-10 h-10 rounded flex items-center justify-center flex-shrink-0 bg-edu-slate-100 text-edu-copper">
+            <div className="w-10 h-10 rounded flex items-center justify-center flex-shrink-0 bg-edu-slate-100 text-edu-gold">
               <IconMail size={18} />
             </div>
             <div>
@@ -81,7 +81,7 @@ export default function ContactPage() {
           </a>
 
           <div className="flex items-center gap-4 p-5 rounded border border-edu-slate-200">
-            <div className="w-10 h-10 rounded flex items-center justify-center flex-shrink-0 bg-edu-slate-100 text-edu-copper">
+            <div className="w-10 h-10 rounded flex items-center justify-center flex-shrink-0 bg-edu-slate-100 text-edu-gold">
               <IconPhone size={18} />
             </div>
             <div>
@@ -108,7 +108,7 @@ export default function ContactPage() {
                 </div>
                 <p className="font-display font-semibold text-edu-ink text-lg mb-2">Message sent</p>
                 <p className="text-sm text-edu-slate-600">Thanks for reaching out — we&apos;ll get back to you as soon as we can.</p>
-                <button onClick={() => setSent(false)} className="text-sm font-semibold mt-4 text-edu-copper">
+                <button onClick={() => setSent(false)} className="text-sm font-semibold mt-4 text-edu-gold">
                   Send another message
                 </button>
               </div>

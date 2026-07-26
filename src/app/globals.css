@@ -124,6 +124,24 @@ body {
 }
 .btn-ghost:hover { background: rgba(28,38,32,0.04); border-color: var(--ink); }
 
+.btn-gold {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 24px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--paper);
+  background: var(--gold);
+  border: 1px solid var(--gold);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  text-decoration: none;
+}
+.btn-gold:hover { background: #8A6D2F; }
+
 /* ─── Section spacing ─── */
 .section { padding: 88px 0; }
 .section-sm { padding: 56px 0; }

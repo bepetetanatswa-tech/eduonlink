@@ -7,6 +7,8 @@ import { LinkPreviewCard, extractFirstUrl } from "./LinkPreviewCard";
 import { createReconnectingSubscription, type ConnStatus } from "@/lib/supabase/reconnect";
 import { useChatAttachmentUrls } from "@/lib/supabase/chatAttachments";
 import { IconBell } from "@/components/icons";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
+import { useToast } from "@/components/ui/ToastProvider";
 
 interface Sender { id: string; full_name: string; avatar_url: string | null; role: string }
 interface Reaction { emoji: string; user_id: string }
@@ -72,6 +74,10 @@ function dayLabel(iso: string) {
 
 export function ClassChat({ classId, profileId, userName, className, isTeacher = false, height = "calc(100vh - 80px)" }: Props) {
  const supabase = createClient();
+ const confirmDialog = useConfirm();
+ const showToast = useToast();
+ const touchTimerRef = useRef<ReturnType<typeof setTimeout>>();
+ const touchMovedRef = useRef(false);
  const [messages, setMessages] = useState<ChatMessage[]>([]);
  const [input, setInput] = useState("");
  const [uploading, setUploading] = useState(false);
@@ -522,8 +528,39 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
  }
 
  async function deleteMessage(id: string) {
- await (supabase.from("messages") as any).update({ is_deleted: true }).eq("id", id);
+ const ok = await confirmDialog({
+ title: "Delete this message?",
+ message: "This removes it from the class chat for everyone. This can't be undone.",
+ danger: true,
+ confirmLabel: "Delete",
+ });
+ if (!ok) return;
+ // Optimistic — disappears immediately, syncs in the background.
  setMessages(prev => prev.filter(m => m.id !== id));
+ const { error } = await (supabase.from("messages") as any).update({ is_deleted: true, deleted_at: new Date().toISOString() }).eq("id", id);
+ if (error) {
+ showToast("Couldn't delete the message — try again.", "error");
+ loadMessages();
+ } else {
+ showToast("Message deleted.", "success");
+ }
+ }
+
+ function handleTouchStart(msgId: string) {
+ touchMovedRef.current = false;
+ touchTimerRef.current = setTimeout(() => {
+ if (!touchMovedRef.current) {
+ if (navigator.vibrate) navigator.vibrate(10);
+ setShowEmoji(msgId);
+ }
+ }, 450);
+ }
+ function handleTouchMove() {
+ touchMovedRef.current = true;
+ if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
+ }
+ function handleTouchEnd() {
+ if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
  }
 
  async function muteUser(userId: string) {
@@ -644,15 +681,16 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
  {/* Bubble */}
  <div
  style={{
- background: isOwn ? "linear-gradient(135deg,#1E3A6E,#1A3060)" : "rgba(28,38,32,0.05)",
+ background: isOwn ? "rgba(177,80,43,0.1)" : "rgba(28,38,32,0.05)",
  border: `1px solid ${isOwn ? "rgba(177,80,43,0.3)" : S.border}`,
- borderRadius: isOwn
- ? (msg.parent ? "12px 4px 12px 12px" : "12px 4px 12px 12px")
- : (msg.parent ? "4px 12px 12px 12px" : "4px 12px 12px 12px"),
+ borderRadius: "12px 4px 12px 12px",
  padding: "8px 12px",
  position: "relative",
  }}
  onMouseEnter={() => setShowEmoji(msg.id)}
+ onTouchStart={() => handleTouchStart(msg.id)}
+ onTouchMove={handleTouchMove}
+ onTouchEnd={handleTouchEnd}
  >
  {/* File/image */}
  {msg.message_type === "image" && msg.file_url && (
@@ -679,7 +717,7 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
  {url && <LinkPreviewCard url={url} />}
  </>
  )}
- <p style={{ fontSize: 10, color: isOwn ? "rgba(205,214,244,0.5)" : S.dim, marginTop: 4, textAlign: "right" }}>{fmt(msg.created_at)}{msg.is_pinned && ""}{starredIds.has(msg.id) && " ★"}</p>
+ <p style={{ fontSize: 10, color: S.dim, marginTop: 4, textAlign: "right" }}>{fmt(msg.created_at)}{msg.is_pinned && ""}{starredIds.has(msg.id) && " ★"}</p>
 
  {/* Hover action row */}
  {showEmoji === msg.id && (

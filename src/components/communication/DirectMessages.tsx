@@ -7,6 +7,8 @@ import { createClient } from "@/lib/supabase/client";
 import { createReconnectingSubscription, type ConnStatus } from "@/lib/supabase/reconnect";
 import { useChatAttachmentUrls } from "@/lib/supabase/chatAttachments";
 import { IconBell } from "@/components/icons";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
+import { useToast } from "@/components/ui/ToastProvider";
 
 interface Profile { id: string; full_name: string; avatar_url: string | null; role: string; email: string }
 interface ParentMsg { id: string; content: string; sender: { full_name: string } }
@@ -102,6 +104,22 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
  const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
  const pendingMessagesRef = useRef<PendingMessage[]>([]);
  const [starredIds, setStarredIds] = useState<Set<string>>(new Set());
+ const [revealedId, setRevealedId] = useState<string | null>(null);
+ const confirmDialog = useConfirm();
+ const showToast = useToast();
+ const touchTimerRef = useRef<ReturnType<typeof setTimeout>>();
+ const touchMovedRef = useRef(false);
+ const handleTouchStart = (msgId: string) => {
+ touchMovedRef.current = false;
+ touchTimerRef.current = setTimeout(() => {
+ if (!touchMovedRef.current) {
+ if (navigator.vibrate) navigator.vibrate(10);
+ setRevealedId(msgId);
+ }
+ }, 450);
+ };
+ const handleTouchMove = () => { touchMovedRef.current = true; if (touchTimerRef.current) clearTimeout(touchTimerRef.current); };
+ const handleTouchEnd = () => { if (touchTimerRef.current) clearTimeout(touchTimerRef.current); };
  const [showStarred, setShowStarred] = useState(false);
  const signedUrls = useChatAttachmentUrls(
  supabase,
@@ -119,7 +137,8 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
  const el = messagesContainerRef.current;
  if (!el) return;
  const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
- setIsNearBottom(nearBottom);
+ if (revealedId) setRevealedId(null);
+    setIsNearBottom(nearBottom);
  if (nearBottom) setNewMessageCount(0);
  }
 
@@ -619,8 +638,20 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
  }
 
  async function deleteMessage(id: string) {
- await (supabase.from("messages") as any).update({ is_deleted: true }).eq("id", id);
+ const ok = await confirmDialog({
+ title: "Delete this message?",
+ message: "This removes it from the conversation for both of you. This can't be undone.",
+ danger: true,
+ confirmLabel: "Delete",
+ });
+ if (!ok) return;
  setMessages(prev => prev.filter(m => m.id !== id));
+ const { error } = await (supabase.from("messages") as any).update({ is_deleted: true, deleted_at: new Date().toISOString() }).eq("id", id);
+ if (error) {
+ showToast("Couldn't delete the message — try again.", "error");
+ } else {
+ showToast("Message deleted.", "success");
+ }
  }
 
  async function toggleBlock() {
@@ -756,8 +787,8 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block", maxWidth: "100%" }}>{m.parent.content}</span>
  </div>
  )}
- <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 6, flexDirection: isOwn ? "row-reverse" : "row" }} className="dm-msg-bubble-wrap">
- <div style={{ background: isOwn ? "linear-gradient(135deg,#1E3A6E,#1A3060)" : "rgba(28,38,32,0.05)", border: `1px solid ${isOwn ? "rgba(177,80,43,0.3)" : S.border}`, borderRadius: isOwn ? (m.parent ? "12px 4px 12px 12px" : "12px 4px 12px 12px") : (m.parent ? "4px 12px 12px 12px" : "4px 12px 12px 12px"), padding: "8px 12px" }}>
+ <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 6, flexDirection: isOwn ? "row-reverse" : "row" }} className="dm-msg-bubble-wrap" onTouchStart={() => handleTouchStart(m.id)} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
+ <div style={{ background: isOwn ? "rgba(177,80,43,0.1)" : "rgba(28,38,32,0.05)", border: `1px solid ${isOwn ? "rgba(177,80,43,0.3)" : S.border}`, borderRadius: isOwn ? (m.parent ? "12px 4px 12px 12px" : "12px 4px 12px 12px") : (m.parent ? "4px 12px 12px 12px" : "4px 12px 12px 12px"), padding: "8px 12px" }}>
  {m.message_type === "image" && m.file_url && (
  signedUrls[m.file_url]
  ? <img src={signedUrls[m.file_url]} alt={m.attachment_name ?? "image"} style={{ maxWidth: 220, borderRadius: 8, display: "block", marginBottom: 4 }} />
@@ -778,7 +809,7 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
  )}
  {m.message_type === "text" && <p style={{ fontSize: 13, color: S.text, lineHeight: 1.5, margin: 0, wordBreak: "break-word" }}>{m.content}</p>}
  </div>
- <div className="dm-msg-actions" style={{ display: "none", gap: 4 }}>
+ <div className="dm-msg-actions" style={{ display: revealedId === m.id ? "flex" : "none", gap: 4 }}>
  <button onClick={() => setReplyTo(m)} title="Reply" style={{ background: "none", border: "none", cursor: "pointer", color: S.muted, fontSize: 13, padding: 2 }}>↩</button>
  <button onClick={() => toggleStar(m.id)} title={starredIds.has(m.id) ? "Unstar" : "Star"} style={{ background: "none", border: "none", cursor: "pointer", color: starredIds.has(m.id) ? "#A9873F" : S.muted, fontSize: 13, padding: 2 }}>{starredIds.has(m.id) ? "★" : "☆"}</button>
  {isOwn && <button onClick={() => deleteMessage(m.id)} title="Delete" style={{ background: "none", border: "none", cursor: "pointer", color: "#A3311E", fontSize: 13, padding: 2 }}>✕</button>}

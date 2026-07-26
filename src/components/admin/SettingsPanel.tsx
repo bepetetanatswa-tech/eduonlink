@@ -3,6 +3,10 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import {
+  IconWrench, IconLock, IconChip, IconFlask, IconChartBar, IconMessage,
+  IconPhone, IconTag, IconCoins, IconAlertTriangle, IconCheck,
+} from "@/components/icons";
 
 interface Setting { key: string; value: unknown }
 
@@ -12,31 +16,34 @@ interface Props {
 }
 
 const SETTING_META: Record<string, {
-  label: string; desc: string; type: "toggle" | "number" | "text"; group: string; icon: string; danger?: boolean;
+  label: string; desc: string; type: "toggle" | "number" | "text"; group: string; icon: React.ComponentType<{ size?: number; className?: string }>; danger?: boolean;
 }> = {
-  maintenance_mode:        { label: "Maintenance Mode",         desc: "Block all non-admin access and show a maintenance page",          type: "toggle", group: "Platform",   icon: "🔧", danger: true },
-  allow_new_registrations: { label: "Allow New Registrations",  desc: "When off, new signups are blocked",                              type: "toggle", group: "Platform",   icon: "🔐" },
-  ai_enabled:              { label: "AI Features (Sir Taks)",   desc: "Enable or disable all AI chat and HBC blueprint features",       type: "toggle", group: "Features",   icon: "🤖" },
-  hbc_enabled:             { label: "HBC Project Workflow",     desc: "Enable or disable the Heritage-Based Curriculum project system", type: "toggle", group: "Features",   icon: "🏺" },
-  free_ai_daily_limit:     { label: "Free AI Daily Limit",      desc: "Max questions per day for free-tier students",                   type: "number", group: "Limits",     icon: "📊" },
-  maintenance_message:     { label: "Maintenance Message",      desc: "Message shown to users during maintenance",                      type: "text",   group: "Platform",   icon: "💬" },
-  ecocash_number:          { label: "EcoCash Number",           desc: "The number shown to users for manual EcoCash payments — update this the moment you switch to a dedicated business line", type: "text", group: "Payments", icon: "📱" },
-  ecocash_name:            { label: "EcoCash Recipient Name",   desc: "The registered name shown alongside the number on payment screens", type: "text", group: "Payments", icon: "🏷️" },
-  commission_rate_pct:     { label: "Marketplace Commission %", desc: "Platform's cut of teacher course/class sales — the rest goes to the teacher's earnings balance", type: "number", group: "Payments", icon: "💰" },
+  maintenance_mode:        { label: "Maintenance mode",         desc: "Block all non-admin access and show a maintenance page.",          type: "toggle", group: "Platform", icon: IconWrench, danger: true },
+  allow_new_registrations: { label: "Allow new registrations",  desc: "When this is off, new signups are blocked platform-wide.",          type: "toggle", group: "Platform", icon: IconLock },
+  ai_enabled:              { label: "AI features (Sir Taks)",   desc: "Turn all AI chat and HBC blueprint generation on or off.",          type: "toggle", group: "Features", icon: IconChip },
+  hbc_enabled:             { label: "HBC project workflow",     desc: "Turn the Heritage-Based Curriculum project system on or off.",       type: "toggle", group: "Features", icon: IconFlask },
+  free_ai_daily_limit:     { label: "Free AI daily limit",      desc: "The maximum number of AI questions a free-tier student can ask per day.", type: "number", group: "Limits", icon: IconChartBar },
+  maintenance_message:     { label: "Maintenance message",      desc: "The message users see on the maintenance page while it's active.",  type: "text",   group: "Platform", icon: IconMessage },
+  ecocash_number:          { label: "EcoCash number",           desc: "The number shown to users for manual EcoCash payments — update this the moment you switch to a dedicated business line.", type: "text", group: "Payments", icon: IconPhone },
+  ecocash_name:            { label: "EcoCash recipient name",   desc: "The registered name shown alongside the number on payment screens.", type: "text", group: "Payments", icon: IconTag },
+  commission_rate_pct:     { label: "Marketplace commission %", desc: "The platform's cut of teacher course and class sales — the rest goes to the teacher's earnings balance.", type: "number", group: "Payments", icon: IconCoins },
 };
 
 const GROUPS = ["Platform", "Features", "Limits", "Payments"];
 
 function Toggle({ on, onChange, danger }: { on: boolean; onChange: (v: boolean) => void; danger?: boolean }) {
-  const color = danger && on ? "#FF6B6B" : on ? "#00E5A3" : "#2A2D3E";
-  const bg = danger && on ? "rgba(255,107,107,0.15)" : on ? "rgba(0,229,163,0.15)" : "rgba(255,255,255,0.06)";
+  const color = danger && on ? "#A3311E" : on ? "#1F4738" : "#AEB5A6";
   return (
     <button
       onClick={() => onChange(!on)}
-      style={{ width: 44, height: 24, borderRadius: 12, background: bg, border: `1px solid ${color}40`, cursor: "pointer", position: "relative", transition: "all 0.2s", flexShrink: 0 }}
+      className="relative flex-shrink-0"
+      style={{ width: 42, height: 24, borderRadius: 12, background: on ? `${color}22` : "#E3E2D4", border: `1px solid ${color}` }}
       aria-label={on ? "On" : "Off"}
     >
-      <div style={{ position: "absolute", top: 2, left: on ? 22 : 2, width: 18, height: 18, borderRadius: "50%", background: color, transition: "left 0.2s" }} />
+      <span
+        className="absolute top-[2px] block rounded-full transition-[left] duration-150"
+        style={{ left: on ? 20 : 2, width: 18, height: 18, background: color }}
+      />
     </button>
   );
 }
@@ -54,9 +61,8 @@ export function SettingsPanel({ initialSettings, adminId }: Props) {
   });
   const [saving, setSaving] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
-  const supabase = createClient();
-
   const [saveError, setSaveError] = useState<string | null>(null);
+  const supabase = createClient();
 
   const save = async (key: string, value: unknown) => {
     setSaving(key);
@@ -72,25 +78,27 @@ export function SettingsPanel({ initialSettings, adminId }: Props) {
   };
 
   return (
-    <div style={{ maxWidth: 760, display: "flex", flexDirection: "column", gap: 28 }}>
+    <div className="max-w-[760px] flex flex-col gap-8">
       <div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", margin: 0 }}>Platform Settings</h2>
-        <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>Global configuration — changes take effect immediately</p>
+        <h2 className="font-display font-semibold text-xl text-edu-ink">Platform settings</h2>
+        <p className="text-sm text-edu-slate-500 mt-1">Global configuration — changes take effect immediately.</p>
       </div>
 
       {saveError && (
-        <div style={{ padding: "10px 16px", borderRadius: 10, background: "rgba(255,107,107,0.08)", border: "1px solid rgba(255,107,107,0.2)", color: "#FF6B6B", fontSize: 13 }}>
-          ⚠️ {saveError}
+        <div className="flex items-start gap-2 px-4 py-3 rounded bg-edu-clay-100 border border-edu-clay-200 text-sm text-edu-clay-dark">
+          <IconAlertTriangle size={16} className="flex-shrink-0 mt-0.5" />
+          {saveError}
         </div>
       )}
 
-      {/* Maintenance Mode Banner */}
       {settings["maintenance_mode"] === true && (
-        <div style={{ padding: "14px 18px", background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.3)", borderRadius: 14, display: "flex", gap: 12, alignItems: "center" }}>
-          <span style={{ fontSize: 20 }}>⚠️</span>
+        <div className="flex items-start gap-3 p-4 rounded bg-edu-clay-100 border border-edu-clay-200">
+          <IconAlertTriangle size={20} className="flex-shrink-0 text-edu-clay" />
           <div>
-            <p style={{ fontSize: 13, fontWeight: 700, color: "#FF6B6B", margin: "0 0 2px" }}>Maintenance Mode is ON</p>
-            <p style={{ fontSize: 11, color: "#FF9A9A" }}>All non-admin users are currently seeing the maintenance page. Only you can access the platform.</p>
+            <p className="text-sm font-semibold text-edu-clay-dark">Maintenance mode is on</p>
+            <p className="text-xs text-edu-clay-dark mt-0.5 leading-relaxed">
+              All non-admin users are currently seeing the maintenance page. Only you can access the platform.
+            </p>
           </div>
         </div>
       )}
@@ -99,65 +107,71 @@ export function SettingsPanel({ initialSettings, adminId }: Props) {
         const keys = Object.entries(SETTING_META).filter(([, m]) => m.group === group).map(([k]) => k);
         return (
           <div key={group}>
-            <h3 style={{ fontSize: 11, fontWeight: 600, color: "#4A5170", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 12px" }}>{group}</h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <h3 className="text-xs font-semibold text-edu-slate-500 uppercase tracking-[0.06em] mb-3">{group}</h3>
+            <div className="flex flex-col gap-3">
               {keys.map((key) => {
                 const meta = SETTING_META[key];
                 if (!meta) return null;
                 const val = settings[key];
                 const isSaving = saving === key;
                 const isSaved = saved === key;
+                const Icon = meta.icon;
+                const dangerActive = meta.danger && val === true;
 
                 return (
-                  <div key={key} style={{ background: meta.danger && val === true ? "rgba(255,107,107,0.05)" : "rgba(255,255,255,0.02)", border: `1px solid ${meta.danger && val === true ? "rgba(255,107,107,0.2)" : "rgba(255,255,255,0.06)"}`, borderRadius: 14, padding: "16px 18px", display: "flex", alignItems: "center", gap: 16 }}>
-                    <span style={{ fontSize: 20, flexShrink: 0 }}>{meta.icon}</span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: 14, fontWeight: 600, color: "#CDD6F4", margin: "0 0 2px", fontFamily: "'Space Grotesk', sans-serif" }}>{meta.label}</p>
-                      <p style={{ fontSize: 11, color: "#4A5170", margin: 0 }}>{meta.desc}</p>
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-                      {isSaved && <span style={{ fontSize: 10, color: "#00E5A3" }}>Saved ✓</span>}
-                      {isSaving && <span style={{ fontSize: 10, color: "#4A5170" }}>Saving…</span>}
+                  <div
+                    key={key}
+                    className={`rounded border p-5 ${dangerActive ? "bg-edu-clay-100 border-edu-clay-200" : "border-edu-slate-200"}`}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className={`flex-shrink-0 mt-0.5 ${dangerActive ? "text-edu-clay" : "text-edu-slate-500"}`}>
+                        <Icon size={20} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-4">
+                          <p className="font-display font-semibold text-sm text-edu-ink">{meta.label}</p>
+                          {meta.type === "toggle" && (
+                            <Toggle on={val === true} danger={meta.danger} onChange={(v) => save(key, v)} />
+                          )}
+                        </div>
+                        <p className="text-sm text-edu-slate-600 leading-relaxed mt-1">{meta.desc}</p>
 
-                      {meta.type === "toggle" && (
-                        <Toggle on={val === true} danger={meta.danger} onChange={(v) => save(key, v)} />
-                      )}
-                      {meta.type === "number" && (
-                        <>
-                          <input
-                            type="number"
-                            min={1}
-                            max={100}
-                            value={typeof val === "number" ? val : 10}
-                            onChange={(e) => setSettings((p) => ({ ...p, [key]: parseInt(e.target.value) || 10 }))}
-                            style={{ width: 64, padding: "6px 10px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, fontSize: 13, color: "#CDD6F4", textAlign: "center", outline: "none" }}
-                          />
-                          <button
-                            onClick={() => save(key, typeof val === "number" ? val : 10)}
-                            disabled={isSaving || val === savedValues[key]}
-                            style={{ padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: isSaving ? "not-allowed" : "pointer", background: "rgba(77,127,255,0.12)", border: "1px solid rgba(77,127,255,0.3)", color: "#4D7FFF", opacity: (isSaving || val === savedValues[key]) ? 0.5 : 1 }}
-                          >
-                            Save
-                          </button>
-                        </>
-                      )}
-                      {meta.type === "text" && (
-                        <>
-                          <input
-                            type="text"
-                            value={typeof val === "string" ? val : ""}
-                            onChange={(e) => setSettings((p) => ({ ...p, [key]: e.target.value }))}
-                            style={{ width: 240, padding: "7px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: 12, color: "#CDD6F4", outline: "none" }}
-                          />
-                          <button
-                            onClick={() => save(key, typeof val === "string" ? val : "")}
-                            disabled={isSaving || val === savedValues[key]}
-                            style={{ padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: isSaving ? "not-allowed" : "pointer", background: "rgba(77,127,255,0.12)", border: "1px solid rgba(77,127,255,0.3)", color: "#4D7FFF", opacity: (isSaving || val === savedValues[key]) ? 0.5 : 1 }}
-                          >
-                            Save
-                          </button>
-                        </>
-                      )}
+                        {meta.type !== "toggle" && (
+                          <div className="flex flex-wrap items-center gap-3 mt-4">
+                            {meta.type === "number" && (
+                              <input
+                                type="number"
+                                min={1}
+                                max={100}
+                                value={typeof val === "number" ? val : 10}
+                                onChange={(e) => setSettings((p) => ({ ...p, [key]: parseInt(e.target.value) || 10 }))}
+                                className="field w-20 text-center"
+                              />
+                            )}
+                            {meta.type === "text" && (
+                              <input
+                                type="text"
+                                value={typeof val === "string" ? val : ""}
+                                onChange={(e) => setSettings((p) => ({ ...p, [key]: e.target.value }))}
+                                className="field flex-1 min-w-[200px] sm:max-w-[320px]"
+                              />
+                            )}
+                            <button
+                              onClick={() => save(key, val)}
+                              disabled={isSaving || val === savedValues[key]}
+                              className="btn-ghost h-9 px-4 text-xs disabled:opacity-40"
+                            >
+                              Save
+                            </button>
+                            {isSaving && <span className="text-xs text-edu-slate-500">Saving…</span>}
+                            {isSaved && (
+                              <span className="flex items-center gap-1 text-xs text-edu-bottle-dark">
+                                <IconCheck size={12} strokeWidth={3} /> Saved
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
@@ -167,9 +181,9 @@ export function SettingsPanel({ initialSettings, adminId }: Props) {
         );
       })}
 
-      <div style={{ padding: "14px 18px", background: "rgba(77,127,255,0.05)", border: "1px solid rgba(77,127,255,0.12)", borderRadius: 14 }}>
-        <p style={{ fontSize: 12, color: "#4A5170", margin: 0, lineHeight: 1.6 }}>
-          <strong style={{ color: "#4D7FFF" }}>Note:</strong> Maintenance mode immediately redirects all non-admin users to the maintenance page. AI and HBC toggles affect all users platform-wide. Changes persist until toggled again.
+      <div className="p-4 rounded bg-edu-copper-50 border border-edu-copper-200">
+        <p className="text-xs text-edu-slate-600 leading-relaxed">
+          <strong className="text-edu-copper-dark">Note:</strong> maintenance mode immediately redirects all non-admin users to the maintenance page. AI and HBC toggles affect all users platform-wide. Changes persist until toggled again.
         </p>
       </div>
     </div>

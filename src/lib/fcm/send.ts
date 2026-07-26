@@ -91,7 +91,10 @@ export async function sendFcm(tokens: string[], payload: { title: string; body: 
             token,
             notification: { title: payload.title, body: payload.body },
             data: { link: payload.link },
-            android: { priority: "high" },
+            // channel_id must match the channel created client-side in
+            // native.ts — without it Android silently falls back to a
+            // default-importance channel with no heads-up banner or sound.
+            android: { priority: "high", notification: { channel_id: "eduonlink_default" } },
           },
         }),
       });

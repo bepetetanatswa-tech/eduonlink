@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { getEffectiveProfile } from "@/lib/impersonation";
+import { IconBook, IconFileText, IconChip, IconChevronRight } from "@/components/icons";
 
 export default async function StudentDashboardPage() {
   const supabase = await createClient();
@@ -53,47 +54,49 @@ export default async function StudentDashboardPage() {
   }).length;
 
   return (
-    <div style={{ maxWidth: 1100, display: "flex", flexDirection: "column", gap: "24px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+    <div className="max-w-[1100px] flex flex-col gap-6">
+      <div className="flex justify-between items-center flex-wrap gap-3">
         <div>
-          <h2 style={{ fontSize: "22px", fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif" }}>
-            Welcome, {profile.full_name.split(" ")[0]} 🎓
+          <h2 className="font-display font-semibold text-xl text-edu-ink">
+            Welcome, {profile.full_name.split(" ")[0]}
           </h2>
-          <p style={{ fontSize: "13px", color: "#4A5170", marginTop: 2 }}>Keep learning — every lesson counts.</p>
+          <p className="text-[13px] text-edu-slate-500 mt-0.5">Keep learning — every lesson counts.</p>
         </div>
-        <div style={{ display: "flex", gap: "8px" }}>
-          <Link href="/student/dashboard/ai-tutor" style={{ padding: "8px 16px", borderRadius: "10px", fontSize: "12px", fontWeight: 600, background: "rgba(189,147,249,0.12)", border: "1px solid rgba(189,147,249,0.25)", color: "#BD93F9", textDecoration: "none" }}>
-            ✨ Ask Sir Taks
+        <div className="flex gap-2">
+          <Link href="/student/dashboard/ai-tutor" className="btn-ghost py-2 px-4 text-xs">
+            Ask Sir Taks
           </Link>
-          <Link href="/student/dashboard/assignments" style={{ padding: "8px 16px", borderRadius: "10px", fontSize: "12px", fontWeight: 600, background: "rgba(77,127,255,0.12)", border: "1px solid rgba(77,127,255,0.25)", color: "#4D7FFF", textDecoration: "none" }}>
-            View Assignments
+          <Link href="/student/dashboard/assignments" className="btn-primary py-2 px-4 text-xs">
+            View assignments
           </Link>
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))", gap: "14px" }}>
-        <StatCard label="Enrolled Classes" value={(enrollments ?? []).length} accentColor="#4D7FFF" icon={<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>} />
-        <StatCard label="Due Assignments" value={(upcomingAssignments ?? []).length} subtitle={dueSoon > 0 ? `${dueSoon} due within 3 days` : undefined} accentColor={dueSoon > 0 ? "#F5A623" : "#00E5A3"} icon={<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>} />
-        <StatCard label="AI Sessions" value={aiCount ?? 0} subtitle="with Sir Taks" accentColor="#BD93F9" icon={<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>} />
+      <div className="grid gap-3.5" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))" }}>
+        <StatCard label="Enrolled classes" value={(enrollments ?? []).length} accentColor="#B1502B" icon={<IconBook size={18} />} />
+        <StatCard label="Due assignments" value={(upcomingAssignments ?? []).length} subtitle={dueSoon > 0 ? `${dueSoon} due within 3 days` : undefined} accentColor={dueSoon > 0 ? "#A9873F" : "#1F4738"} icon={<IconFileText size={18} />} />
+        <StatCard label="AI sessions" value={aiCount ?? 0} subtitle="with Sir Taks" accentColor="#A9873F" icon={<IconChip size={18} />} />
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+      <div className="grid md:grid-cols-2 gap-4">
         {/* My classes */}
-        <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "16px", overflow: "hidden" }}>
-          <div style={{ padding: "14px 18px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <h3 style={{ fontSize: "14px", fontWeight: 600, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif" }}>My Classes</h3>
-            <Link href="/student/dashboard/lessons" style={{ fontSize: "11px", color: "#4D7FFF", textDecoration: "none" }}>View all →</Link>
+        <div className="border border-edu-slate-200 rounded overflow-hidden">
+          <div className="px-4 py-3 border-b border-edu-slate-200 flex justify-between items-center">
+            <h3 className="font-display font-semibold text-sm text-edu-ink">My classes</h3>
+            <Link href="/student/dashboard/lessons" className="text-[11px] text-edu-copper flex items-center gap-0.5">
+              View all <IconChevronRight size={11} />
+            </Link>
           </div>
-          <div style={{ padding: "8px" }}>
+          <div className="p-2">
             {(enrollments ?? []).length === 0 ? (
-              <EmptyState icon={<svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>} title="No classes yet" description="Your teacher will enroll you in classes once you join a school." />
+              <EmptyState icon={<IconBook size={20} />} title="No classes yet" description="Your teacher will enroll you in classes once you join a school." />
             ) : (enrollments ?? []).map((e: { id: string; classes: { id: string; name: string; grade_level: string | null; subject: string | null } | null }) => {
               const cls = e.classes;
               if (!cls) return null;
               return (
-                <div key={e.id} style={{ padding: "10px 12px", borderRadius: "10px", marginBottom: 4, background: "rgba(77,127,255,0.04)", border: "1px solid rgba(77,127,255,0.08)" }}>
-                  <p style={{ fontSize: "13px", fontWeight: 600, color: "#CDD6F4" }}>{cls.name}</p>
-                  <p style={{ fontSize: "11px", color: "#4A5170" }}>{[cls.grade_level, cls.subject].filter(Boolean).join(" · ") || "Active class"}</p>
+                <div key={e.id} className="px-3 py-2.5 rounded mb-1 bg-edu-copper-50 border border-edu-copper-200">
+                  <p className="text-[13px] font-semibold text-edu-ink">{cls.name}</p>
+                  <p className="text-[11px] text-edu-slate-500">{[cls.grade_level, cls.subject].filter(Boolean).join(" · ") || "Active class"}</p>
                 </div>
               );
             })}
@@ -101,22 +104,23 @@ export default async function StudentDashboardPage() {
         </div>
 
         {/* Upcoming assignments + recent grades */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-          {/* Upcoming */}
-          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "16px", overflow: "hidden", flex: 1 }}>
-            <div style={{ padding: "14px 18px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h3 style={{ fontSize: "14px", fontWeight: 600, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif" }}>Upcoming</h3>
-              <Link href="/student/dashboard/assignments" style={{ fontSize: "11px", color: "#4D7FFF", textDecoration: "none" }}>View all →</Link>
+        <div className="flex flex-col gap-3">
+          <div className="border border-edu-slate-200 rounded overflow-hidden flex-1">
+            <div className="px-4 py-3 border-b border-edu-slate-200 flex justify-between items-center">
+              <h3 className="font-display font-semibold text-sm text-edu-ink">Upcoming</h3>
+              <Link href="/student/dashboard/assignments" className="text-[11px] text-edu-copper flex items-center gap-0.5">
+                View all <IconChevronRight size={11} />
+              </Link>
             </div>
-            <div style={{ padding: "8px" }}>
+            <div className="p-2">
               {(upcomingAssignments ?? []).length === 0 ? (
-                <p style={{ padding: "16px", fontSize: "12px", color: "#4A5170", textAlign: "center" }}>No upcoming assignments 🎉</p>
+                <p className="p-4 text-xs text-edu-slate-500 text-center">Nothing due — you&apos;re caught up.</p>
               ) : (upcomingAssignments ?? []).map((a: { id: string; title: string; due_date: string | null }) => {
                 const isUrgent = a.due_date && (new Date(a.due_date).getTime() - now.getTime()) < 3 * 24 * 60 * 60 * 1000;
                 return (
-                  <div key={a.id} style={{ padding: "8px 12px", borderRadius: "8px", marginBottom: 3, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <p style={{ fontSize: "12px", fontWeight: 500, color: "#CDD6F4" }}>{a.title}</p>
-                    <span style={{ fontSize: "10px", fontWeight: 600, color: isUrgent ? "#F5A623" : "#4A5170" }}>
+                  <div key={a.id} className="px-3 py-2 rounded mb-0.5 flex justify-between items-center">
+                    <p className="text-xs font-medium text-edu-ink">{a.title}</p>
+                    <span className={`text-[10px] font-semibold ${isUrgent ? "text-edu-gold-dark" : "text-edu-slate-500"}`}>
                       {a.due_date ? new Date(a.due_date).toLocaleDateString("en-ZW", { day: "numeric", month: "short" }) : "No date"}
                     </span>
                   </div>
@@ -125,23 +129,22 @@ export default async function StudentDashboardPage() {
             </div>
           </div>
 
-          {/* Recent grades */}
-          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "16px", overflow: "hidden", flex: 1 }}>
-            <div style={{ padding: "14px 18px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h3 style={{ fontSize: "14px", fontWeight: 600, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif" }}>My Grades</h3>
-              <Link href="/student/dashboard/grades" style={{ fontSize: "11px", color: "#4D7FFF", textDecoration: "none" }}>View all →</Link>
+          <div className="border border-edu-slate-200 rounded overflow-hidden flex-1">
+            <div className="px-4 py-3 border-b border-edu-slate-200 flex justify-between items-center">
+              <h3 className="font-display font-semibold text-sm text-edu-ink">My grades</h3>
+              <Link href="/student/dashboard/grades" className="text-[11px] text-edu-copper flex items-center gap-0.5">
+                View all <IconChevronRight size={11} />
+              </Link>
             </div>
-            <div style={{ padding: "8px" }}>
+            <div className="p-2">
               {(recentGrades ?? []).length === 0 ? (
-                <p style={{ padding: "16px", fontSize: "12px", color: "#4A5170", textAlign: "center" }}>No grades recorded yet</p>
+                <p className="p-4 text-xs text-edu-slate-500 text-center">No grades recorded yet.</p>
               ) : (recentGrades ?? []).map((g: { id: string; score: number | null; grade: string | null; academic_year: string; term: number }) => (
-                <div key={g.id} style={{ padding: "8px 12px", borderRadius: "8px", marginBottom: 3, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div>
-                    <p style={{ fontSize: "11px", color: "#6B7290" }}>Term {g.term} · {g.academic_year}</p>
-                  </div>
-                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                    {g.score !== null && <span style={{ fontSize: "12px", fontWeight: 700, color: g.score >= 50 ? "#00E5A3" : "#FF6B6B" }}>{g.score}%</span>}
-                    {g.grade && <span style={{ fontSize: "10px", fontWeight: 700, color: "#F5A623" }}>{g.grade}</span>}
+                <div key={g.id} className="px-3 py-2 rounded mb-0.5 flex justify-between items-center">
+                  <p className="text-[11px] text-edu-slate-600">Term {g.term} · {g.academic_year}</p>
+                  <div className="flex gap-2 items-center">
+                    {g.score !== null && <span className={`text-xs font-bold ${g.score >= 50 ? "text-edu-bottle" : "text-edu-clay"}`}>{g.score}%</span>}
+                    {g.grade && <span className="text-[10px] font-bold text-edu-gold-dark">{g.grade}</span>}
                   </div>
                 </div>
               ))}
@@ -151,13 +154,14 @@ export default async function StudentDashboardPage() {
       </div>
 
       {/* Sir Taks AI promo */}
-      <div style={{ background: "linear-gradient(135deg, rgba(189,147,249,0.08), rgba(77,127,255,0.08))", border: "1px solid rgba(189,147,249,0.2)", borderRadius: "16px", padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "16px" }}>
+      <div className="border border-edu-gold-300 bg-edu-gold-50 rounded px-6 py-5 flex items-center justify-between flex-wrap gap-4">
         <div>
-          <p style={{ fontSize: "15px", fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif" }}>✨ Sir Taks AI Tutor</p>
-          <p style={{ fontSize: "12px", color: "#6B7290", marginTop: 4 }}>Get instant ZIMSEC-aligned explanations for any topic. Available 24/7.</p>
+          <p className="font-display font-bold text-[15px] text-edu-ink">Sir Taks AI tutor</p>
+          <p className="text-xs text-edu-slate-600 mt-1">Get instant ZIMSEC-aligned explanations for any topic. Available any time, day or night.</p>
         </div>
-        <Link href="/student/dashboard/ai-tutor" style={{ padding: "10px 20px", borderRadius: "12px", fontSize: "13px", fontWeight: 700, background: "rgba(189,147,249,0.15)", border: "1px solid rgba(189,147,249,0.3)", color: "#BD93F9", textDecoration: "none", whiteSpace: "nowrap" }}>
-          Start a Session →
+        <Link href="/student/dashboard/ai-tutor" className="btn-gold py-2.5 px-5 text-[13px] whitespace-nowrap">
+          Start a session
+          <IconChevronRight size={14} />
         </Link>
       </div>
     </div>

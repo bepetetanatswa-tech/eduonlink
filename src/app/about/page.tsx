@@ -1,34 +1,28 @@
-"use client";
-
-import { motion } from "framer-motion";
 import Link from "next/link";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { IconChip, IconBook, IconFlask, IconSchool, IconChevronRight } from "@/components/icons";
 
 const VALUES = [
   {
-    icon: "✦",
-    title: "AI for Every Student",
-    body: "World-class AI tutoring should not be a privilege. EduOnLink puts a personal AI teacher — Sir Taks — in the hands of every Zimbabwean student, whether they are in Harare or a rural Manicaland village.",
-    accent: "#00E5A3",
+    Icon: IconChip,
+    title: "AI for every student",
+    body: "World-class AI tutoring shouldn't be a privilege. EduOnLink puts a personal AI teacher — Sir Taks — in the hands of every Zimbabwean student, whether they're in Harare or a rural Manicaland village.",
   },
   {
-    icon: "📚",
+    Icon: IconBook,
     title: "Rooted in Zimbabwe",
-    body: "We are not a foreign platform retrofitted for Zimbabwe. EduOnLink was built from the ground up around the ZIMSEC curriculum, HBC projects, and the realities of Zimbabwean classrooms.",
-    accent: "#4D7FFF",
+    body: "EduOnLink was built from the ground up around the ZIMSEC curriculum, HBC projects, and the realities of Zimbabwean classrooms.",
   },
   {
-    icon: "🔬",
-    title: "Honest Technology",
-    body: "Sir Taks is powered by Google Gemini — one of the most capable AI systems in the world. We never use AI to replace teachers; we use it to amplify what great teachers already do.",
-    accent: "#F5A623",
+    Icon: IconFlask,
+    title: "Honest technology",
+    body: "Sir Taks is powered by Google Gemini. We never use AI to replace teachers — we use it to amplify what great teachers already do.",
   },
   {
-    icon: "🏫",
-    title: "Built for Schools",
-    body: "EduOnLink is designed to be deployed institution-wide. From student learning to teacher lesson planning, parent progress reports, and school admin dashboards — one platform, every stakeholder.",
-    accent: "#A78BFA",
+    Icon: IconSchool,
+    title: "Built for schools",
+    body: "From student learning to teacher lesson planning, parent progress reports, and school admin dashboards — one platform, every stakeholder.",
   },
 ];
 
@@ -36,8 +30,7 @@ const TEAM = [
   {
     name: "Tanatswa Bepete",
     role: "Founder & CEO",
-    bio: "Tanatswa built EduOnLink to solve the education gap he witnessed firsthand. Sir Taks AI — the platform's tutor — is named after him. He believes every Zimbabwean child deserves a world-class education, regardless of postcode or income.",
-    accent: "#4D7FFF",
+    bio: "Tanatswa built EduOnLink to solve the education gap he witnessed firsthand. Sir Taks — the platform's tutor — is named after him. He believes every Zimbabwean child deserves a world-class education, regardless of postcode or income.",
     initial: "T",
   },
 ];
@@ -45,323 +38,167 @@ const TEAM = [
 const TIMELINE = [
   { year: "2024", event: "EduOnLink founded. Mission: bring AI-powered ZIMSEC tutoring to every Zimbabwean student." },
   { year: "Early 2025", event: "Sir Taks AI tutor developed using Google Gemini. Full ZIMSEC O-Level and A-Level curriculum mapped." },
-  { year: "Mid 2025", event: "HBC Project Blueprint generator launched. School admin and teacher portals built." },
+  { year: "Mid 2025", event: "HBC project blueprint generator launched. School admin and teacher portals built." },
   { year: "2025 →", event: "Public launch. Opening access to students, teachers, parents, and schools across Zimbabwe." },
 ];
 
-function FadeIn({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      whileInView={{ opacity: 1 }}
-      viewport={{ once: true, amount: 0.1 }}
-      transition={{ duration: 0.3, delay }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
 export default function AboutPage() {
   return (
-    <div className="min-h-screen" style={{ background: "#07080C" }}>
+    <div className="min-h-screen bg-edu-paper margin-rule">
       <Navbar />
 
-      {/* ── Hero ────────────────────────────────────────────────── */}
-      <section className="pt-28 md:pt-36 pb-16 md:pb-24 px-6 relative overflow-hidden">
-        {/* Background glow */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: "radial-gradient(ellipse at 50% 0%, rgba(77,127,255,0.12) 0%, transparent 60%)",
-          }}
-        />
-
-        <div className="max-w-4xl mx-auto relative z-10 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+      <section className="pt-40 pb-16 md:pt-48 md:pb-20">
+        <div className="container-edu max-w-3xl">
+          <h1
+            className="font-display font-semibold text-edu-ink mb-6"
+            style={{ fontSize: "clamp(36px, 6vw, 60px)", lineHeight: 1.08 }}
           >
-            <p className="font-mono text-xs font-medium tracking-[0.15em] uppercase mb-6" style={{ color: "#4D7FFF" }}>
-              Our Story
-            </p>
-          </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            className="font-display font-bold text-white mb-6"
-            style={{ fontSize: "clamp(36px, 7vw, 72px)", lineHeight: 1.05 }}
-          >
-            We built the school<br />
-            <span style={{ background: "linear-gradient(135deg, #4D7FFF, #00E5A3)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-              Zimbabwe deserves.
-            </span>
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.25 }}
-            className="text-lg leading-relaxed max-w-2xl mx-auto"
-            style={{ color: "#6B7290" }}
-          >
-            EduOnLink is an AI-powered education platform built specifically
-            for Zimbabwe. Not adapted. Not translated. Built for ZIMSEC, the HBC curriculum, and
-            the students who will define Zimbabwe&apos;s next chapter.
-          </motion.p>
+            We built the school Zimbabwe deserves.
+          </h1>
+          <p className="text-lg leading-relaxed text-edu-slate-600 max-w-2xl">
+            EduOnLink is an AI-powered education platform built specifically for Zimbabwe, for the ZIMSEC curriculum and the HBC project, and for the students who will define the country&apos;s next chapter.
+          </p>
         </div>
       </section>
 
-      {/* ── Mission statement ───────────────────────────────────── */}
-      <section className="py-16 px-6">
-        <div className="max-w-5xl mx-auto">
-          <FadeIn>
-            <div
-              className="rounded-3xl p-10 lg:p-16 relative overflow-hidden"
-              style={{
-                background: "#0D0F1A",
-                border: "1px solid rgba(77,127,255,0.18)",
-              }}
-            >
-              <div
-                className="absolute top-0 right-0 w-64 h-64 rounded-full pointer-events-none"
-                style={{
-                  background: "radial-gradient(circle, rgba(0,229,163,0.08) 0%, transparent 70%)",
-                  filter: "blur(40px)",
-                }}
-              />
-              <p className="font-mono text-xs font-medium tracking-[0.15em] uppercase mb-6" style={{ color: "#00E5A3" }}>
-                Our Mission
+      <section className="section-sm">
+        <div className="container-edu max-w-4xl">
+          <div className="border border-edu-copper-300 rounded p-8 lg:p-12">
+            <p className="text-xs font-semibold uppercase tracking-[0.08em] mb-5 text-edu-copper-dark">Our mission</p>
+            <blockquote className="font-display font-semibold text-edu-ink leading-tight mb-5" style={{ fontSize: "clamp(22px, 4vw, 34px)" }}>
+              &ldquo;Every Zimbabwean student — regardless of where they live, what school they attend, or what their family earns — deserves a world-class education. EduOnLink is how we make that happen.&rdquo;
+            </blockquote>
+            <p className="text-sm font-semibold text-edu-copper">— Tanatswa Bepete, Founder</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="section-sm">
+        <div className="container-edu max-w-4xl">
+          <div className="grid lg:grid-cols-2 gap-12 items-start">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.08em] mb-4 text-edu-slate-500">The problem</p>
+              <h2 className="font-display font-semibold text-edu-ink mb-5" style={{ fontSize: "clamp(26px, 4vw, 38px)", lineHeight: 1.1 }}>
+                Zimbabwe&apos;s students are brilliant. The system hasn&apos;t kept up.
+              </h2>
+              <p className="text-sm leading-relaxed mb-4 text-edu-slate-600">
+                Zimbabwe has some of the highest literacy rates in Africa. Its students are motivated, its teachers are dedicated, and its curriculum — ZIMSEC — is rigorous and respected. But access to quality resources is deeply unequal. A student in Borrowdale has tutors, past papers, and revision guides. A student in Binga has a textbook and a teacher managing 60 students.
               </p>
-              <blockquote
-                className="font-display font-bold text-white leading-tight mb-6"
-                style={{ fontSize: "clamp(22px, 4vw, 38px)" }}
-              >
-                &ldquo;Every Zimbabwean student — regardless of where they live,
-                what school they attend, or what their family earns — deserves
-                a world-class education. EduOnLink is how we make that happen.&rdquo;
-              </blockquote>
-              <p className="text-sm font-semibold" style={{ color: "#4D7FFF" }}>
-                — Tanatswa Bepete, Founder
+              <p className="text-sm leading-relaxed text-edu-slate-600">
+                AI can&apos;t solve every problem in education. But it can make sure every student, no matter where they are, has a patient, knowledgeable tutor available at 3am the night before an exam. That&apos;s what EduOnLink does.
               </p>
             </div>
-          </FadeIn>
-        </div>
-      </section>
 
-      {/* ── The problem we're solving ───────────────────────────── */}
-      <section className="py-16 px-6">
-        <div className="max-w-5xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <FadeIn>
-              <p className="font-mono text-xs font-medium tracking-[0.15em] uppercase mb-5" style={{ color: "#4A5170" }}>
-                The Problem
-              </p>
-              <h2 className="font-display font-bold text-white mb-6" style={{ fontSize: "clamp(26px, 4vw, 40px)", lineHeight: 1.1 }}>
-                Zimbabwe&apos;s students are brilliant.<br />
-                The system hasn&apos;t kept up.
-              </h2>
-              <p className="text-sm leading-relaxed mb-4" style={{ color: "#6B7290" }}>
-                Zimbabwe has some of the highest literacy rates in Africa. Its students are motivated,
-                its teachers are dedicated, and its curriculum — ZIMSEC — is rigorous and respected.
-                But access to quality resources is deeply unequal. A student in Borrowdale has tutors,
-                past papers, and revision guides. A student in Binga has a textbook and a teacher
-                managing 60 students.
-              </p>
-              <p className="text-sm leading-relaxed" style={{ color: "#6B7290" }}>
-                AI cannot solve every problem in education. But it can ensure that every student,
-                no matter where they are, has a patient, knowledgeable tutor available at 3am the
-                night before an exam. That is what EduOnLink does.
-              </p>
-            </FadeIn>
-
-            <FadeIn delay={0.15}>
-              <div className="flex flex-col gap-4">
-                {[
-                  { stat: "28+",  desc: "ZIMSEC subjects — O-Level, A-Level and Primary", accent: "#4D7FFF" },
-                  { stat: "24/7", desc: "AI tutor access on any device, urban or rural", accent: "#00E5A3" },
-                  { stat: "All 10", desc: "Zimbabwe provinces served — urban and rural", accent: "#F5A623" },
-                  { stat: "Free", desc: "For every student. No credit card. No commitment.", accent: "#A78BFA" },
-                ].map((s) => (
-                  <div
-                    key={s.stat}
-                    className="flex items-center gap-5 p-5 rounded-2xl"
-                    style={{ background: "#0F1018", border: "1px solid rgba(255,255,255,0.07)" }}
-                  >
-                    <span className="font-display font-bold text-2xl flex-shrink-0 w-20" style={{ color: s.accent }}>
-                      {s.stat}
-                    </span>
-                    <p className="text-sm" style={{ color: "#8892B0" }}>{s.desc}</p>
-                  </div>
-                ))}
-              </div>
-            </FadeIn>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Values ──────────────────────────────────────────────── */}
-      <section className="py-16 px-6">
-        <div className="max-w-5xl mx-auto">
-          <FadeIn className="mb-12">
-            <p className="font-mono text-xs font-medium tracking-[0.15em] uppercase mb-4" style={{ color: "#4A5170" }}>
-              What We Believe
-            </p>
-            <h2 className="font-display font-bold text-white" style={{ fontSize: "clamp(26px, 4vw, 40px)" }}>
-              Our principles
-            </h2>
-          </FadeIn>
-
-          <div className="grid sm:grid-cols-2 gap-4">
-            {VALUES.map((v, i) => (
-              <FadeIn key={v.title} delay={i * 0.08}>
-                <div
-                  className="p-7 rounded-2xl h-full"
-                  style={{ background: "#0F1018", border: "1px solid rgba(255,255,255,0.07)" }}
-                >
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center text-lg mb-5"
-                    style={{ background: `${v.accent}12`, border: `1px solid ${v.accent}20` }}
-                  >
-                    {v.icon}
-                  </div>
-                  <h3 className="font-display font-semibold text-white text-lg mb-3">{v.title}</h3>
-                  <p className="text-sm leading-relaxed" style={{ color: "#6B7290" }}>{v.body}</p>
+            <div className="flex flex-col gap-3">
+              {[
+                { stat: "28+",    desc: "ZIMSEC subjects — O-Level, A-Level and Primary" },
+                { stat: "24/7",   desc: "AI tutor access on any device, urban or rural" },
+                { stat: "All 10", desc: "Zimbabwe provinces served — urban and rural" },
+                { stat: "Free",   desc: "For every student. No credit card. No commitment." },
+              ].map((s) => (
+                <div key={s.stat} className="flex items-center gap-5 p-5 border border-edu-slate-200 rounded">
+                  <span className="font-display font-semibold text-2xl flex-shrink-0 w-20 text-edu-copper">{s.stat}</span>
+                  <p className="text-sm text-edu-slate-600">{s.desc}</p>
                 </div>
-              </FadeIn>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Timeline ────────────────────────────────────────────── */}
-      <section className="py-16 px-6">
-        <div className="max-w-5xl mx-auto">
-          <FadeIn className="mb-12">
-            <p className="font-mono text-xs font-medium tracking-[0.15em] uppercase mb-4" style={{ color: "#4A5170" }}>
-              Our Journey
-            </p>
-            <h2 className="font-display font-bold text-white" style={{ fontSize: "clamp(26px, 4vw, 40px)" }}>
-              How we got here
-            </h2>
-          </FadeIn>
-
-          <div className="relative">
-            <div
-              className="absolute left-[19px] top-0 bottom-0 w-px"
-              style={{ background: "linear-gradient(to bottom, rgba(77,127,255,0.3), rgba(0,229,163,0.1))" }}
-            />
-            <div className="flex flex-col gap-8 pl-12">
-              {TIMELINE.map((t, i) => (
-                <FadeIn key={t.year} delay={i * 0.1}>
-                  <div className="relative">
-                    <div
-                      className="absolute -left-[49px] top-1 w-4 h-4 rounded-full border-2 flex-shrink-0"
-                      style={{
-                        background: "#07080C",
-                        borderColor: i === TIMELINE.length - 1 ? "#00E5A3" : "#4D7FFF",
-                        boxShadow: `0 0 12px ${i === TIMELINE.length - 1 ? "rgba(0,229,163,0.4)" : "rgba(77,127,255,0.3)"}`,
-                      }}
-                    />
-                    <p className="font-mono text-xs font-semibold mb-1" style={{ color: "#4D7FFF" }}>{t.year}</p>
-                    <p className="text-sm leading-relaxed" style={{ color: "#8892B0" }}>{t.event}</p>
-                  </div>
-                </FadeIn>
               ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── Team ────────────────────────────────────────────────── */}
-      <section className="py-16 px-6">
-        <div className="max-w-5xl mx-auto">
-          <FadeIn className="mb-12">
-            <p className="font-mono text-xs font-medium tracking-[0.15em] uppercase mb-4" style={{ color: "#4A5170" }}>
-              The Team
-            </p>
-            <h2 className="font-display font-bold text-white" style={{ fontSize: "clamp(26px, 4vw, 40px)" }}>
-              Who we are
-            </h2>
-          </FadeIn>
+      <section className="section-sm">
+        <div className="container-edu max-w-4xl">
+          <div className="mb-10">
+            <p className="text-xs font-semibold uppercase tracking-[0.08em] mb-4 text-edu-slate-500">What we believe</p>
+            <h2 className="font-display font-semibold text-edu-ink" style={{ fontSize: "clamp(26px, 4vw, 38px)" }}>Our principles</h2>
+          </div>
 
-          <div className="flex flex-col gap-4">
-            {TEAM.map((m) => (
-              <FadeIn key={m.name}>
-                <div
-                  className="flex flex-col sm:flex-row gap-6 p-7 rounded-2xl"
-                  style={{ background: "#0F1018", border: "1px solid rgba(255,255,255,0.07)" }}
-                >
-                  <div
-                    className="w-14 h-14 rounded-2xl flex items-center justify-center font-display font-bold text-xl flex-shrink-0"
-                    style={{
-                      background: `${m.accent}15`,
-                      border: `1px solid ${m.accent}25`,
-                      color: m.accent,
-                    }}
-                  >
-                    {m.initial}
-                  </div>
-                  <div>
-                    <p className="font-display font-bold text-white text-lg">{m.name}</p>
-                    <p className="text-xs font-mono mb-3" style={{ color: m.accent }}>{m.role}</p>
-                    <p className="text-sm leading-relaxed" style={{ color: "#6B7290" }}>{m.bio}</p>
-                  </div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {VALUES.map((v) => (
+              <div key={v.title} className="p-6 border border-edu-slate-200 rounded h-full">
+                <div className="w-10 h-10 rounded flex items-center justify-center mb-4 bg-edu-slate-100 text-edu-copper">
+                  <v.Icon size={20} />
                 </div>
-              </FadeIn>
-            ))}
-
-            <FadeIn delay={0.1}>
-              <div
-                className="p-7 rounded-2xl text-center"
-                style={{ background: "rgba(77,127,255,0.04)", border: "1px solid rgba(77,127,255,0.1)" }}
-              >
-                <p className="text-sm mb-3" style={{ color: "#6B7290" }}>
-                  EduOnLink is growing. We are looking for educators, engineers, and people who believe
-                  in what we are building.
-                </p>
-                <a
-                  href="mailto:vavhimiacademy@gmail.com"
-                  className="text-sm font-semibold transition-colors"
-                  style={{ color: "#4D7FFF" }}
-                >
-                  Get in touch about joining the team →
-                </a>
+                <h3 className="font-display font-semibold text-edu-ink text-lg mb-2">{v.title}</h3>
+                <p className="text-sm leading-relaxed text-edu-slate-600">{v.body}</p>
               </div>
-            </FadeIn>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ── CTA ─────────────────────────────────────────────────── */}
-      <section className="py-20 px-6">
-        <div className="max-w-3xl mx-auto text-center">
-          <FadeIn>
-            <h2 className="font-display font-bold text-white mb-4" style={{ fontSize: "clamp(26px, 4vw, 44px)", lineHeight: 1.1 }}>
-              Ready to be part of it?
-            </h2>
-            <p className="text-base mb-8" style={{ color: "#6B7290" }}>
-              Join EduOnLink as a student, teacher, parent, or school. It is free to start.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link
-                href="/auth/register"
-                className="btn-primary text-sm px-8 py-3.5"
-              >
-                Create your account →
-              </Link>
-              <Link
-                href="/contact"
-                className="btn-ghost text-sm px-8 py-3.5"
-              >
-                Contact us
-              </Link>
+      <section className="section-sm">
+        <div className="container-edu max-w-4xl">
+          <div className="mb-10">
+            <p className="text-xs font-semibold uppercase tracking-[0.08em] mb-4 text-edu-slate-500">Our journey</p>
+            <h2 className="font-display font-semibold text-edu-ink" style={{ fontSize: "clamp(26px, 4vw, 38px)" }}>How we got here</h2>
+          </div>
+
+          <div className="relative">
+            <div className="absolute left-[7px] top-1 bottom-1 w-[2px] bg-edu-clay opacity-40" />
+            <div className="flex flex-col gap-7 pl-8">
+              {TIMELINE.map((t) => (
+                <div key={t.year} className="relative">
+                  <div className="absolute -left-[33px] top-1 w-3.5 h-3.5 rounded-full border-2 border-edu-clay bg-edu-paper" />
+                  <p className="text-xs font-semibold mb-1 text-edu-copper">{t.year}</p>
+                  <p className="text-sm leading-relaxed text-edu-slate-600">{t.event}</p>
+                </div>
+              ))}
             </div>
-          </FadeIn>
+          </div>
+        </div>
+      </section>
+
+      <section className="section-sm">
+        <div className="container-edu max-w-4xl">
+          <div className="mb-10">
+            <p className="text-xs font-semibold uppercase tracking-[0.08em] mb-4 text-edu-slate-500">The team</p>
+            <h2 className="font-display font-semibold text-edu-ink" style={{ fontSize: "clamp(26px, 4vw, 38px)" }}>Who we are</h2>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            {TEAM.map((m) => (
+              <div key={m.name} className="flex flex-col sm:flex-row gap-5 p-6 border border-edu-slate-200 rounded">
+                <div className="w-14 h-14 rounded flex items-center justify-center font-display font-semibold text-xl flex-shrink-0 bg-edu-copper-100 border border-edu-copper-300 text-edu-copper-dark">
+                  {m.initial}
+                </div>
+                <div>
+                  <p className="font-display font-semibold text-edu-ink text-lg">{m.name}</p>
+                  <p className="text-xs mb-2.5 text-edu-copper">{m.role}</p>
+                  <p className="text-sm leading-relaxed text-edu-slate-600">{m.bio}</p>
+                </div>
+              </div>
+            ))}
+
+            <div className="p-6 border border-edu-copper-200 bg-edu-copper-50 rounded text-center">
+              <p className="text-sm mb-3 text-edu-slate-600">
+                EduOnLink is growing. We&apos;re looking for educators, engineers, and people who believe in what we&apos;re building.
+              </p>
+              <a href="mailto:vavhimiacademy@gmail.com" className="text-sm font-semibold text-edu-copper inline-flex items-center gap-1">
+                Get in touch about joining the team <IconChevronRight size={13} />
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section-sm pb-24">
+        <div className="container-edu max-w-2xl text-center">
+          <h2 className="font-display font-semibold text-edu-ink mb-4" style={{ fontSize: "clamp(26px, 4vw, 40px)", lineHeight: 1.1 }}>
+            Ready to be part of it?
+          </h2>
+          <p className="text-base mb-8 text-edu-slate-600">
+            Join EduOnLink as a student, teacher, parent, or school. It&apos;s free to start.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link href="/auth/register" className="btn-primary text-sm px-8 py-3.5">
+              Create your account
+              <IconChevronRight size={14} />
+            </Link>
+            <Link href="/contact" className="btn-ghost text-sm px-8 py-3.5">
+              Contact us
+            </Link>
+          </div>
         </div>
       </section>
 

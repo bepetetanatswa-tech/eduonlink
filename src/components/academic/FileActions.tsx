@@ -7,7 +7,7 @@ const btnBase: React.CSSProperties = {
  fontSize: 11, fontWeight: 600, textDecoration: "none", cursor: "pointer", flexShrink: 0, border: "none", background: "none",
 };
 
-export function FileActions({ fileUrl, accentColor = "#4D7FFF", onView }: { fileUrl: string; accentColor?: string; onView?: () => void }) {
+export function FileActions({ fileUrl, accentColor = "#B1502B", onView }: { fileUrl: string; accentColor?: string; onView?: () => void }) {
  const router = useRouter();
  const [blocked, setBlocked] = useState<string | null>(null);
  const [downloading, setDownloading] = useState(false);

@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
 
     await admin.from("notifications").insert({
       user_id: pv.user_id,
-      title: "Credits added to your account! 🎉",
+      title: "Credits added to your account!",
       message: `${pv.credit_amount} ${pv.credit_type.replace(/_/g, " ")} credits have been added to your account.`,
       type: "payment",
     });
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     // notifies the teacher) — nothing else to activate here.
     await admin.from("notifications").insert({
       user_id: pv.user_id,
-      title: "Purchase confirmed! 🎉",
+      title: "Purchase confirmed!",
       message: `Your payment for "${pv.course?.title ?? "the course"}" was approved. You now have full access.`,
       type: "payment",
     });
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
     // branch below and created a bogus subscription row.
     await admin.from("notifications").insert({
       user_id: pv.user_id,
-      title: "Enrollment confirmed! 🎉",
+      title: "Enrollment confirmed!",
       message: `Your payment for "${pv.class?.name ?? "the class"}" was approved. You're now enrolled.`,
       type: "payment",
     });
@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
 
     await admin.from("notifications").insert({
       user_id: pv.user_id,
-      title: `Payment approved! Your ${planName} is now active 🎉`,
+      title: `Payment approved! Your ${planName} is now active`,
       message: `Welcome to EduOnLink Pro! Your subscription runs until ${end.toLocaleDateString()}. Enjoy full access!`,
       type: "payment",
     });

@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
 
   await (admin.from("notifications") as any).insert({
     user_id: current.teacher_id,
-    title: decision === "paid" ? "Withdrawal paid 💸" : decision === "approved" ? "Withdrawal approved" : "Withdrawal rejected",
+    title: decision === "paid" ? "Withdrawal paid" : decision === "approved" ? "Withdrawal approved" : "Withdrawal rejected",
     message: decision === "paid"
       ? `Your $${current.amount.toFixed(2)} withdrawal has been sent.`
       : decision === "approved"

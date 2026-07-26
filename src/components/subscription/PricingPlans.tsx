@@ -2,8 +2,14 @@
 import { useState } from "react";
 import { getPlansForRole, CREDIT_PACKS, PlanDefinition, CreditPack } from "@/lib/subscription/plans";
 import { EcoCashPayment } from "./EcoCashPayment";
+import { IconChip, IconBook, IconFileText, IconCheck, IconSchool } from "@/components/icons";
 
 const S = { border: "rgba(28,38,32,0.07)", text: "#1C2620", muted: "#566257", dim: "#6E7A6C", accent: "#B1502B" };
+
+const CREDIT_ICON: Record<CreditPack["creditType"], React.ComponentType<{ size?: number }>> = {
+  ai_questions: IconChip, mock_exams: IconBook, pdf_downloads: IconFileText,
+  certificates: IconCheck, school_seats: IconSchool,
+};
 
 interface Props {
   role: "student" | "teacher" | "school";
@@ -119,7 +125,7 @@ export function PricingPlans({ role, currentPlanKey, username }: Props) {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))", gap: 14 }}>
             {relevantPacks.map(pack => (
               <div key={pack.key} style={{ background: "rgba(28,38,32,0.02)", border: `1px solid ${S.border}`, borderRadius: 14, padding: "18px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
-                <div style={{ fontSize: 32 }}>{pack.emoji}</div>
+                <div style={{ display: "flex", justifyContent: "center", color: S.accent }}>{(() => { const CI = CREDIT_ICON[pack.creditType]; return <CI size={28} />; })()}</div>
                 <div>
                   <h4 style={{ fontSize: 14, fontWeight: 700, color: S.text, fontFamily: "inherit", margin: "0 0 4px" }}>{pack.name}</h4>
                   <p style={{ fontSize: 12, color: S.muted, margin: 0 }}>{pack.description}</p>

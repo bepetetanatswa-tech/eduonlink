@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
 
   await sendEmail({
     to: teacher.email,
-    subject: decision === "approved" ? "EduOnLink — You're verified! 🎉" : "EduOnLink — Teacher application update",
+    subject: decision === "approved" ? "EduOnLink — You're verified!" : "EduOnLink — Teacher application update",
     html: decision === "approved"
       ? teacherApprovedEmail(teacher.full_name)
       : teacherRejectedEmail(teacher.full_name, reason.trim()),
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
 
   await (admin.from("notifications") as any).insert({
     user_id: teacher.id,
-    title: decision === "approved" ? "You're verified 🎉" : "Application update",
+    title: decision === "approved" ? "You're verified" : "Application update",
     message: decision === "approved"
       ? "Your teacher account has been verified. You now have full access to teaching features."
       : `Your application was not approved: ${reason.trim()}`,

@@ -12,28 +12,28 @@ export function levelFromGradeLevel(gradeLevel: string | null | undefined): Zims
 
 const BANDS: Record<ZimsecLevel, GradeBand[]> = {
   primary: [
-    { l: "A", c: "#00E5A3", min: 90 },
-    { l: "B", c: "#4D7FFF", min: 80 },
-    { l: "C", c: "#F5A623", min: 70 },
-    { l: "D", c: "#FF9B6B", min: 60 },
-    { l: "E", c: "#FFD166", min: 50 },
-    { l: "F", c: "#FF6B6B", min: 0 },
+    { l: "A", c: "#1F4738", min: 90 },
+    { l: "B", c: "#4C7A63", min: 80 },
+    { l: "C", c: "#A9873F", min: 70 },
+    { l: "D", c: "#C9A15A", min: 60 },
+    { l: "E", c: "#B1502B", min: 50 },
+    { l: "F", c: "#A3311E", min: 0 },
   ],
   o_level: [
-    { l: "A", c: "#00E5A3", min: 75 },
-    { l: "B", c: "#4D7FFF", min: 60 },
-    { l: "C", c: "#F5A623", min: 50 },
-    { l: "D", c: "#FF9B6B", min: 40 },
-    { l: "E", c: "#FFD166", min: 30 },
-    { l: "U", c: "#FF6B6B", min: 0 },
+    { l: "A", c: "#1F4738", min: 75 },
+    { l: "B", c: "#4C7A63", min: 60 },
+    { l: "C", c: "#A9873F", min: 50 },
+    { l: "D", c: "#C9A15A", min: 40 },
+    { l: "E", c: "#B1502B", min: 30 },
+    { l: "U", c: "#A3311E", min: 0 },
   ],
   a_level: [
-    { l: "A", c: "#00E5A3", min: 80 },
-    { l: "B", c: "#4D7FFF", min: 70 },
-    { l: "C", c: "#F5A623", min: 60 },
-    { l: "D", c: "#FF9B6B", min: 50 },
-    { l: "E", c: "#FFD166", min: 40 },
-    { l: "U", c: "#FF6B6B", min: 0 },
+    { l: "A", c: "#1F4738", min: 80 },
+    { l: "B", c: "#4C7A63", min: 70 },
+    { l: "C", c: "#A9873F", min: 60 },
+    { l: "D", c: "#C9A15A", min: 50 },
+    { l: "E", c: "#B1502B", min: 40 },
+    { l: "U", c: "#A3311E", min: 0 },
   ],
 };
 
@@ -43,5 +43,5 @@ export function gradeForScore(score: number, level: ZimsecLevel): GradeBand {
 }
 
 export const GRADE_COLOR: Record<string, string> = {
-  A: "#00E5A3", B: "#4D7FFF", C: "#F5A623", D: "#FF9B6B", E: "#FFD166", F: "#FF6B6B", U: "#FF6B6B",
+  A: "#1F4738", B: "#4C7A63", C: "#A9873F", D: "#C9A15A", E: "#B1502B", F: "#A3311E", U: "#A3311E",
 };

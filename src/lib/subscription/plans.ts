@@ -162,21 +162,20 @@ export interface CreditPack {
   name: string;
   price: number;
   description: string;
-  emoji: string;
   creditType: "ai_questions" | "mock_exams" | "pdf_downloads" | "certificates" | "school_seats";
   amount: number;
 }
 
 export const CREDIT_PACKS: CreditPack[] = [
-  { key: "ai_50", name: "AI Top-Up", price: 0.99, description: "50 extra AI tutor questions", emoji: "🤖", creditType: "ai_questions", amount: 50 },
-  { key: "ai_150", name: "AI Bundle", price: 2.49, description: "150 extra AI tutor questions", emoji: "🤖", creditType: "ai_questions", amount: 150 },
-  { key: "ai_500", name: "AI Mega Bundle", price: 6.99, description: "500 extra AI tutor questions — best value", emoji: "🤖", creditType: "ai_questions", amount: 500 },
-  { key: "mock_3", name: "Mock Exam Pack", price: 0.99, description: "3 timed ZIMSEC mock exams", emoji: "📝", creditType: "mock_exams", amount: 3 },
-  { key: "mock_10", name: "Mock Exam Bundle", price: 2.99, description: "10 timed ZIMSEC mock exams", emoji: "📝", creditType: "mock_exams", amount: 10 },
-  { key: "pdf_10", name: "PDF Download Pack", price: 0.99, description: "10 resource PDF downloads", emoji: "📄", creditType: "pdf_downloads", amount: 10 },
-  { key: "cert_1", name: "Achievement Certificate", price: 0.99, description: "Generate 1 verified achievement certificate", emoji: "🏆", creditType: "certificates", amount: 1 },
-  { key: "cert_5", name: "Certificate Bundle", price: 3.99, description: "5 achievement certificates", emoji: "🏆", creditType: "certificates", amount: 5 },
-  { key: "school_seats_10", name: "10 Extra Seats", price: 7.99, description: "Add 10 extra student seats to your school plan", emoji: "🏫", creditType: "school_seats", amount: 10 },
+  { key: "ai_50", name: "AI Top-Up", price: 0.99, description: "50 extra AI tutor questions", creditType: "ai_questions", amount: 50 },
+  { key: "ai_150", name: "AI Bundle", price: 2.49, description: "150 extra AI tutor questions", creditType: "ai_questions", amount: 150 },
+  { key: "ai_500", name: "AI Mega Bundle", price: 6.99, description: "500 extra AI tutor questions — best value", creditType: "ai_questions", amount: 500 },
+  { key: "mock_3", name: "Mock Exam Pack", price: 0.99, description: "3 timed ZIMSEC mock exams", creditType: "mock_exams", amount: 3 },
+  { key: "mock_10", name: "Mock Exam Bundle", price: 2.99, description: "10 timed ZIMSEC mock exams", creditType: "mock_exams", amount: 10 },
+  { key: "pdf_10", name: "PDF Download Pack", price: 0.99, description: "10 resource PDF downloads", creditType: "pdf_downloads", amount: 10 },
+  { key: "cert_1", name: "Achievement Certificate", price: 0.99, description: "Generate 1 verified achievement certificate", creditType: "certificates", amount: 1 },
+  { key: "cert_5", name: "Certificate Bundle", price: 3.99, description: "5 achievement certificates", creditType: "certificates", amount: 5 },
+  { key: "school_seats_10", name: "10 Extra Seats", price: 7.99, description: "Add 10 extra student seats to your school plan", creditType: "school_seats", amount: 10 },
 ];
 
 export interface OneTimeFee {

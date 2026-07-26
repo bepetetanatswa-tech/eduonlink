@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     const origin = process.env.NEXT_PUBLIC_APP_URL || "https://voa-production.vercel.app";
     await sendEmail({
       to: adminProfile.email,
-      subject: decision === "approved" ? "EduOnLink — Your school is approved! 🎉" : "EduOnLink — Registration update",
+      subject: decision === "approved" ? "EduOnLink — Your school is approved!" : "EduOnLink — Registration update",
       html: decision === "approved"
         ? schoolApprovedEmail(school.name, `${origin}/school/dashboard`)
         : schoolRejectedEmail(school.name, reason.trim()),
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
 
   await (admin.from("notifications") as any).insert({
     user_id: school.admin_id,
-    title: decision === "approved" ? "School approved 🎉" : "School registration update",
+    title: decision === "approved" ? "School approved" : "School registration update",
     message: decision === "approved"
       ? `${school.name} has been verified. Your dashboard is unlocked.`
       : `${school.name} was not approved: ${reason.trim()}`,

@@ -19,7 +19,7 @@ function renderInline(text: string, keyPrefix: string): ReactNode[] {
       nodes.push(<em key={`${keyPrefix}-${i++}`}>{match[2]}</em>);
     } else if (match[3] !== undefined && match[4] !== undefined) {
       nodes.push(
-        <a key={`${keyPrefix}-${i++}`} href={match[4]} target="_blank" rel="noreferrer" style={{ color: "#4D7FFF" }}>
+        <a key={`${keyPrefix}-${i++}`} href={match[4]} target="_blank" rel="noreferrer" style={{ color: "#B1502B" }}>
           {match[3]}
         </a>
       );

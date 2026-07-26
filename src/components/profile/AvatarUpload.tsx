@@ -63,8 +63,8 @@ export function AvatarUpload({ userId, currentUrl, name, onUploaded }: AvatarUpl
         onClick={() => inputRef.current?.click()}
         style={{
           width: 72, height: 72, borderRadius: 20, cursor: "pointer", position: "relative",
-          background: preview ? "transparent" : "linear-gradient(135deg, #4D7FFF, #2D5BDF)",
-          border: "1px solid rgba(255,255,255,0.1)", overflow: "hidden",
+          background: preview ? "transparent" : "linear-gradient(135deg, #B1502B, #8F4022)",
+          border: "1px solid rgba(28,38,32,0.1)", overflow: "hidden",
           display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
         }}
       >
@@ -87,14 +87,14 @@ export function AvatarUpload({ userId, currentUrl, name, onUploaded }: AvatarUpl
           onClick={() => inputRef.current?.click()}
           disabled={uploading}
           style={{
-            fontSize: 13, fontWeight: 600, color: "#4D7FFF", background: "rgba(77,127,255,0.1)",
-            border: "1px solid rgba(77,127,255,0.25)", borderRadius: 10, padding: "8px 14px", cursor: "pointer",
+            fontSize: 13, fontWeight: 600, color: "#B1502B", background: "rgba(177,80,43,0.1)",
+            border: "1px solid rgba(177,80,43,0.25)", borderRadius: 10, padding: "8px 14px", cursor: "pointer",
           }}
         >
           {uploading ? "Uploading…" : "Upload photo"}
         </button>
-        <p style={{ fontSize: 11, color: "#4A5170", marginTop: 6 }}>JPG, PNG or WEBP. Max 5MB.</p>
-        {error && <p style={{ fontSize: 11, color: "#FF6B6B", marginTop: 4 }}>{error}</p>}
+        <p style={{ fontSize: 11, color: "#6E7A6C", marginTop: 6 }}>JPG, PNG or WEBP. Max 5MB.</p>
+        {error && <p style={{ fontSize: 11, color: "#A3311E", marginTop: 4 }}>{error}</p>}
       </div>
 
       <input

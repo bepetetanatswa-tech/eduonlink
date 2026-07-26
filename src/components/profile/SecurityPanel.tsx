@@ -106,35 +106,35 @@ export function SecurityPanel() {
   };
 
   return (
-    <div className="rounded-2xl p-6 flex flex-col gap-4" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-      <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#4A5170" }}>Security</p>
+    <div className="rounded-2xl p-6 flex flex-col gap-4" style={{ background: "rgba(28,38,32,0.02)", border: "1px solid rgba(28,38,32,0.06)" }}>
+      <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#6E7A6C" }}>Security</p>
 
       <div className="flex flex-col gap-2">
-        <p className="text-sm font-medium" style={{ color: "#8892B0" }}>Recent sign-in activity</p>
+        <p className="text-sm font-medium" style={{ color: "#566257" }}>Recent sign-in activity</p>
         {loading ? (
-          <p className="text-xs" style={{ color: "#4A5170" }}>Loading…</p>
+          <p className="text-xs" style={{ color: "#6E7A6C" }}>Loading…</p>
         ) : logins.length === 0 ? (
-          <p className="text-xs" style={{ color: "#4A5170" }}>No sign-in history yet.</p>
+          <p className="text-xs" style={{ color: "#6E7A6C" }}>No sign-in history yet.</p>
         ) : (
           <div className="flex flex-col gap-1.5">
             {logins.map((l, i) => (
-              <div key={i} className="flex items-center justify-between px-3 py-2 rounded-xl" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}>
+              <div key={i} className="flex items-center justify-between px-3 py-2 rounded-xl" style={{ background: "rgba(28,38,32,0.03)", border: "1px solid rgba(28,38,32,0.05)" }}>
                 <div>
-                  <p className="text-xs" style={{ color: "#CDD6F4" }}>{describeUserAgent(l.user_agent)}</p>
-                  <p className="text-[11px]" style={{ color: "#4A5170" }}>{l.ip ?? "Unknown IP"}</p>
+                  <p className="text-xs" style={{ color: "#1C2620" }}>{describeUserAgent(l.user_agent)}</p>
+                  <p className="text-[11px]" style={{ color: "#6E7A6C" }}>{l.ip ?? "Unknown IP"}</p>
                 </div>
-                <p className="text-[11px]" style={{ color: "#4A5170" }}>{new Date(l.created_at).toLocaleString()}</p>
+                <p className="text-[11px]" style={{ color: "#6E7A6C" }}>{new Date(l.created_at).toLocaleString()}</p>
               </div>
             ))}
           </div>
         )}
       </div>
 
-      <div className="h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
+      <div className="h-px" style={{ background: "rgba(28,38,32,0.06)" }} />
 
       <div className="flex flex-col gap-2">
-        <p className="text-sm font-medium" style={{ color: "#8892B0" }}>Change password</p>
-        {passwordError && <p className="text-xs" style={{ color: "#FF6B6B" }}>{passwordError}</p>}
+        <p className="text-sm font-medium" style={{ color: "#566257" }}>Change password</p>
+        {passwordError && <p className="text-xs" style={{ color: "#A3311E" }}>{passwordError}</p>}
         <FormInput
           label="Current password"
           type="password"
@@ -164,23 +164,23 @@ export function SecurityPanel() {
           onClick={changePassword}
           disabled={changingPassword}
           className="text-xs font-semibold px-3 py-2 rounded-lg self-start"
-          style={{ background: "rgba(0,229,163,0.1)", border: "1px solid rgba(0,229,163,0.25)", color: "#00E5A3", cursor: changingPassword ? "not-allowed" : "pointer" }}
+          style={{ background: "rgba(31,71,56,0.1)", border: "1px solid rgba(31,71,56,0.25)", color: "#1F4738", cursor: changingPassword ? "not-allowed" : "pointer" }}
         >
           {changingPassword ? "Changing…" : "Change password"}
         </button>
       </div>
 
-      <div className="h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
+      <div className="h-px" style={{ background: "rgba(28,38,32,0.06)" }} />
 
       <div className="flex flex-col gap-2">
-        <p className="text-sm font-medium" style={{ color: "#8892B0" }}>Sessions</p>
-        {message && <p className="text-xs" style={{ color: "#00E5A3" }}>{message}</p>}
+        <p className="text-sm font-medium" style={{ color: "#566257" }}>Sessions</p>
+        {message && <p className="text-xs" style={{ color: "#1F4738" }}>{message}</p>}
         <div className="flex flex-wrap gap-2">
           <button
             onClick={logoutOthers}
             disabled={busy}
             className="text-xs font-semibold px-3 py-2 rounded-lg"
-            style={{ background: "rgba(77,127,255,0.1)", border: "1px solid rgba(77,127,255,0.25)", color: "#4D7FFF", cursor: busy ? "not-allowed" : "pointer" }}
+            style={{ background: "rgba(177,80,43,0.1)", border: "1px solid rgba(177,80,43,0.25)", color: "#B1502B", cursor: busy ? "not-allowed" : "pointer" }}
           >
             Log out of all other devices
           </button>
@@ -188,7 +188,7 @@ export function SecurityPanel() {
             onClick={logoutEverywhere}
             disabled={busy}
             className="text-xs font-semibold px-3 py-2 rounded-lg"
-            style={{ background: "rgba(255,107,107,0.08)", border: "1px solid rgba(255,107,107,0.2)", color: "#FF6B6B", cursor: busy ? "not-allowed" : "pointer" }}
+            style={{ background: "rgba(163,49,30,0.08)", border: "1px solid rgba(163,49,30,0.2)", color: "#A3311E", cursor: busy ? "not-allowed" : "pointer" }}
           >
             Log out everywhere (including this device)
           </button>

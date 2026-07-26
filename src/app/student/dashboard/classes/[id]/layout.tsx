@@ -5,7 +5,7 @@ import { ClassTabNav } from "./ClassTabNav";
 
 interface Props { children: React.ReactNode; params: Promise<{ id: string }> }
 
-const S = { border: "rgba(255,255,255,0.07)", text: "#CDD6F4", muted: "#8892B0", dim: "#4A5170" };
+const S = { border: "rgba(28,38,32,0.07)", text: "#1C2620", muted: "#566257", dim: "#6E7A6C" };
 
 export default async function StudentClassDetailLayout({ children, params }: Props) {
   const { id: classId } = await params;
@@ -27,7 +27,7 @@ export default async function StudentClassDetailLayout({ children, params }: Pro
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 900 }}>
       <div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: S.text, fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>{cls?.name ?? "Class"}</h2>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: S.text, fontFamily: "inherit", margin: 0 }}>{cls?.name ?? "Class"}</h2>
         {cls?.subject && <p style={{ fontSize: 12, color: S.dim, marginTop: 4 }}>{cls.subject}{cls.grade_level ? ` · Grade ${cls.grade_level}` : ""}</p>}
       </div>
       <ClassTabNav classId={classId} basePath="/student/dashboard/classes" />

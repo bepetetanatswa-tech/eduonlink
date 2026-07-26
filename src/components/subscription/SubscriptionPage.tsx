@@ -3,7 +3,7 @@ import { useState } from "react";
 import { SubscriptionDashboard } from "./SubscriptionDashboard";
 import { PricingPlans } from "./PricingPlans";
 
-const S = { border: "rgba(255,255,255,0.07)", text: "#CDD6F4", dim: "#4A5170", accent: "#4D7FFF" };
+const S = { border: "rgba(28,38,32,0.07)", text: "#1C2620", dim: "#6E7A6C", accent: "#B1502B" };
 
 interface Props {
   role: "student" | "teacher" | "school";
@@ -23,7 +23,7 @@ export function SubscriptionPage({ role, currentPlanKey, username }: Props) {
           { key: "plans", label: "Upgrade / Buy Credits" },
         ].map(t => (
           <button key={t.key} onClick={() => setView(t.key as "dashboard" | "plans")}
-            style={{ padding: "9px 20px", borderRadius: 10, background: view === t.key ? S.accent : "rgba(255,255,255,0.04)", border: `1px solid ${view === t.key ? S.accent : S.border}`, color: view === t.key ? "#fff" : S.dim, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+            style={{ padding: "9px 20px", borderRadius: 10, background: view === t.key ? S.accent : "rgba(28,38,32,0.04)", border: `1px solid ${view === t.key ? S.accent : S.border}`, color: view === t.key ? "#fff" : S.dim, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
             {t.label}
           </button>
         ))}

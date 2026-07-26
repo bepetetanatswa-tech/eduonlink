@@ -72,8 +72,8 @@ export default async function TeacherClassesPage() {
     <div style={{ maxWidth: 900, display: "flex", flexDirection: "column", gap: 20 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
         <div>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", margin: 0 }}>My Classes</h2>
-          <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>{classes.length} class{classes.length !== 1 ? "es" : ""} assigned to you</p>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1C2620", fontFamily: "inherit", margin: 0 }}>My Classes</h2>
+          <p style={{ fontSize: 12, color: "#6E7A6C", marginTop: 4 }}>{classes.length} class{classes.length !== 1 ? "es" : ""} assigned to you</p>
         </div>
         {(profile.role === "super_admin" || profile.is_approved) && (
           <CreateIndependentClassButton />
@@ -81,8 +81,8 @@ export default async function TeacherClassesPage() {
       </div>
 
       {classes.length === 0 ? (
-        <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: "48px", textAlign: "center" }}>
-          <p style={{ fontSize: 14, color: "#4A5170" }}>
+        <div style={{ background: "rgba(28,38,32,0.02)", border: "1px solid rgba(28,38,32,0.06)", borderRadius: 16, padding: "48px", textAlign: "center" }}>
+          <p style={{ fontSize: 14, color: "#6E7A6C" }}>
             {profile.role === "super_admin" || profile.is_approved
               ? "No classes yet. Ask your school administrator to assign one, or create your own above."
               : "No classes assigned to you yet. Ask your school administrator."}

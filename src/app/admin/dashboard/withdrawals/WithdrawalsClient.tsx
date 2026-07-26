@@ -9,7 +9,7 @@ interface Withdrawal {
 }
 
 const STATUS_COLOR: Record<string, string> = {
-  pending: "#F5A623", approved: "#4D7FFF", paid: "#00E5A3", rejected: "#FF6B6B",
+  pending: "#A9873F", approved: "#B1502B", paid: "#1F4738", rejected: "#A3311E",
 };
 
 export function WithdrawalsClient({ initialWithdrawals }: { initialWithdrawals: Withdrawal[] }) {
@@ -46,21 +46,21 @@ export function WithdrawalsClient({ initialWithdrawals }: { initialWithdrawals: 
     <div style={{ maxWidth: 900, display: "flex", flexDirection: "column", gap: 20 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
         <div>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", margin: 0 }}>Teacher Withdrawals</h2>
-          <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>{withdrawals.length} total · {pendingCount} pending</p>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1C2620", fontFamily: "inherit", margin: 0 }}>Teacher Withdrawals</h2>
+          <p style={{ fontSize: 12, color: "#6E7A6C", marginTop: 4 }}>{withdrawals.length} total · {pendingCount} pending</p>
         </div>
-        {notification && <span style={{ fontSize: 12, color: "#00E5A3" }}>{notification}</span>}
+        {notification && <span style={{ fontSize: 12, color: "#1F4738" }}>{notification}</span>}
       </div>
 
       {rejecting && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-          <div style={{ width: "100%", maxWidth: 420, background: "#0D1021", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: 24, display: "flex", flexDirection: "column", gap: 14 }}>
-            <h3 style={{ fontSize: 16, fontWeight: 700, color: "#CDD6F4", margin: 0 }}>Reject withdrawal — ${rejecting.amount.toFixed(2)}</h3>
+          <div style={{ width: "100%", maxWidth: 420, background: "#0D1021", border: "1px solid rgba(28,38,32,0.1)", borderRadius: 20, padding: 24, display: "flex", flexDirection: "column", gap: 14 }}>
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: "#1C2620", margin: 0 }}>Reject withdrawal — ${rejecting.amount.toFixed(2)}</h3>
             <textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} rows={3} placeholder="Reason (sent to the teacher)"
-              style={{ width: "100%", padding: "8px 12px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: 13, color: "#CDD6F4", outline: "none", resize: "vertical", boxSizing: "border-box" }} />
+              style={{ width: "100%", padding: "8px 12px", background: "rgba(28,38,32,0.06)", border: "1px solid rgba(28,38,32,0.1)", borderRadius: 8, fontSize: 13, color: "#1C2620", outline: "none", resize: "vertical", boxSizing: "border-box" }} />
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-              <button onClick={() => { setRejecting(null); setRejectReason(""); }} style={{ padding: "8px 16px", borderRadius: 8, fontSize: 12, background: "none", border: "1px solid rgba(255,255,255,0.08)", color: "#6B7290", cursor: "pointer" }}>Cancel</button>
-              <button onClick={() => decide(rejecting.id, "rejected", rejectReason)} disabled={deciding || !rejectReason.trim()} style={{ padding: "8px 20px", borderRadius: 8, fontSize: 13, fontWeight: 700, background: "rgba(255,107,107,0.9)", border: "none", color: "#fff", cursor: (deciding || !rejectReason.trim()) ? "not-allowed" : "pointer" }}>{deciding ? "Sending…" : "Reject & notify"}</button>
+              <button onClick={() => { setRejecting(null); setRejectReason(""); }} style={{ padding: "8px 16px", borderRadius: 8, fontSize: 12, background: "none", border: "1px solid rgba(28,38,32,0.08)", color: "#566257", cursor: "pointer" }}>Cancel</button>
+              <button onClick={() => decide(rejecting.id, "rejected", rejectReason)} disabled={deciding || !rejectReason.trim()} style={{ padding: "8px 20px", borderRadius: 8, fontSize: 13, fontWeight: 700, background: "rgba(163,49,30,0.9)", border: "none", color: "#fff", cursor: (deciding || !rejectReason.trim()) ? "not-allowed" : "pointer" }}>{deciding ? "Sending…" : "Reject & notify"}</button>
             </div>
           </div>
         </div>
@@ -68,13 +68,13 @@ export function WithdrawalsClient({ initialWithdrawals }: { initialWithdrawals: 
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {withdrawals.length === 0 ? (
-          <div style={{ padding: 40, textAlign: "center", color: "#4A5170", fontSize: 13, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16 }}>No withdrawal requests</div>
+          <div style={{ padding: 40, textAlign: "center", color: "#6E7A6C", fontSize: 13, background: "rgba(28,38,32,0.02)", border: "1px solid rgba(28,38,32,0.06)", borderRadius: 16 }}>No withdrawal requests</div>
         ) : withdrawals.map((w) => (
-          <div key={w.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: 16, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+          <div key={w.id} style={{ background: "rgba(28,38,32,0.02)", border: "1px solid rgba(28,38,32,0.06)", borderRadius: 16, padding: 16, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
             <div>
-              <p style={{ fontSize: 14, fontWeight: 700, color: "#CDD6F4", margin: 0 }}>${w.amount.toFixed(2)} — {w.profiles?.full_name ?? "Unknown teacher"}</p>
-              <p style={{ fontSize: 11, color: "#4A5170", margin: "2px 0 0" }}>{w.profiles?.email} · payout to {w.payout_phone} · {new Date(w.requested_at).toLocaleDateString()}</p>
-              {w.rejection_reason && <p style={{ fontSize: 11, color: "#FF6B6B", margin: "2px 0 0" }}>Rejected: {w.rejection_reason}</p>}
+              <p style={{ fontSize: 14, fontWeight: 700, color: "#1C2620", margin: 0 }}>${w.amount.toFixed(2)} — {w.profiles?.full_name ?? "Unknown teacher"}</p>
+              <p style={{ fontSize: 11, color: "#6E7A6C", margin: "2px 0 0" }}>{w.profiles?.email} · payout to {w.payout_phone} · {new Date(w.requested_at).toLocaleDateString()}</p>
+              {w.rejection_reason && <p style={{ fontSize: 11, color: "#A3311E", margin: "2px 0 0" }}>Rejected: {w.rejection_reason}</p>}
             </div>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 6, textTransform: "capitalize", color: STATUS_COLOR[w.status], background: `${STATUS_COLOR[w.status]}18`, border: `1px solid ${STATUS_COLOR[w.status]}35` }}>
@@ -82,12 +82,12 @@ export function WithdrawalsClient({ initialWithdrawals }: { initialWithdrawals: 
               </span>
               {w.status === "pending" && (
                 <>
-                  <button onClick={() => decide(w.id, "approved")} disabled={deciding} style={{ padding: "5px 14px", borderRadius: 7, fontSize: 11, fontWeight: 600, background: "rgba(77,127,255,0.1)", border: "1px solid rgba(77,127,255,0.25)", color: "#4D7FFF", cursor: "pointer" }}>Approve</button>
-                  <button onClick={() => setRejecting(w)} disabled={deciding} style={{ padding: "5px 14px", borderRadius: 7, fontSize: 11, fontWeight: 600, background: "rgba(245,166,35,0.08)", border: "1px solid rgba(245,166,35,0.2)", color: "#F5A623", cursor: "pointer" }}>Reject</button>
+                  <button onClick={() => decide(w.id, "approved")} disabled={deciding} style={{ padding: "5px 14px", borderRadius: 7, fontSize: 11, fontWeight: 600, background: "rgba(177,80,43,0.1)", border: "1px solid rgba(177,80,43,0.25)", color: "#B1502B", cursor: "pointer" }}>Approve</button>
+                  <button onClick={() => setRejecting(w)} disabled={deciding} style={{ padding: "5px 14px", borderRadius: 7, fontSize: 11, fontWeight: 600, background: "rgba(169,135,63,0.08)", border: "1px solid rgba(169,135,63,0.2)", color: "#A9873F", cursor: "pointer" }}>Reject</button>
                 </>
               )}
               {w.status === "approved" && (
-                <button onClick={() => decide(w.id, "paid")} disabled={deciding} style={{ padding: "5px 14px", borderRadius: 7, fontSize: 11, fontWeight: 600, background: "rgba(0,229,163,0.1)", border: "1px solid rgba(0,229,163,0.25)", color: "#00E5A3", cursor: "pointer" }}>Mark Paid</button>
+                <button onClick={() => decide(w.id, "paid")} disabled={deciding} style={{ padding: "5px 14px", borderRadius: 7, fontSize: 11, fontWeight: 600, background: "rgba(31,71,56,0.1)", border: "1px solid rgba(31,71,56,0.25)", color: "#1F4738", cursor: "pointer" }}>Mark Paid</button>
               )}
             </div>
           </div>

@@ -12,8 +12,8 @@ export default async function StudentAssignmentsPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>Assignments</h2>
-        <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>View, submit and track all your class assignments</p>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1C2620", fontFamily: "inherit", margin: 0 }}>Assignments</h2>
+        <p style={{ fontSize: 12, color: "#6E7A6C", marginTop: 4 }}>View, submit and track all your class assignments</p>
       </div>
       <SubmissionPortal profileId={profile.id} />
     </div>

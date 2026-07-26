@@ -8,9 +8,9 @@ interface Student { id: string; full_name: string; avatar_url: string | null }
 interface AttRow { student_id: string; status: string; reason: string }
 
 const STATUS_COLORS: Record<string, string> = {
-  present: "#00E5A3", absent: "#FF6B6B", late: "#F5A623", excused: "#4D7FFF",
+  present: "#1F4738", absent: "#A3311E", late: "#A9873F", excused: "#B1502B",
 };
-const S = { border: "rgba(255,255,255,0.07)", text: "#CDD6F4", muted: "#8892B0", dim: "#4A5170", accent: "#4D7FFF" };
+const S = { border: "rgba(28,38,32,0.07)", text: "#1C2620", muted: "#566257", dim: "#6E7A6C", accent: "#B1502B" };
 
 export function AttendanceMarker({ profileId, lockedClassId }: { profileId: string; lockedClassId?: string }) {
   const supabase = createClient();
@@ -107,7 +107,7 @@ export function AttendanceMarker({ profileId, lockedClassId }: { profileId: stri
 
   useEffect(() => { if (tab === "report" && classId) loadMonthStats(); }, [tab, classId, date]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const inp: React.CSSProperties = { padding: "9px 12px", background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}`, borderRadius: 9, color: S.text, fontSize: 13, outline: "none" };
+  const inp: React.CSSProperties = { padding: "9px 12px", background: "rgba(28,38,32,0.04)", border: `1px solid ${S.border}`, borderRadius: 9, color: S.text, fontSize: 13, outline: "none" };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -115,20 +115,20 @@ export function AttendanceMarker({ profileId, lockedClassId }: { profileId: stri
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         {!lockedClassId && (
           <select value={classId} onChange={e => setClassId(e.target.value)} style={inp}>
-            {classes.map(c => <option key={c.id} value={c.id} style={{ background: "#0E1117" }}>{c.name} — {c.subject}</option>)}
+            {classes.map(c => <option key={c.id} value={c.id} style={{ background: "#F2EEE3" }}>{c.name} — {c.subject}</option>)}
           </select>
         )}
         <input type="date" value={date} onChange={e => setDate(e.target.value)} style={inp} />
         <div style={{ display: "flex", borderRadius: 9, overflow: "hidden", border: `1px solid ${S.border}` }}>
           {(["mark", "report"] as const).map(t => (
-            <button key={t} onClick={() => setTab(t)} style={{ padding: "9px 16px", background: tab === t ? "rgba(77,127,255,0.15)" : "rgba(255,255,255,0.02)", border: "none", color: tab === t ? "#4D7FFF" : S.muted, fontSize: 12, fontWeight: tab === t ? 600 : 400, cursor: "pointer", textTransform: "capitalize" }}>
+            <button key={t} onClick={() => setTab(t)} style={{ padding: "9px 16px", background: tab === t ? "rgba(177,80,43,0.15)" : "rgba(28,38,32,0.02)", border: "none", color: tab === t ? "#B1502B" : S.muted, fontSize: 12, fontWeight: tab === t ? 600 : 400, cursor: "pointer", textTransform: "capitalize" }}>
               {t === "mark" ? "Mark Attendance" : "Monthly Report"}
             </button>
           ))}
         </div>
       </div>
 
-      {saved && <div style={{ padding: "10px 16px", borderRadius: 10, background: "rgba(0,229,163,0.1)", border: "1px solid rgba(0,229,163,0.25)", color: "#00E5A3", fontSize: 13 }}>✓ Attendance saved successfully</div>}
+      {saved && <div style={{ padding: "10px 16px", borderRadius: 10, background: "rgba(31,71,56,0.1)", border: "1px solid rgba(31,71,56,0.25)", color: "#1F4738", fontSize: 13 }}>✓ Attendance saved successfully</div>}
 
       {tab === "mark" && (
         <>
@@ -141,12 +141,12 @@ export function AttendanceMarker({ profileId, lockedClassId }: { profileId: stri
             ))}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {students.length === 0 && <div style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${S.border}`, borderRadius: 12, padding: "32px", textAlign: "center" }}><p style={{ color: S.dim, fontSize: 14 }}>No enrolled students.</p></div>}
+            {students.length === 0 && <div style={{ background: "rgba(28,38,32,0.02)", border: `1px solid ${S.border}`, borderRadius: 12, padding: "32px", textAlign: "center" }}><p style={{ color: S.dim, fontSize: 14 }}>No enrolled students.</p></div>}
             {students.map(s => {
               const row = rows[s.id] ?? { status: "present", reason: "" };
               return (
-                <div key={s.id} style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${STATUS_COLORS[row.status]}20`, borderRadius: 12, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-                  <div style={{ width: 34, height: 34, borderRadius: 9, background: "linear-gradient(135deg,#4D7FFF,#2D5BDF)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff", flexShrink: 0 }}>
+                <div key={s.id} style={{ background: "rgba(28,38,32,0.02)", border: `1px solid ${STATUS_COLORS[row.status]}20`, borderRadius: 12, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                  <div style={{ width: 34, height: 34, borderRadius: 9, background: "linear-gradient(135deg,#B1502B,#8F4022)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff", flexShrink: 0 }}>
                     {s.full_name.split(" ").map((w: string) => w[0]).slice(0, 2).join("")}
                   </div>
                   <p style={{ flex: 1, fontSize: 13, fontWeight: 500, color: S.text, margin: 0, minWidth: 120 }}>{s.full_name}</p>
@@ -163,10 +163,10 @@ export function AttendanceMarker({ profileId, lockedClassId }: { profileId: stri
                   {(row.status === "absent" || row.status === "excused") && (
                     <select value={row.reason} onChange={e => setReason(s.id, e.target.value)}
                       style={{ ...inp, padding: "5px 10px", fontSize: 11 }}>
-                      <option value="" style={{ background: "#0E1117" }}>Reason…</option>
-                      <option value="sick" style={{ background: "#0E1117" }}>Sick</option>
-                      <option value="family" style={{ background: "#0E1117" }}>Family matter</option>
-                      <option value="unknown" style={{ background: "#0E1117" }}>Unknown</option>
+                      <option value="" style={{ background: "#F2EEE3" }}>Reason…</option>
+                      <option value="sick" style={{ background: "#F2EEE3" }}>Sick</option>
+                      <option value="family" style={{ background: "#F2EEE3" }}>Family matter</option>
+                      <option value="unknown" style={{ background: "#F2EEE3" }}>Unknown</option>
                     </select>
                   )}
                 </div>
@@ -175,7 +175,7 @@ export function AttendanceMarker({ profileId, lockedClassId }: { profileId: stri
           </div>
           {students.length > 0 && (
             <button onClick={saveAttendance} disabled={saving}
-              style={{ padding: "11px 24px", borderRadius: 10, background: S.accent, border: "none", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", alignSelf: "flex-start", opacity: saving ? 0.6 : 1, fontFamily: "'Space Grotesk',sans-serif" }}>
+              style={{ padding: "11px 24px", borderRadius: 10, background: S.accent, border: "none", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", alignSelf: "flex-start", opacity: saving ? 0.6 : 1, fontFamily: "inherit" }}>
               {saving ? "Saving…" : "Save Attendance"}
             </button>
           )}
@@ -188,15 +188,15 @@ export function AttendanceMarker({ profileId, lockedClassId }: { profileId: stri
           {students.map(s => {
             const stat = monthStats[s.id] ?? { present: 0, total: 0 };
             const pct = stat.total > 0 ? Math.round((stat.present / stat.total) * 100) : 0;
-            const color = pct >= 80 ? "#00E5A3" : pct >= 60 ? "#F5A623" : "#FF6B6B";
+            const color = pct >= 80 ? "#1F4738" : pct >= 60 ? "#A9873F" : "#A3311E";
             return (
-              <div key={s.id} style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${S.border}`, borderRadius: 12, padding: "14px 16px" }}>
+              <div key={s.id} style={{ background: "rgba(28,38,32,0.02)", border: `1px solid ${S.border}`, borderRadius: 12, padding: "14px 16px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
                   <p style={{ flex: 1, fontSize: 13, fontWeight: 500, color: S.text, margin: 0 }}>{s.full_name}</p>
                   <span style={{ fontSize: 15, fontWeight: 700, color }}>{pct}%</span>
                   <span style={{ fontSize: 11, color: S.dim }}>{stat.present}/{stat.total} days</span>
                 </div>
-                <div style={{ height: 6, background: "rgba(255,255,255,0.06)", borderRadius: 3 }}>
+                <div style={{ height: 6, background: "rgba(28,38,32,0.06)", borderRadius: 3 }}>
                   <div style={{ height: "100%", width: `${pct}%`, background: color, borderRadius: 3, transition: "width 0.4s" }} />
                 </div>
               </div>

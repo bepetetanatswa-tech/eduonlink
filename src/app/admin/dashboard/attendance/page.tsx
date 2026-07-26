@@ -12,8 +12,8 @@ export default async function AdminAttendancePage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>Attendance</h2>
-        <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>Pick any class platform-wide to view or mark its attendance</p>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1C2620", fontFamily: "inherit", margin: 0 }}>Attendance</h2>
+        <p style={{ fontSize: 12, color: "#6E7A6C", marginTop: 4 }}>Pick any class platform-wide to view or mark its attendance</p>
       </div>
       <ClassScopedTools feature="attendance" />
     </div>

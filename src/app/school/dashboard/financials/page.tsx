@@ -29,11 +29,11 @@ export default async function SchoolFinancialsPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
-        <h2 style={{ fontSize: "20px", fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif" }}>Financials</h2>
-        <p style={{ fontSize: "12px", color: "#4A5170", marginTop: 2 }}>Course sales from your school&apos;s teachers, gross vs. platform commission vs. net paid out</p>
+        <h2 style={{ fontSize: "20px", fontWeight: 700, color: "#1C2620", fontFamily: "inherit" }}>Financials</h2>
+        <p style={{ fontSize: "12px", color: "#6E7A6C", marginTop: 2 }}>Course sales from your school&apos;s teachers, gross vs. platform commission vs. net paid out</p>
       </div>
       {!schoolId ? (
-        <div style={{ background: "rgba(245,166,35,0.08)", border: "1px solid rgba(245,166,35,0.2)", borderRadius: 12, padding: 16, color: "#F5A623", fontSize: 13 }}>
+        <div style={{ background: "rgba(169,135,63,0.08)", border: "1px solid rgba(169,135,63,0.2)", borderRadius: 12, padding: 16, color: "#A9873F", fontSize: 13 }}>
           No school is linked to your account yet.
         </div>
       ) : (

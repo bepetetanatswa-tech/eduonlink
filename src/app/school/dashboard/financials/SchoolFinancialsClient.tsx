@@ -10,7 +10,7 @@ interface Sale {
   teacher_earning_amount: number; created_at: string; courses: { title: string } | null;
 }
 
-const S = { border: "rgba(255,255,255,0.07)", text: "#CDD6F4", muted: "#8892B0", dim: "#4A5170", accent: "#4D7FFF" };
+const S = { border: "rgba(28,38,32,0.07)", text: "#1C2620", muted: "#566257", dim: "#6E7A6C", accent: "#B1502B" };
 
 export function SchoolFinancialsClient({ schoolId, teachers, sales }: { schoolId: string; teachers: Teacher[]; sales: Sale[] }) {
   const supabase = createClient();
@@ -58,8 +58,8 @@ export function SchoolFinancialsClient({ schoolId, teachers, sales }: { schoolId
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div style={{ display: "flex", justifyContent: "flex-end" }}>
-        <span style={{ fontSize: 11, color: live ? "#00E5A3" : "#4A5170", display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ width: 7, height: 7, borderRadius: "50%", background: live ? "#00E5A3" : "#4A5170" }} />
+        <span style={{ fontSize: 11, color: live ? "#1F4738" : "#6E7A6C", display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ width: 7, height: 7, borderRadius: "50%", background: live ? "#1F4738" : "#6E7A6C" }} />
           {live ? "Live" : "Connecting…"}
         </span>
       </div>
@@ -67,12 +67,12 @@ export function SchoolFinancialsClient({ schoolId, teachers, sales }: { schoolId
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
         {[
           { label: "Total sales (gross)", value: totalGross, color: S.text },
-          { label: "Platform commission (20%)", value: totalCommission, color: "#FF9B6B" },
-          { label: "Net paid to teachers", value: totalNet, color: "#00E5A3" },
+          { label: "Platform commission (20%)", value: totalCommission, color: "#A3311E" },
+          { label: "Net paid to teachers", value: totalNet, color: "#1F4738" },
         ].map(stat => (
-          <div key={stat.label} style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${S.border}`, borderRadius: 16, padding: "16px 18px" }}>
+          <div key={stat.label} style={{ background: "rgba(28,38,32,0.02)", border: `1px solid ${S.border}`, borderRadius: 16, padding: "16px 18px" }}>
             <p style={{ fontSize: 11, color: S.dim, margin: "0 0 6px" }}>{stat.label}</p>
-            <p style={{ fontSize: 22, fontWeight: 800, color: stat.color, fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>${stat.value.toFixed(2)}</p>
+            <p style={{ fontSize: 22, fontWeight: 800, color: stat.color, fontFamily: "inherit", margin: 0 }}>${stat.value.toFixed(2)}</p>
           </div>
         ))}
       </div>
@@ -80,7 +80,7 @@ export function SchoolFinancialsClient({ schoolId, teachers, sales }: { schoolId
       <div>
         <p style={{ fontSize: 13, fontWeight: 600, color: S.muted, marginBottom: 8 }}>By teacher</p>
         {teachers.length === 0 ? (
-          <div style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${S.border}`, borderRadius: 12, padding: "32px", textAlign: "center" }}>
+          <div style={{ background: "rgba(28,38,32,0.02)", border: `1px solid ${S.border}`, borderRadius: 12, padding: "32px", textAlign: "center" }}>
             <p style={{ color: S.dim, fontSize: 14 }}>No teachers linked to your school yet.</p>
           </div>
         ) : (
@@ -88,7 +88,7 @@ export function SchoolFinancialsClient({ schoolId, teachers, sales }: { schoolId
             {teachers.map(t => {
               const row = byTeacher.get(t.id);
               return (
-                <div key={t.id} style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${S.border}`, borderRadius: 12, padding: "12px 16px", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                <div key={t.id} style={{ background: "rgba(28,38,32,0.02)", border: `1px solid ${S.border}`, borderRadius: 12, padding: "12px 16px", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                   <p style={{ flex: 1, minWidth: 140, fontSize: 13, fontWeight: 600, color: S.text, margin: 0 }}>{t.full_name}</p>
                   {!row ? (
                     <span style={{ fontSize: 12, color: S.dim }}>No sales yet</span>
@@ -96,8 +96,8 @@ export function SchoolFinancialsClient({ schoolId, teachers, sales }: { schoolId
                     <>
                       <span style={{ fontSize: 11, color: S.dim }}>{row.count} sale{row.count !== 1 ? "s" : ""}</span>
                       <span style={{ fontSize: 12, color: S.muted }}>${row.gross.toFixed(2)} gross</span>
-                      <span style={{ fontSize: 12, color: "#FF9B6B" }}>−${row.commission.toFixed(2)} fee</span>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: "#00E5A3" }}>${row.net.toFixed(2)} net</span>
+                      <span style={{ fontSize: 12, color: "#A3311E" }}>−${row.commission.toFixed(2)} fee</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: "#1F4738" }}>${row.net.toFixed(2)} net</span>
                     </>
                   )}
                 </div>
@@ -114,12 +114,12 @@ export function SchoolFinancialsClient({ schoolId, teachers, sales }: { schoolId
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {localSales.slice(0, 30).map(s => (
-              <div key={s.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: "rgba(255,255,255,0.02)", border: `1px solid ${S.border}`, borderRadius: 10, gap: 12, flexWrap: "wrap" }}>
+              <div key={s.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: "rgba(28,38,32,0.02)", border: `1px solid ${S.border}`, borderRadius: 10, gap: 12, flexWrap: "wrap" }}>
                 <div>
                   <p style={{ fontSize: 13, color: S.text, margin: 0 }}>{s.courses?.title ?? "Course"} · {teacherName(s.teacher_id)}</p>
                   <p style={{ fontSize: 11, color: S.dim, margin: "2px 0 0" }}>{new Date(s.created_at).toLocaleDateString()} · sold for ${s.amount_paid.toFixed(2)}</p>
                 </div>
-                <p style={{ fontSize: 13, fontWeight: 700, color: "#00E5A3", margin: 0 }}>${s.teacher_earning_amount.toFixed(2)} to teacher</p>
+                <p style={{ fontSize: 13, fontWeight: 700, color: "#1F4738", margin: 0 }}>${s.teacher_earning_amount.toFixed(2)} to teacher</p>
               </div>
             ))}
           </div>

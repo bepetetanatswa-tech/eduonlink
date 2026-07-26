@@ -211,8 +211,8 @@ export function ProfileEditor() {
     await fetch(`/api/profile/link-child?id=${id}`, { method: "DELETE" });
   };
 
-  if (loading) return <p style={{ color: "#4A5170", fontSize: 14 }}>Loading profile…</p>;
-  if (!profile) return <p style={{ color: "#F87171", fontSize: 14 }}>Could not load profile.</p>;
+  if (loading) return <p style={{ color: "#6E7A6C", fontSize: 14 }}>Loading profile…</p>;
+  if (!profile) return <p style={{ color: "#A3311E", fontSize: 14 }}>Could not load profile.</p>;
 
   const pct = completionPct(profile);
 
@@ -220,28 +220,28 @@ export function ProfileEditor() {
     <div style={{ maxWidth: 640, display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
         <div className="flex items-center justify-between mb-2">
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif" }}>My Profile</h2>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1C2620", fontFamily: "inherit" }}>My Profile</h2>
           <span
             className="text-xs font-semibold px-2.5 py-1 rounded-full"
             style={{
-              color: pct === 100 ? "#00E5A3" : "#8892B0",
-              background: pct === 100 ? "rgba(0,229,163,0.12)" : "rgba(255,255,255,0.04)",
-              border: `1px solid ${pct === 100 ? "rgba(0,229,163,0.3)" : "rgba(255,255,255,0.08)"}`,
+              color: pct === 100 ? "#1F4738" : "#566257",
+              background: pct === 100 ? "rgba(31,71,56,0.12)" : "rgba(28,38,32,0.04)",
+              border: `1px solid ${pct === 100 ? "rgba(31,71,56,0.3)" : "rgba(28,38,32,0.08)"}`,
             }}
           >
             {pct === 100 ? "Profile complete ✓" : `${pct}% complete`}
           </span>
         </div>
-        <div style={{ height: 4, borderRadius: 4, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
-          <div style={{ height: "100%", width: `${pct}%`, background: "linear-gradient(90deg, #4D7FFF, #00E5A3)", transition: "width 0.3s" }} />
+        <div style={{ height: 4, borderRadius: 4, background: "rgba(28,38,32,0.06)", overflow: "hidden" }}>
+          <div style={{ height: "100%", width: `${pct}%`, background: "linear-gradient(90deg, #B1502B, #1F4738)", transition: "width 0.3s" }} />
         </div>
       </div>
 
       <AuthError message={error} />
       <AuthSuccess message={success} />
 
-      <div className="rounded-2xl p-6 flex flex-col gap-4" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-        <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#4A5170" }}>Basic info</p>
+      <div className="rounded-2xl p-6 flex flex-col gap-4" style={{ background: "rgba(28,38,32,0.02)", border: "1px solid rgba(28,38,32,0.06)" }}>
+        <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#6E7A6C" }}>Basic info</p>
         <AvatarUpload userId={profile.user_id} currentUrl={avatarUrl} name={`${firstName} ${lastName}`} onUploaded={setAvatarUrl} />
         <div className="grid grid-cols-2 gap-3">
           <FormInput label="First name" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
@@ -256,17 +256,17 @@ export function ProfileEditor() {
         </div>
         <FormInput label="Phone number" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+263 7XX XXX XXX" />
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium" style={{ color: "#8892B0" }}>Short bio</label>
+          <label className="text-sm font-medium" style={{ color: "#566257" }}>Short bio</label>
           <textarea
             rows={3} value={bio} onChange={(e) => setBio(e.target.value)}
             className="w-full rounded-xl text-sm text-white outline-none p-3"
-            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", fontFamily: "DM Sans, sans-serif", resize: "vertical" }}
+            style={{ background: "rgba(28,38,32,0.04)", border: "1px solid rgba(28,38,32,0.08)", fontFamily: "inherit", resize: "vertical" }}
           />
         </div>
       </div>
 
-      <div className="rounded-2xl p-6 flex flex-col gap-4" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-        <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#4A5170" }}>Address</p>
+      <div className="rounded-2xl p-6 flex flex-col gap-4" style={{ background: "rgba(28,38,32,0.02)", border: "1px solid rgba(28,38,32,0.06)" }}>
+        <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#6E7A6C" }}>Address</p>
         <FormSelect label="Province" value={province} onChange={(e) => setProvince(e.target.value)}>
           <option value="" disabled>Select a province</option>
           {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
@@ -278,8 +278,8 @@ export function ProfileEditor() {
       </div>
 
       {profile.role === "student" && (
-        <div className="rounded-2xl p-6 flex flex-col gap-4" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-          <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#4A5170" }}>School details</p>
+        <div className="rounded-2xl p-6 flex flex-col gap-4" style={{ background: "rgba(28,38,32,0.02)", border: "1px solid rgba(28,38,32,0.06)" }}>
+          <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#6E7A6C" }}>School details</p>
           <FormSelect label="Current school" value={schoolChoice} onChange={(e) => setSchoolChoice(e.target.value)}>
             <option value="">Not listed / prefer to type</option>
             {schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -297,8 +297,8 @@ export function ProfileEditor() {
             ))}
           </FormSelect>
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium" style={{ color: "#8892B0" }}>
-              Subjects enrolled <span className="text-xs font-normal ml-1" style={{ color: "#4A5170" }}>({subjects.length} selected)</span>
+            <label className="text-sm font-medium" style={{ color: "#566257" }}>
+              Subjects enrolled <span className="text-xs font-normal ml-1" style={{ color: "#6E7A6C" }}>({subjects.length} selected)</span>
             </label>
             <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
               {ZIMSEC_SUBJECTS.map((s) => {
@@ -308,9 +308,9 @@ export function ProfileEditor() {
                     key={s} type="button" onClick={() => toggleSubject(s)}
                     className="px-2.5 py-1 rounded-lg text-xs font-medium transition-all duration-150"
                     style={{
-                      background: active ? "rgba(77,127,255,0.15)" : "rgba(255,255,255,0.04)",
-                      border: `1px solid ${active ? "rgba(77,127,255,0.4)" : "rgba(255,255,255,0.08)"}`,
-                      color: active ? "#7AA5FF" : "#4A5170",
+                      background: active ? "rgba(177,80,43,0.15)" : "rgba(28,38,32,0.04)",
+                      border: `1px solid ${active ? "rgba(177,80,43,0.4)" : "rgba(28,38,32,0.08)"}`,
+                      color: active ? "#7AA5FF" : "#6E7A6C",
                     }}
                   >
                     {s}
@@ -331,48 +331,48 @@ export function ProfileEditor() {
       )}
 
       {profile.role === "parent" && (
-        <div className="rounded-2xl p-6 flex flex-col gap-4" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-          <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#4A5170" }}>Family</p>
+        <div className="rounded-2xl p-6 flex flex-col gap-4" style={{ background: "rgba(28,38,32,0.02)", border: "1px solid rgba(28,38,32,0.06)" }}>
+          <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#6E7A6C" }}>Family</p>
           <FormInput label="Occupation" value={occupation} onChange={(e) => setOccupation(e.target.value)} />
           <FormSelect label="Preferred contact method" value={contactMethod} onChange={(e) => setContactMethod(e.target.value)}>
             <option value="">Select one</option>
             {CONTACT_METHOD_OPTIONS.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
           </FormSelect>
 
-          <div className="h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
+          <div className="h-px" style={{ background: "rgba(28,38,32,0.06)" }} />
 
-          <p className="text-sm font-medium" style={{ color: "#8892B0" }}>Linked children</p>
-          {children.length === 0 && <p className="text-xs" style={{ color: "#4A5170" }}>No children linked yet.</p>}
+          <p className="text-sm font-medium" style={{ color: "#566257" }}>Linked children</p>
+          {children.length === 0 && <p className="text-xs" style={{ color: "#6E7A6C" }}>No children linked yet.</p>}
           <div className="flex flex-col gap-2">
             {children.map((c) => (
-              <div key={c.id} className="flex items-center justify-between px-3 py-2 rounded-xl" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <div key={c.id} className="flex items-center justify-between px-3 py-2 rounded-xl" style={{ background: "rgba(28,38,32,0.03)", border: "1px solid rgba(28,38,32,0.06)" }}>
                 <div>
-                  <p className="text-sm" style={{ color: "#CDD6F4" }}>{c.child.full_name}</p>
-                  <p className="text-xs" style={{ color: "#4A5170" }}>{c.child.email} · {c.relationship}</p>
+                  <p className="text-sm" style={{ color: "#1C2620" }}>{c.child.full_name}</p>
+                  <p className="text-xs" style={{ color: "#6E7A6C" }}>{c.child.email} · {c.relationship}</p>
                 </div>
-                <button type="button" onClick={() => handleUnlinkChild(c.id)} className="text-xs" style={{ color: "#FF6B6B" }}>Remove</button>
+                <button type="button" onClick={() => handleUnlinkChild(c.id)} className="text-xs" style={{ color: "#A3311E" }}>Remove</button>
               </div>
             ))}
           </div>
-          {linkError && <p className="text-xs" style={{ color: "#F87171" }}>{linkError}</p>}
+          {linkError && <p className="text-xs" style={{ color: "#A3311E" }}>{linkError}</p>}
           <div className="flex gap-2">
             <input
               value={childEmail} onChange={(e) => setChildEmail(e.target.value)}
               placeholder="Child's email address" type="email"
               className="flex-1 h-11 rounded-xl text-sm text-white outline-none px-3"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+              style={{ background: "rgba(28,38,32,0.04)", border: "1px solid rgba(28,38,32,0.08)" }}
             />
             <select
               value={childRelationship} onChange={(e) => setChildRelationship(e.target.value)}
               className="h-11 rounded-xl text-sm text-white outline-none px-2"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+              style={{ background: "rgba(28,38,32,0.04)", border: "1px solid rgba(28,38,32,0.08)" }}
             >
               {RELATIONSHIP_OPTIONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
             </select>
             <button
               type="button" onClick={handleLinkChild} disabled={linkingChild}
               className="h-11 px-4 rounded-xl text-sm font-semibold"
-              style={{ background: "rgba(0,229,163,0.12)", border: "1px solid rgba(0,229,163,0.3)", color: "#00E5A3" }}
+              style={{ background: "rgba(31,71,56,0.12)", border: "1px solid rgba(31,71,56,0.3)", color: "#1F4738" }}
             >
               {linkingChild ? "Linking…" : "Link"}
             </button>
@@ -381,8 +381,8 @@ export function ProfileEditor() {
       )}
 
       {profile.role === "teacher" && (
-        <div className="rounded-2xl p-6 flex flex-col gap-4" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-          <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#4A5170" }}>Teaching details</p>
+        <div className="rounded-2xl p-6 flex flex-col gap-4" style={{ background: "rgba(28,38,32,0.02)", border: "1px solid rgba(28,38,32,0.06)" }}>
+          <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#6E7A6C" }}>Teaching details</p>
           <FormSelect label="School" value={schoolChoice} onChange={(e) => setSchoolChoice(e.target.value)}>
             <option value="">Not listed / prefer to type</option>
             {schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -396,8 +396,8 @@ export function ProfileEditor() {
             <FormInput label="Years of experience" type="number" value={yearsExperience} onChange={(e) => setYearsExperience(e.target.value)} />
           </div>
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium" style={{ color: "#8892B0" }}>
-              Subjects taught <span className="text-xs font-normal ml-1" style={{ color: "#4A5170" }}>({teachingSubjects.length} selected)</span>
+            <label className="text-sm font-medium" style={{ color: "#566257" }}>
+              Subjects taught <span className="text-xs font-normal ml-1" style={{ color: "#6E7A6C" }}>({teachingSubjects.length} selected)</span>
             </label>
             <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
               {ZIMSEC_SUBJECTS.map((s) => {
@@ -407,9 +407,9 @@ export function ProfileEditor() {
                     key={s} type="button" onClick={() => toggleTeachingSubject(s)}
                     className="px-2.5 py-1 rounded-lg text-xs font-medium transition-all duration-150"
                     style={{
-                      background: active ? "rgba(77,127,255,0.15)" : "rgba(255,255,255,0.04)",
-                      border: `1px solid ${active ? "rgba(77,127,255,0.4)" : "rgba(255,255,255,0.08)"}`,
-                      color: active ? "#7AA5FF" : "#4A5170",
+                      background: active ? "rgba(177,80,43,0.15)" : "rgba(28,38,32,0.04)",
+                      border: `1px solid ${active ? "rgba(177,80,43,0.4)" : "rgba(28,38,32,0.08)"}`,
+                      color: active ? "#7AA5FF" : "#6E7A6C",
                     }}
                   >
                     {s}
@@ -422,8 +422,8 @@ export function ProfileEditor() {
       )}
 
       {profile.role === "school_admin" && (
-        <div className="rounded-2xl p-6 flex flex-col gap-4" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-          <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#4A5170" }}>School</p>
+        <div className="rounded-2xl p-6 flex flex-col gap-4" style={{ background: "rgba(28,38,32,0.02)", border: "1px solid rgba(28,38,32,0.06)" }}>
+          <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#6E7A6C" }}>School</p>
           <FormSelect label="School you administer" value={schoolChoice} onChange={(e) => setSchoolChoice(e.target.value)}>
             <option value="">Not listed / prefer to type</option>
             {schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}

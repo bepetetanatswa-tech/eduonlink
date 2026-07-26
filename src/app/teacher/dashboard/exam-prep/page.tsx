@@ -12,8 +12,8 @@ export default async function TeacherExamPrepPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>Exam Preparation</h2>
-        <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>Upload ZIMSEC past papers for your students</p>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1C2620", fontFamily: "inherit", margin: 0 }}>Exam Preparation</h2>
+        <p style={{ fontSize: 12, color: "#6E7A6C", marginTop: 4 }}>Upload ZIMSEC past papers for your students</p>
       </div>
       <ExamPrepHub profileId={profile.id} isStaff />
     </div>

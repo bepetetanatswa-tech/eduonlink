@@ -8,7 +8,7 @@ interface Comment {
   author: { full_name: string; role: string } | null;
 }
 
-const S = { border: "rgba(255,255,255,0.07)", text: "#CDD6F4", muted: "#8892B0", dim: "#4A5170", accent: "#4D7FFF" };
+const S = { border: "rgba(28,38,32,0.07)", text: "#1C2620", muted: "#566257", dim: "#6E7A6C", accent: "#B1502B" };
 
 export function LessonQA({ materialId, profileId, isTeacher }: { materialId: string; profileId: string; isTeacher: boolean }) {
   const supabase = createClient();
@@ -61,7 +61,7 @@ export function LessonQA({ materialId, profileId, isTeacher }: { materialId: str
   const questions = comments.filter(c => !c.parent_id);
   const repliesFor = (id: string) => comments.filter(c => c.parent_id === id);
 
-  const inp: React.CSSProperties = { flex: 1, padding: "8px 12px", background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}`, borderRadius: 9, color: S.text, fontSize: 12, outline: "none" };
+  const inp: React.CSSProperties = { flex: 1, padding: "8px 12px", background: "rgba(28,38,32,0.04)", border: `1px solid ${S.border}`, borderRadius: 9, color: S.text, fontSize: 12, outline: "none" };
 
   if (loading) return <p style={{ fontSize: 12, color: S.dim }}>Loading questions…</p>;
 
@@ -71,7 +71,7 @@ export function LessonQA({ materialId, profileId, isTeacher }: { materialId: str
         <p style={{ fontSize: 12, color: S.dim, margin: 0 }}>No questions yet — be the first to ask.</p>
       )}
       {questions.map(q => (
-        <div key={q.id} style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${S.border}`, borderRadius: 10, padding: "10px 12px" }}>
+        <div key={q.id} style={{ background: "rgba(28,38,32,0.02)", border: `1px solid ${S.border}`, borderRadius: 10, padding: "10px 12px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
             <p style={{ fontSize: 12, fontWeight: 600, color: S.text, margin: 0 }}>{q.author?.full_name ?? "Student"}</p>
             <span style={{ fontSize: 10, color: S.dim }}>{new Date(q.created_at).toLocaleDateString()}</span>
@@ -79,10 +79,10 @@ export function LessonQA({ materialId, profileId, isTeacher }: { materialId: str
           <p style={{ fontSize: 12, color: S.muted, margin: "4px 0 0", lineHeight: 1.5 }}>{q.content}</p>
 
           {repliesFor(q.id).map(r => (
-            <div key={r.id} style={{ marginTop: 8, marginLeft: 14, paddingLeft: 10, borderLeft: `2px solid ${r.author?.role === "teacher" ? "rgba(0,229,163,0.3)" : S.border}` }}>
+            <div key={r.id} style={{ marginTop: 8, marginLeft: 14, paddingLeft: 10, borderLeft: `2px solid ${r.author?.role === "teacher" ? "rgba(31,71,56,0.3)" : S.border}` }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <p style={{ fontSize: 11, fontWeight: 600, color: r.author?.role === "teacher" ? "#00E5A3" : S.text, margin: 0 }}>{r.author?.full_name ?? "User"}</p>
-                {r.author?.role === "teacher" && <span style={{ fontSize: 9, color: "#00E5A3", background: "rgba(0,229,163,0.1)", padding: "1px 6px", borderRadius: 10 }}>Teacher</span>}
+                <p style={{ fontSize: 11, fontWeight: 600, color: r.author?.role === "teacher" ? "#1F4738" : S.text, margin: 0 }}>{r.author?.full_name ?? "User"}</p>
+                {r.author?.role === "teacher" && <span style={{ fontSize: 9, color: "#1F4738", background: "rgba(31,71,56,0.1)", padding: "1px 6px", borderRadius: 10 }}>Teacher</span>}
               </div>
               <p style={{ fontSize: 12, color: S.muted, margin: "2px 0 0", lineHeight: 1.5 }}>{r.content}</p>
             </div>

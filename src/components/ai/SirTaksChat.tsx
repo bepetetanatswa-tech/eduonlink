@@ -3,6 +3,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { IconChip, IconAlertTriangle, IconChevronRight } from "@/components/icons";
 
 type UserRole = "student" | "teacher" | "parent" | "school_admin" | "super_admin";
 
@@ -20,106 +21,63 @@ interface Props {
 const ROLE_CONFIG: Record<UserRole, {
   title: string;
   subtitle: string;
-  welcomeLabel: string;
   welcomeBody: string;
   disclaimer: string;
-  topics: { name: string; icon: string; color: string }[];
+  topics: string[];
 }> = {
   student: {
     title: "Sir Taks AI Tutor",
     subtitle: "Your personal ZIMSEC guide — select a subject to begin",
-    welcomeLabel: "Start Learning",
     welcomeBody: "I guide you through concepts step by step — I won't do your homework, but I'll help you master it deeply.",
     disclaimer: "Sir Taks guides your thinking — he won't do the work for you, but will help you master it.",
     topics: [
-      { name: "Mathematics", icon: "📐", color: "#4D7FFF" },
-      { name: "English Language", icon: "📚", color: "#00E5A3" },
-      { name: "English Literature", icon: "📖", color: "#00B4D8" },
-      { name: "Shona", icon: "🗣️", color: "#BD93F9" },
-      { name: "Ndebele", icon: "💬", color: "#BD93F9" },
-      { name: "History", icon: "🏛️", color: "#F5A623" },
-      { name: "Geography", icon: "🌍", color: "#00B4D8" },
-      { name: "Biology", icon: "🧬", color: "#00E5A3" },
-      { name: "Chemistry", icon: "⚗️", color: "#FF6B6B" },
-      { name: "Physics", icon: "⚡", color: "#4D7FFF" },
-      { name: "Combined Science", icon: "🔬", color: "#BD93F9" },
-      { name: "Agriculture", icon: "🌾", color: "#00B4D8" },
-      { name: "Business Studies", icon: "💼", color: "#F5A623" },
-      { name: "Accounting", icon: "📊", color: "#4D7FFF" },
-      { name: "Computer Science", icon: "💻", color: "#BD93F9" },
-      { name: "Art & Design", icon: "🎨", color: "#FF6B6B" },
-      { name: "R.M.E", icon: "✝️", color: "#F5A623" },
-      { name: "HBC / Heritage", icon: "🏺", color: "#FF6B6B" },
-      { name: "Commerce", icon: "🏦", color: "#00E5A3" },
-      { name: "General Revision", icon: "📝", color: "#8892B0" },
+      "Mathematics", "English Language", "English Literature", "Shona", "Ndebele",
+      "History", "Geography", "Biology", "Chemistry", "Physics", "Combined Science",
+      "Agriculture", "Business Studies", "Accounting", "Computer Science",
+      "Art & Design", "R.M.E", "HBC / Heritage", "Commerce", "General Revision",
     ],
   },
   teacher: {
     title: "Sir Taks — Teaching Assistant",
     subtitle: "Your AI co-planner for the Zimbabwean classroom",
-    welcomeLabel: "Start Planning",
     welcomeBody: "I'm your professional thought partner. Tell me what you're teaching and we'll plan it together — you make all the final decisions.",
     disclaimer: "Sir Taks is your planning partner — the professional judgement is always yours.",
     topics: [
-      { name: "Lesson Planning", icon: "📅", color: "#4D7FFF" },
-      { name: "Assessment Design", icon: "📝", color: "#00E5A3" },
-      { name: "Differentiation Strategies", icon: "🎯", color: "#BD93F9" },
-      { name: "HBC Project Guidance", icon: "🏺", color: "#FF6B6B" },
-      { name: "Parent Communication", icon: "💌", color: "#F5A623" },
-      { name: "Classroom Management", icon: "🏫", color: "#00B4D8" },
-      { name: "ZIMSEC Exam Prep", icon: "📋", color: "#4D7FFF" },
-      { name: "Professional Development", icon: "🎓", color: "#00E5A3" },
-      { name: "Report Writing", icon: "📄", color: "#BD93F9" },
-      { name: "Student Motivation", icon: "⭐", color: "#F5A623" },
+      "Lesson Planning", "Assessment Design", "Differentiation Strategies",
+      "HBC Project Guidance", "Parent Communication", "Classroom Management",
+      "ZIMSEC Exam Prep", "Professional Development", "Report Writing", "Student Motivation",
     ],
   },
   parent: {
     title: "Sir Taks — Parent Guide",
     subtitle: "Understand your child's education and how to support them",
-    welcomeLabel: "Get Guidance",
     welcomeBody: "I help you understand Zimbabwe's school system and give you practical ways to support your child's learning at home.",
     disclaimer: "Always work with your child's actual teacher for personalised advice about your specific child.",
     topics: [
-      { name: "Understanding Results", icon: "📊", color: "#4D7FFF" },
-      { name: "Home Learning Support", icon: "🏠", color: "#00E5A3" },
-      { name: "Exam Season Support", icon: "📅", color: "#F5A623" },
-      { name: "Curriculum Questions", icon: "📚", color: "#BD93F9" },
-      { name: "School Communication", icon: "💬", color: "#00B4D8" },
-      { name: "Study Environment", icon: "💡", color: "#4D7FFF" },
-      { name: "Managing Anxiety", icon: "🤝", color: "#00E5A3" },
-      { name: "ZIMSEC Explained", icon: "🎓", color: "#FF6B6B" },
+      "Understanding Results", "Home Learning Support", "Exam Season Support",
+      "Curriculum Questions", "School Communication", "Study Environment",
+      "Managing Anxiety", "ZIMSEC Explained",
     ],
   },
   school_admin: {
     title: "Sir Taks — School Advisor",
     subtitle: "Strategic AI support for school leadership",
-    welcomeLabel: "Start Consulting",
     welcomeBody: "I help you think through school challenges and plan improvements. Bring a problem or question and we'll work through it together.",
     disclaimer: "Sir Taks provides frameworks and options — all decisions remain with school leadership.",
     topics: [
-      { name: "School Improvement", icon: "📈", color: "#4D7FFF" },
-      { name: "Staff Development", icon: "👩‍🏫", color: "#00E5A3" },
-      { name: "ZIMSEC Compliance", icon: "📋", color: "#F5A623" },
-      { name: "Student Performance", icon: "📊", color: "#BD93F9" },
-      { name: "Parent Engagement", icon: "🤝", color: "#00B4D8" },
-      { name: "Timetable Planning", icon: "📅", color: "#4D7FFF" },
-      { name: "School Policy", icon: "📜", color: "#FF6B6B" },
-      { name: "Budget Planning", icon: "💰", color: "#F5A623" },
+      "School Improvement", "Staff Development", "ZIMSEC Compliance",
+      "Student Performance", "Parent Engagement", "Timetable Planning",
+      "School Policy", "Budget Planning",
     ],
   },
   super_admin: {
     title: "Sir Taks — Platform Advisor",
     subtitle: "Strategic AI support for EduOnLink platform management",
-    welcomeLabel: "Start Session",
     welcomeBody: "I help you analyse platform metrics, plan growth strategy, and think through product decisions for EduOnLink.",
     disclaimer: "Strategic frameworks only — always validate with real platform data.",
     topics: [
-      { name: "Platform Strategy", icon: "🚀", color: "#4D7FFF" },
-      { name: "School Onboarding", icon: "🏫", color: "#00E5A3" },
-      { name: "Subscription Tiers", icon: "💎", color: "#F5A623" },
-      { name: "Feature Planning", icon: "🗺️", color: "#BD93F9" },
-      { name: "User Growth", icon: "📈", color: "#00B4D8" },
-      { name: "Quality Assurance", icon: "✅", color: "#4D7FFF" },
+      "Platform Strategy", "School Onboarding", "Subscription Tiers",
+      "Feature Planning", "User Growth", "Quality Assurance",
     ],
   },
 };
@@ -130,8 +88,8 @@ function renderContent(text: string) {
     return (
       <span key={i}>
         {parts.map((p, j) => {
-          if (p.startsWith("**") && p.endsWith("**")) return <strong key={j} style={{ color: "#CDD6F4", fontWeight: 700 }}>{p.slice(2, -2)}</strong>;
-          if (p.startsWith("`") && p.endsWith("`")) return <code key={j} style={{ background: "rgba(77,127,255,0.15)", padding: "1px 5px", borderRadius: 4, fontSize: "0.9em", fontFamily: "monospace", color: "#BD93F9" }}>{p.slice(1, -1)}</code>;
+          if (p.startsWith("**") && p.endsWith("**")) return <strong key={j} className="text-edu-ink font-bold">{p.slice(2, -2)}</strong>;
+          if (p.startsWith("`") && p.endsWith("`")) return <code key={j} className="bg-edu-copper-100 px-1.5 py-0.5 rounded text-[0.9em] text-edu-copper-dark">{p.slice(1, -1)}</code>;
           return <span key={j}>{p}</span>;
         })}
         {i < text.split("\n").length - 1 && <br />}
@@ -263,53 +221,43 @@ export function SirTaksChat({ profileId, userName, userRole, initialQuestionsUse
   }, [input, streaming, messages, topic, profileId, convId, dailyLimit, questionsUsed, supabase, userRole]);
 
   const quotaPct = dailyLimit ? Math.min((questionsUsed / dailyLimit) * 100, 100) : 0;
-  const quotaColor = quotaPct > 80 ? "#F5A623" : "#00E5A3";
+  const quotaColor = quotaPct > 80 ? "#A9873F" : "#1F4738";
 
   // ── TOPIC SELECTOR ──────────────────────────────────────────────────────
   if (phase === "select") {
     return (
-      <div style={{ maxWidth: 860, margin: "0 auto" }}>
-        <div style={{ marginBottom: 28, textAlign: "center" }}>
-          <div style={{
-            width: 70, height: 70, borderRadius: "20px", margin: "0 auto 14px",
-            background: "linear-gradient(135deg, #1a1f35, #0d1424)",
-            border: "1px solid rgba(77,127,255,0.4)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 34, boxShadow: "0 0 24px rgba(77,127,255,0.2)",
-          }}>🎓</div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", marginBottom: 8 }}>{cfg.title}</h1>
-          <p style={{ fontSize: 13, color: "#6B7290", maxWidth: 460, margin: "0 auto 12px", lineHeight: 1.6 }}>{cfg.subtitle}</p>
+      <div className="max-w-[860px] mx-auto">
+        <div className="mb-7 text-center">
+          <div className="w-16 h-16 rounded mx-auto mb-3.5 flex items-center justify-center bg-edu-slate-100 border border-edu-copper-200 text-edu-copper">
+            <IconChip size={28} />
+          </div>
+          <h1 className="font-display font-semibold text-2xl text-edu-ink mb-2">{cfg.title}</h1>
+          <p className="text-[13px] text-edu-slate-600 max-w-[460px] mx-auto mb-3 leading-relaxed">{cfg.subtitle}</p>
           {dailyLimit !== null && (
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "5px 14px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 20 }}>
-              <div style={{ width: 70, height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2, overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${quotaPct}%`, background: quotaColor, transition: "width 0.3s" }} />
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 border border-edu-slate-200 rounded-full">
+              <div className="w-16 h-1 rounded-full bg-edu-slate-200 overflow-hidden">
+                <div className="h-full transition-[width] duration-300" style={{ width: `${quotaPct}%`, background: quotaColor }} />
               </div>
-              <span style={{ fontSize: 11, color: "#6B7290" }}>{questionsUsed}/{dailyLimit} questions today</span>
+              <span className="text-[11px] text-edu-slate-500">{questionsUsed}/{dailyLimit} questions today</span>
             </div>
           )}
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(148px, 1fr))", gap: 10, marginBottom: 20 }}>
+        <div className="grid gap-2 mb-5" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(148px, 1fr))" }}>
           {cfg.topics.map((t) => (
-            <button key={t.name} onClick={() => startSession(t.name)} style={{
-              display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
-              padding: "16px 10px", borderRadius: 14, cursor: "pointer",
-              background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)",
-              transition: "all 0.15s", textAlign: "center",
-            }}
-              onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = `${t.color}12`; el.style.borderColor = `${t.color}40`; el.style.transform = "translateY(-2px)"; }}
-              onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255,255,255,0.025)"; el.style.borderColor = "rgba(255,255,255,0.06)"; el.style.transform = "translateY(0)"; }}
+            <button
+              key={t}
+              onClick={() => startSession(t)}
+              className="px-3 py-4 rounded border border-edu-slate-200 hover:border-edu-copper-300 hover:bg-edu-copper-50 transition-colors duration-150 text-center"
             >
-              <span style={{ fontSize: 26 }}>{t.icon}</span>
-              <span style={{ fontSize: 12, fontWeight: 600, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", lineHeight: 1.3 }}>{t.name}</span>
+              <span className="text-xs font-semibold text-edu-ink leading-snug">{t}</span>
             </button>
           ))}
         </div>
 
-        <div style={{ background: "rgba(77,127,255,0.06)", border: "1px solid rgba(77,127,255,0.12)", borderRadius: 12, padding: "12px 16px", display: "flex", gap: 10 }}>
-          <span style={{ fontSize: 16, flexShrink: 0 }}>💡</span>
-          <p style={{ fontSize: 12, color: "#6B7290", lineHeight: 1.6, margin: 0 }}>
-            <strong style={{ color: "#4D7FFF" }}>How Sir Taks works:</strong> {cfg.welcomeBody}
+        <div className="border border-edu-copper-200 bg-edu-copper-50 rounded px-4 py-3 flex gap-2.5">
+          <p className="text-xs leading-relaxed text-edu-slate-600">
+            <strong className="text-edu-copper-dark">How Sir Taks works:</strong> {cfg.welcomeBody}
           </p>
         </div>
       </div>
@@ -318,48 +266,61 @@ export function SirTaksChat({ profileId, userName, userRole, initialQuestionsUse
 
   // ── CHAT ──────────────────────────────────────────────────────────────────
   return (
-    <div style={{ maxWidth: 860, margin: "0 auto", display: "flex", flexDirection: "column", height: "calc(100vh - 120px)", minHeight: 500 }}>
+    <div className="max-w-[860px] mx-auto flex flex-col" style={{ height: "calc(100vh - 120px)", minHeight: 500 }}>
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "16px 16px 0 0", flexShrink: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ width: 40, height: 40, borderRadius: "11px", background: "linear-gradient(135deg, #1a1f35, #0d1424)", border: "1px solid rgba(77,127,255,0.4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>🎓</div>
+      <div className="flex items-center justify-between px-4 py-3 border border-edu-slate-200 rounded-t flex-shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded flex items-center justify-center flex-shrink-0 bg-edu-slate-100 border border-edu-copper-200 text-edu-copper">
+            <IconChip size={18} />
+          </div>
           <div>
-            <p style={{ fontSize: 14, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", margin: 0 }}>Sir Taks</p>
-            <p style={{ fontSize: 11, color: "#4D7FFF", margin: 0 }}>{topic}</p>
+            <p className="text-sm font-bold text-edu-ink">Sir Taks</p>
+            <p className="text-[11px] text-edu-copper">{topic}</p>
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div className="flex items-center gap-3">
           {dailyLimit !== null && (
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <div style={{ width: 56, height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 2, overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${quotaPct}%`, background: quotaColor, transition: "width 0.3s" }} />
+            <div className="flex items-center gap-1.5">
+              <div className="w-14 h-1 rounded-full bg-edu-slate-200 overflow-hidden">
+                <div className="h-full transition-[width] duration-300" style={{ width: `${quotaPct}%`, background: quotaColor }} />
               </div>
-              <span style={{ fontSize: 10, color: "#4A5170" }}>{questionsUsed}/{dailyLimit}</span>
+              <span className="text-[10px] text-edu-slate-500">{questionsUsed}/{dailyLimit}</span>
             </div>
           )}
-          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#00E5A3", animation: "pulse 2s ease-in-out infinite" }} />
-            <span style={{ fontSize: 11, color: "#00E5A3" }}>Online</span>
+          <div className="flex items-center gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-edu-bottle" />
+            <span className="text-[11px] text-edu-bottle">Online</span>
           </div>
-          <button onClick={() => { setPhase("select"); setMessages([]); setConvId(null); setInput(""); }} style={{ padding: "4px 10px", borderRadius: 8, fontSize: 11, fontWeight: 600, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#6B7290", cursor: "pointer" }}>
-            Change Topic
+          <button
+            onClick={() => { setPhase("select"); setMessages([]); setConvId(null); setInput(""); }}
+            className="btn-ghost py-1 px-2.5 text-[11px]"
+          >
+            Change topic
           </button>
         </div>
       </div>
 
       {/* Messages */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "20px 16px", background: "rgba(255,255,255,0.01)", borderLeft: "1px solid rgba(255,255,255,0.06)", borderRight: "1px solid rgba(255,255,255,0.06)", scrollbarWidth: "thin", scrollbarColor: "rgba(255,255,255,0.08) transparent" }}>
+      <div className="flex-1 overflow-y-auto px-4 py-5 border-l border-r border-edu-slate-200">
         {messages.map((m, i) => (
-          <div key={i} style={{ display: "flex", gap: 10, marginBottom: 20, justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
+          <div key={i} className={`flex gap-2.5 mb-5 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
             {m.role === "assistant" && (
-              <div style={{ width: 36, height: 36, borderRadius: "10px", flexShrink: 0, marginTop: 2, background: "linear-gradient(135deg, #1a1f35, #0d1424)", border: "1px solid rgba(77,127,255,0.4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🎓</div>
+              <div className="w-8 h-8 rounded flex-shrink-0 mt-0.5 flex items-center justify-center bg-edu-slate-100 border border-edu-copper-200 text-edu-copper">
+                <IconChip size={16} />
+              </div>
             )}
-            <div style={{ maxWidth: "72%", padding: "12px 15px", borderRadius: m.role === "user" ? "16px 4px 16px 16px" : "4px 16px 16px 16px", background: m.role === "user" ? "linear-gradient(135deg, rgba(189,147,249,0.15), rgba(139,97,249,0.1))" : "rgba(77,127,255,0.08)", border: m.role === "user" ? "1px solid rgba(189,147,249,0.25)" : "1px solid rgba(77,127,255,0.15)" }}>
-              <div style={{ fontSize: 14, color: "#CDD6F4", lineHeight: 1.65 }}>{renderContent(m.content)}</div>
-              <p style={{ fontSize: 10, color: "#4A5170", marginTop: 6, textAlign: "right", margin: "6px 0 0" }}>{m.ts.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</p>
+            <div
+              className={`max-w-[72%] px-4 py-3 rounded border ${
+                m.role === "user"
+                  ? "bg-edu-slate-100 border-edu-slate-200"
+                  : "bg-edu-copper-50 border-edu-copper-200"
+              }`}
+            >
+              <div className="text-sm text-edu-ink leading-relaxed">{renderContent(m.content)}</div>
+              <p className="text-[10px] text-edu-slate-500 mt-1.5 text-right">{m.ts.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</p>
             </div>
             {m.role === "user" && (
-              <div style={{ width: 36, height: 36, borderRadius: "10px", flexShrink: 0, marginTop: 2, background: "rgba(189,147,249,0.12)", border: "1px solid rgba(189,147,249,0.25)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: "#BD93F9", fontFamily: "'Space Grotesk', sans-serif" }}>
+              <div className="w-8 h-8 rounded flex-shrink-0 mt-0.5 flex items-center justify-center text-xs font-bold text-edu-paper bg-edu-copper">
                 {userName.charAt(0).toUpperCase()}
               </div>
             )}
@@ -367,20 +328,19 @@ export function SirTaksChat({ profileId, userName, userRole, initialQuestionsUse
         ))}
 
         {streaming && (
-          <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
-            <div style={{ width: 36, height: 36, borderRadius: "10px", flexShrink: 0, marginTop: 2, background: "linear-gradient(135deg, #1a1f35, #0d1424)", border: "1px solid rgba(77,127,255,0.4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🎓</div>
-            <div style={{ maxWidth: "72%", padding: "12px 15px", borderRadius: "4px 16px 16px 16px", background: "rgba(77,127,255,0.08)", border: "1px solid rgba(77,127,255,0.15)" }}>
+          <div className="flex gap-2.5 mb-5">
+            <div className="w-8 h-8 rounded flex-shrink-0 mt-0.5 flex items-center justify-center bg-edu-slate-100 border border-edu-copper-200 text-edu-copper">
+              <IconChip size={16} />
+            </div>
+            <div className="max-w-[72%] px-4 py-3 rounded border bg-edu-copper-50 border-edu-copper-200">
               {streamText ? (
-                <div style={{ fontSize: 14, color: "#CDD6F4", lineHeight: 1.65 }}>
-                  {renderContent(streamText)}
-                  <span style={{ display: "inline-block", width: 8, height: 14, background: "#4D7FFF", marginLeft: 2, verticalAlign: "text-bottom", animation: "blink 1s step-end infinite" }} />
-                </div>
+                <div className="text-sm text-edu-ink leading-relaxed">{renderContent(streamText)}</div>
               ) : (
-                <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
-                  <span style={{ fontSize: 11, color: "#4A5170", marginRight: 4 }}>Sir Taks is thinking</span>
-                  {[0, 1, 2].map((n) => (
-                    <div key={n} style={{ width: 6, height: 6, borderRadius: "50%", background: "#4D7FFF", animation: `bounce 1.2s ease-in-out ${n * 0.2}s infinite` }} />
-                  ))}
+                <div className="flex gap-1.5 items-center text-edu-copper">
+                  <span className="text-[11px] text-edu-slate-500 mr-1">Sir Taks is thinking</span>
+                  <span className="typing-dot" />
+                  <span className="typing-dot" />
+                  <span className="typing-dot" />
                 </div>
               )}
             </div>
@@ -388,23 +348,23 @@ export function SirTaksChat({ profileId, userName, userRole, initialQuestionsUse
         )}
 
         {error && (
-          <div style={{ margin: "8px 0 16px", padding: "10px 14px", background: "rgba(255,107,107,0.08)", border: "1px solid rgba(255,107,107,0.2)", borderRadius: 10, display: "flex", gap: 8, alignItems: "center" }}>
-            <span>⚠️</span>
-            <p style={{ fontSize: 13, color: "#FF6B6B", margin: 0 }}>{error}</p>
+          <div className="my-2 px-3.5 py-2.5 bg-edu-clay-100 border border-edu-clay-200 rounded flex gap-2 items-center">
+            <IconAlertTriangle size={16} className="flex-shrink-0 text-edu-clay" />
+            <p className="text-[13px] text-edu-clay-dark">{error}</p>
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
       {/* Input */}
-      <div style={{ padding: "12px 16px", background: "#0A0C14", border: "1px solid rgba(255,255,255,0.06)", borderTop: "none", borderRadius: "0 0 16px 16px", flexShrink: 0 }}>
+      <div className="px-4 py-3 border border-edu-slate-200 border-t-0 rounded-b flex-shrink-0 bg-edu-paper">
         {dailyLimit !== null && questionsUsed >= dailyLimit ? (
-          <div style={{ textAlign: "center", padding: "10px 0" }}>
-            <p style={{ fontSize: 13, color: "#F5A623", marginBottom: 4 }}>You&apos;ve reached your {dailyLimit} free questions for today.</p>
-            <p style={{ fontSize: 12, color: "#4A5170" }}>Upgrade to Student Pro for unlimited Sir Taks access.</p>
+          <div className="text-center py-2.5">
+            <p className="text-[13px] text-edu-gold-dark mb-1">You&apos;ve reached your {dailyLimit} free questions for today.</p>
+            <p className="text-xs text-edu-slate-500">Upgrade to Student Pro for unlimited Sir Taks access.</p>
           </div>
         ) : (
-          <div style={{ display: "flex", gap: 10, alignItems: "flex-end" }}>
+          <div className="flex gap-2.5 items-end">
             <textarea
               ref={inputRef}
               value={input}
@@ -413,24 +373,17 @@ export function SirTaksChat({ profileId, userName, userRole, initialQuestionsUse
               placeholder="Type your question… (Shift+Enter for new line)"
               rows={1}
               disabled={streaming}
-              style={{ flex: 1, resize: "none", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "10px 14px", fontSize: 14, color: "#CDD6F4", fontFamily: "inherit", outline: "none", transition: "border-color 0.15s", minHeight: 42, maxHeight: 140, scrollbarWidth: "none", boxSizing: "border-box" }}
-              onFocus={(e) => (e.target.style.borderColor = "rgba(77,127,255,0.4)")}
-              onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.08)")}
+              className="flex-1 resize-none rounded border border-edu-slate-300 px-3.5 py-2.5 text-sm text-edu-ink outline-none transition-colors duration-150 focus:border-edu-copper"
+              style={{ minHeight: 42, maxHeight: 140, boxSizing: "border-box" }}
               onInput={(e) => { const t = e.currentTarget; t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 140) + "px"; }}
             />
-            <button onClick={sendMessage} disabled={!input.trim() || streaming} style={{ padding: "10px 18px", borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: (!input.trim() || streaming) ? "not-allowed" : "pointer", background: (!input.trim() || streaming) ? "rgba(77,127,255,0.15)" : "rgba(77,127,255,0.9)", border: "1px solid rgba(77,127,255,0.3)", color: (!input.trim() || streaming) ? "#4A5170" : "#fff", transition: "all 0.15s", flexShrink: 0, height: 42 }}>
-              {streaming ? "…" : "Send →"}
+            <button onClick={sendMessage} disabled={!input.trim() || streaming} className="btn-primary h-[42px] px-4 text-[13px] disabled:opacity-40 flex-shrink-0">
+              {streaming ? "…" : <>Send <IconChevronRight size={14} /></>}
             </button>
           </div>
         )}
-        <p style={{ fontSize: 10, color: "#2A2D3E", marginTop: 6, textAlign: "center" }}>{cfg.disclaimer}</p>
+        <p className="text-[10px] text-edu-slate-400 mt-1.5 text-center">{cfg.disclaimer}</p>
       </div>
-
-      <style>{`
-        @keyframes bounce { 0%,80%,100%{transform:scale(.6);opacity:.4} 40%{transform:scale(1);opacity:1} }
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-      `}</style>
     </div>
   );
 }

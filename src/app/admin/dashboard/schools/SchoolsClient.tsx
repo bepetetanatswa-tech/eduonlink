@@ -116,19 +116,19 @@ export function SchoolsClient({ initialSchools }: { initialSchools: School[] }) 
     <div style={{ maxWidth: 1000, display: "flex", flexDirection: "column", gap: 20 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
         <div>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", margin: 0 }}>Schools</h2>
-          <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>{schools.length} registered · {schools.filter((s) => s.status === "approved").length} approved · {schools.filter((s) => s.status === "pending").length} pending</p>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1C2620", fontFamily: "inherit", margin: 0 }}>Schools</h2>
+          <p style={{ fontSize: 12, color: "#6E7A6C", marginTop: 4 }}>{schools.length} registered · {schools.filter((s) => s.status === "approved").length} approved · {schools.filter((s) => s.status === "pending").length} pending</p>
         </div>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          {notification && <span style={{ fontSize: 12, color: "#00E5A3" }}>{notification}</span>}
-          <button onClick={() => setAddOpen(!addOpen)} style={{ padding: "8px 18px", borderRadius: 10, fontSize: 13, fontWeight: 700, background: "rgba(77,127,255,0.9)", border: "none", color: "#fff", cursor: "pointer" }}>+ Add School</button>
+          {notification && <span style={{ fontSize: 12, color: "#1F4738" }}>{notification}</span>}
+          <button onClick={() => setAddOpen(!addOpen)} style={{ padding: "8px 18px", borderRadius: 10, fontSize: 13, fontWeight: 700, background: "rgba(177,80,43,0.9)", border: "none", color: "#fff", cursor: "pointer" }}>+ Add School</button>
         </div>
       </div>
 
       {/* Add school form */}
       {addOpen && (
-        <div style={{ background: "rgba(77,127,255,0.05)", border: "1px solid rgba(77,127,255,0.2)", borderRadius: 16, padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
-          <h3 style={{ fontSize: 14, fontWeight: 700, color: "#CDD6F4", margin: 0 }}>Register New School</h3>
+        <div style={{ background: "rgba(177,80,43,0.05)", border: "1px solid rgba(177,80,43,0.2)", borderRadius: 16, padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: "#1C2620", margin: 0 }}>Register New School</h3>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             {[
               { label: "School Name *", key: "name", placeholder: "e.g. Harare High School" },
@@ -137,39 +137,39 @@ export function SchoolsClient({ initialSchools }: { initialSchools: School[] }) 
               { label: "Phone", key: "phone", placeholder: "+263 77 123 4567" },
             ].map((f) => (
               <div key={f.key}>
-                <label style={{ fontSize: 10, color: "#4A5170", display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>{f.label}</label>
-                <input value={(addForm as any)[f.key]} onChange={(e) => setAddForm((p) => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} style={{ width: "100%", padding: "8px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: 13, color: "#CDD6F4", outline: "none", boxSizing: "border-box" }} />
+                <label style={{ fontSize: 10, color: "#6E7A6C", display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>{f.label}</label>
+                <input value={(addForm as any)[f.key]} onChange={(e) => setAddForm((p) => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} style={{ width: "100%", padding: "8px 12px", background: "rgba(28,38,32,0.04)", border: "1px solid rgba(28,38,32,0.1)", borderRadius: 8, fontSize: 13, color: "#1C2620", outline: "none", boxSizing: "border-box" }} />
               </div>
             ))}
             <div>
-              <label style={{ fontSize: 10, color: "#4A5170", display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>Province</label>
-              <select value={addForm.province} onChange={(e) => setAddForm((p) => ({ ...p, province: e.target.value }))} style={{ width: "100%", padding: "8px 12px", background: "rgba(10,12,20,0.95)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: 13, color: "#CDD6F4", outline: "none" }}>
+              <label style={{ fontSize: 10, color: "#6E7A6C", display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>Province</label>
+              <select value={addForm.province} onChange={(e) => setAddForm((p) => ({ ...p, province: e.target.value }))} style={{ width: "100%", padding: "8px 12px", background: "rgba(10,12,20,0.95)", border: "1px solid rgba(28,38,32,0.1)", borderRadius: 8, fontSize: 13, color: "#1C2620", outline: "none" }}>
                 {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
               </select>
             </div>
             <div>
-              <label style={{ fontSize: 10, color: "#4A5170", display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>Plan</label>
-              <select value={addForm.subscription_plan} onChange={(e) => setAddForm((p) => ({ ...p, subscription_plan: e.target.value }))} style={{ width: "100%", padding: "8px 12px", background: "rgba(10,12,20,0.95)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: 13, color: "#CDD6F4", outline: "none" }}>
+              <label style={{ fontSize: 10, color: "#6E7A6C", display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>Plan</label>
+              <select value={addForm.subscription_plan} onChange={(e) => setAddForm((p) => ({ ...p, subscription_plan: e.target.value }))} style={{ width: "100%", padding: "8px 12px", background: "rgba(10,12,20,0.95)", border: "1px solid rgba(28,38,32,0.1)", borderRadius: 8, fontSize: 13, color: "#1C2620", outline: "none" }}>
                 {PLANS.map((p) => <option key={p} value={p}>{p}</option>)}
               </select>
             </div>
           </div>
           <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-            <button onClick={() => setAddOpen(false)} style={{ padding: "8px 16px", borderRadius: 8, fontSize: 12, background: "none", border: "1px solid rgba(255,255,255,0.08)", color: "#6B7290", cursor: "pointer" }}>Cancel</button>
-            <button onClick={addSchool} disabled={saving} style={{ padding: "8px 20px", borderRadius: 8, fontSize: 13, fontWeight: 700, background: "rgba(77,127,255,0.9)", border: "none", color: "#fff", cursor: saving ? "not-allowed" : "pointer" }}>{saving ? "Adding…" : "Add School"}</button>
+            <button onClick={() => setAddOpen(false)} style={{ padding: "8px 16px", borderRadius: 8, fontSize: 12, background: "none", border: "1px solid rgba(28,38,32,0.08)", color: "#566257", cursor: "pointer" }}>Cancel</button>
+            <button onClick={addSchool} disabled={saving} style={{ padding: "8px 20px", borderRadius: 8, fontSize: 13, fontWeight: 700, background: "rgba(177,80,43,0.9)", border: "none", color: "#fff", cursor: saving ? "not-allowed" : "pointer" }}>{saving ? "Adding…" : "Add School"}</button>
           </div>
         </div>
       )}
 
-      <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search schools…" style={{ padding: "9px 16px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, fontSize: 13, color: "#CDD6F4", outline: "none" }} />
+      <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search schools…" style={{ padding: "9px 16px", background: "rgba(28,38,32,0.04)", border: "1px solid rgba(28,38,32,0.08)", borderRadius: 10, fontSize: 13, color: "#1C2620", outline: "none" }} />
 
       {/* Edit modal */}
       {editing && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-          <div style={{ width: "100%", maxWidth: 520, background: "#0D1021", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: 24, display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ width: "100%", maxWidth: 520, background: "#0D1021", border: "1px solid rgba(28,38,32,0.1)", borderRadius: 20, padding: 24, display: "flex", flexDirection: "column", gap: 14 }}>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <h3 style={{ fontSize: 16, fontWeight: 700, color: "#CDD6F4", margin: 0 }}>Edit School</h3>
-              <button onClick={() => setEditing(null)} style={{ background: "none", border: "none", color: "#6B7290", fontSize: 18, cursor: "pointer" }}>✕</button>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: "#1C2620", margin: 0 }}>Edit School</h3>
+              <button onClick={() => setEditing(null)} style={{ background: "none", border: "none", color: "#566257", fontSize: 18, cursor: "pointer" }}>✕</button>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               {[
@@ -179,26 +179,26 @@ export function SchoolsClient({ initialSchools }: { initialSchools: School[] }) 
                 { label: "Phone", key: "phone" },
               ].map((f) => (
                 <div key={f.key}>
-                  <label style={{ fontSize: 10, color: "#4A5170", display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>{f.label}</label>
-                  <input value={(editForm as any)[f.key] ?? ""} onChange={(e) => setEditForm((p) => ({ ...p, [f.key]: e.target.value }))} style={{ width: "100%", padding: "8px 12px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: 13, color: "#CDD6F4", outline: "none", boxSizing: "border-box" }} />
+                  <label style={{ fontSize: 10, color: "#6E7A6C", display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>{f.label}</label>
+                  <input value={(editForm as any)[f.key] ?? ""} onChange={(e) => setEditForm((p) => ({ ...p, [f.key]: e.target.value }))} style={{ width: "100%", padding: "8px 12px", background: "rgba(28,38,32,0.06)", border: "1px solid rgba(28,38,32,0.1)", borderRadius: 8, fontSize: 13, color: "#1C2620", outline: "none", boxSizing: "border-box" }} />
                 </div>
               ))}
               <div>
-                <label style={{ fontSize: 10, color: "#4A5170", display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>Province</label>
-                <select value={editForm.province ?? ""} onChange={(e) => setEditForm((p) => ({ ...p, province: e.target.value }))} style={{ width: "100%", padding: "8px 12px", background: "rgba(10,12,20,0.95)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: 13, color: "#CDD6F4", outline: "none" }}>
+                <label style={{ fontSize: 10, color: "#6E7A6C", display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>Province</label>
+                <select value={editForm.province ?? ""} onChange={(e) => setEditForm((p) => ({ ...p, province: e.target.value }))} style={{ width: "100%", padding: "8px 12px", background: "rgba(10,12,20,0.95)", border: "1px solid rgba(28,38,32,0.1)", borderRadius: 8, fontSize: 13, color: "#1C2620", outline: "none" }}>
                   {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: 10, color: "#4A5170", display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>Plan</label>
-                <select value={editForm.subscription_plan ?? "free"} onChange={(e) => setEditForm((p) => ({ ...p, subscription_plan: e.target.value }))} style={{ width: "100%", padding: "8px 12px", background: "rgba(10,12,20,0.95)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: 13, color: "#CDD6F4", outline: "none" }}>
+                <label style={{ fontSize: 10, color: "#6E7A6C", display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>Plan</label>
+                <select value={editForm.subscription_plan ?? "free"} onChange={(e) => setEditForm((p) => ({ ...p, subscription_plan: e.target.value }))} style={{ width: "100%", padding: "8px 12px", background: "rgba(10,12,20,0.95)", border: "1px solid rgba(28,38,32,0.1)", borderRadius: 8, fontSize: 13, color: "#1C2620", outline: "none" }}>
                   {PLANS.map((p) => <option key={p} value={p}>{p}</option>)}
                 </select>
               </div>
             </div>
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-              <button onClick={() => setEditing(null)} style={{ padding: "8px 16px", borderRadius: 8, fontSize: 12, background: "none", border: "1px solid rgba(255,255,255,0.08)", color: "#6B7290", cursor: "pointer" }}>Cancel</button>
-              <button onClick={saveEdit} disabled={saving} style={{ padding: "8px 20px", borderRadius: 8, fontSize: 13, fontWeight: 700, background: "rgba(77,127,255,0.9)", border: "none", color: "#fff", cursor: saving ? "not-allowed" : "pointer" }}>{saving ? "Saving…" : "Save Changes"}</button>
+              <button onClick={() => setEditing(null)} style={{ padding: "8px 16px", borderRadius: 8, fontSize: 12, background: "none", border: "1px solid rgba(28,38,32,0.08)", color: "#566257", cursor: "pointer" }}>Cancel</button>
+              <button onClick={saveEdit} disabled={saving} style={{ padding: "8px 20px", borderRadius: 8, fontSize: 13, fontWeight: 700, background: "rgba(177,80,43,0.9)", border: "none", color: "#fff", cursor: saving ? "not-allowed" : "pointer" }}>{saving ? "Saving…" : "Save Changes"}</button>
             </div>
           </div>
         </div>
@@ -207,70 +207,70 @@ export function SchoolsClient({ initialSchools }: { initialSchools: School[] }) 
       {/* Reject modal */}
       {rejecting && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-          <div style={{ width: "100%", maxWidth: 420, background: "#0D1021", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: 24, display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ width: "100%", maxWidth: 420, background: "#0D1021", border: "1px solid rgba(28,38,32,0.1)", borderRadius: 20, padding: 24, display: "flex", flexDirection: "column", gap: 14 }}>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <h3 style={{ fontSize: 16, fontWeight: 700, color: "#CDD6F4", margin: 0 }}>Reject {rejecting.name}</h3>
-              <button onClick={() => { setRejecting(null); setRejectReason(""); }} style={{ background: "none", border: "none", color: "#6B7290", fontSize: 18, cursor: "pointer" }}>✕</button>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: "#1C2620", margin: 0 }}>Reject {rejecting.name}</h3>
+              <button onClick={() => { setRejecting(null); setRejectReason(""); }} style={{ background: "none", border: "none", color: "#566257", fontSize: 18, cursor: "pointer" }}>✕</button>
             </div>
             <div>
-              <label style={{ fontSize: 10, color: "#4A5170", display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>Reason (sent to the school admin)</label>
-              <textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} rows={3} placeholder="e.g. Could not verify school registration documents" style={{ width: "100%", padding: "8px 12px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: 13, color: "#CDD6F4", outline: "none", resize: "vertical", boxSizing: "border-box" }} />
+              <label style={{ fontSize: 10, color: "#6E7A6C", display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>Reason (sent to the school admin)</label>
+              <textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} rows={3} placeholder="e.g. Could not verify school registration documents" style={{ width: "100%", padding: "8px 12px", background: "rgba(28,38,32,0.06)", border: "1px solid rgba(28,38,32,0.1)", borderRadius: 8, fontSize: 13, color: "#1C2620", outline: "none", resize: "vertical", boxSizing: "border-box" }} />
             </div>
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-              <button onClick={() => { setRejecting(null); setRejectReason(""); }} style={{ padding: "8px 16px", borderRadius: 8, fontSize: 12, background: "none", border: "1px solid rgba(255,255,255,0.08)", color: "#6B7290", cursor: "pointer" }}>Cancel</button>
-              <button onClick={() => decide(rejecting.id, "rejected", rejectReason)} disabled={deciding || !rejectReason.trim()} style={{ padding: "8px 20px", borderRadius: 8, fontSize: 13, fontWeight: 700, background: "rgba(255,107,107,0.9)", border: "none", color: "#fff", cursor: (deciding || !rejectReason.trim()) ? "not-allowed" : "pointer" }}>{deciding ? "Sending…" : "Reject & notify"}</button>
+              <button onClick={() => { setRejecting(null); setRejectReason(""); }} style={{ padding: "8px 16px", borderRadius: 8, fontSize: 12, background: "none", border: "1px solid rgba(28,38,32,0.08)", color: "#566257", cursor: "pointer" }}>Cancel</button>
+              <button onClick={() => decide(rejecting.id, "rejected", rejectReason)} disabled={deciding || !rejectReason.trim()} style={{ padding: "8px 20px", borderRadius: 8, fontSize: 13, fontWeight: 700, background: "rgba(163,49,30,0.9)", border: "none", color: "#fff", cursor: (deciding || !rejectReason.trim()) ? "not-allowed" : "pointer" }}>{deciding ? "Sending…" : "Reject & notify"}</button>
             </div>
           </div>
         </div>
       )}
 
       {/* Table */}
-      <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, overflow: "hidden" }}>
+      <div style={{ background: "rgba(28,38,32,0.02)", border: "1px solid rgba(28,38,32,0.06)", borderRadius: 16, overflow: "hidden" }}>
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+              <tr style={{ borderBottom: "1px solid rgba(28,38,32,0.05)" }}>
                 {["School", "Province", "Plan", "Status", "Actions"].map((h) => (
-                  <th key={h} style={{ padding: "10px 18px", textAlign: "left", fontSize: 10, fontWeight: 600, color: "#4A5170", letterSpacing: "0.06em", textTransform: "uppercase", whiteSpace: "nowrap" }}>{h}</th>
+                  <th key={h} style={{ padding: "10px 18px", textAlign: "left", fontSize: 10, fontWeight: 600, color: "#6E7A6C", letterSpacing: "0.06em", textTransform: "uppercase", whiteSpace: "nowrap" }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={5} style={{ padding: "40px", textAlign: "center", color: "#4A5170", fontSize: 13 }}>No schools found</td></tr>
+                <tr><td colSpan={5} style={{ padding: "40px", textAlign: "center", color: "#6E7A6C", fontSize: 13 }}>No schools found</td></tr>
               ) : filtered.map((s) => (
-                <tr key={s.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.03)" }}>
+                <tr key={s.id} style={{ borderBottom: "1px solid rgba(28,38,32,0.03)" }}>
                   <td style={{ padding: "14px 18px" }}>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: "#CDD6F4", margin: 0 }}>{s.name}</p>
-                    <p style={{ fontSize: 10, color: "#4A5170", margin: "2px 0 0" }}>{s.district ?? ""}{s.email ? ` · ${s.email}` : ""}</p>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: "#1C2620", margin: 0 }}>{s.name}</p>
+                    <p style={{ fontSize: 10, color: "#6E7A6C", margin: "2px 0 0" }}>{s.district ?? ""}{s.email ? ` · ${s.email}` : ""}</p>
                     {s.status === "rejected" && s.rejection_reason && (
-                      <p style={{ fontSize: 10, color: "#FF6B6B", margin: "2px 0 0" }}>Rejected: {s.rejection_reason}</p>
+                      <p style={{ fontSize: 10, color: "#A3311E", margin: "2px 0 0" }}>Rejected: {s.rejection_reason}</p>
                     )}
                   </td>
-                  <td style={{ padding: "14px 18px", fontSize: 12, color: "#6B7290" }}>{s.province ?? "—"}</td>
+                  <td style={{ padding: "14px 18px", fontSize: 12, color: "#566257" }}>{s.province ?? "—"}</td>
                   <td style={{ padding: "14px 18px" }}>
-                    <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 6, color: "#4D7FFF", background: "rgba(77,127,255,0.1)", border: "1px solid rgba(77,127,255,0.2)", textTransform: "capitalize" }}>{s.subscription_plan}</span>
+                    <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 6, color: "#B1502B", background: "rgba(177,80,43,0.1)", border: "1px solid rgba(177,80,43,0.2)", textTransform: "capitalize" }}>{s.subscription_plan}</span>
                   </td>
                   <td style={{ padding: "14px 18px" }}>
                     <span style={{
                       fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 6, textTransform: "capitalize",
-                      color: s.status === "approved" ? "#00E5A3" : s.status === "rejected" ? "#FF6B6B" : "#F5A623",
-                      background: s.status === "approved" ? "rgba(0,229,163,0.1)" : s.status === "rejected" ? "rgba(255,107,107,0.08)" : "rgba(245,166,35,0.08)",
-                      border: `1px solid ${s.status === "approved" ? "rgba(0,229,163,0.2)" : s.status === "rejected" ? "rgba(255,107,107,0.2)" : "rgba(245,166,35,0.2)"}`,
+                      color: s.status === "approved" ? "#1F4738" : s.status === "rejected" ? "#A3311E" : "#A9873F",
+                      background: s.status === "approved" ? "rgba(31,71,56,0.1)" : s.status === "rejected" ? "rgba(163,49,30,0.08)" : "rgba(169,135,63,0.08)",
+                      border: `1px solid ${s.status === "approved" ? "rgba(31,71,56,0.2)" : s.status === "rejected" ? "rgba(163,49,30,0.2)" : "rgba(169,135,63,0.2)"}`,
                     }}>
                       {s.status === "approved" ? "✓ Approved" : s.status}
                     </span>
                   </td>
                   <td style={{ padding: "14px 18px" }}>
                     <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                      <button onClick={() => openEdit(s)} style={{ padding: "4px 12px", borderRadius: 7, fontSize: 11, fontWeight: 600, background: "rgba(77,127,255,0.1)", border: "1px solid rgba(77,127,255,0.2)", color: "#4D7FFF", cursor: "pointer" }}>Edit</button>
+                      <button onClick={() => openEdit(s)} style={{ padding: "4px 12px", borderRadius: 7, fontSize: 11, fontWeight: 600, background: "rgba(177,80,43,0.1)", border: "1px solid rgba(177,80,43,0.2)", color: "#B1502B", cursor: "pointer" }}>Edit</button>
                       {s.status !== "approved" && (
-                        <button onClick={() => decide(s.id, "approved")} disabled={deciding} style={{ padding: "4px 12px", borderRadius: 7, fontSize: 11, fontWeight: 600, background: "rgba(0,229,163,0.1)", border: "1px solid rgba(0,229,163,0.25)", color: "#00E5A3", cursor: deciding ? "not-allowed" : "pointer" }}>Approve</button>
+                        <button onClick={() => decide(s.id, "approved")} disabled={deciding} style={{ padding: "4px 12px", borderRadius: 7, fontSize: 11, fontWeight: 600, background: "rgba(31,71,56,0.1)", border: "1px solid rgba(31,71,56,0.25)", color: "#1F4738", cursor: deciding ? "not-allowed" : "pointer" }}>Approve</button>
                       )}
                       {s.status !== "rejected" && (
-                        <button onClick={() => setRejecting(s)} disabled={deciding} style={{ padding: "4px 12px", borderRadius: 7, fontSize: 11, fontWeight: 600, background: "rgba(245,166,35,0.08)", border: "1px solid rgba(245,166,35,0.2)", color: "#F5A623", cursor: deciding ? "not-allowed" : "pointer" }}>Reject</button>
+                        <button onClick={() => setRejecting(s)} disabled={deciding} style={{ padding: "4px 12px", borderRadius: 7, fontSize: 11, fontWeight: 600, background: "rgba(169,135,63,0.08)", border: "1px solid rgba(169,135,63,0.2)", color: "#A9873F", cursor: deciding ? "not-allowed" : "pointer" }}>Reject</button>
                       )}
-                      <button onClick={() => deleteSchool(s.id)} style={{ padding: "4px 10px", borderRadius: 7, fontSize: 11, background: "rgba(255,107,107,0.06)", border: "1px solid rgba(255,107,107,0.15)", color: "#FF6B6B", cursor: "pointer" }}>Delete</button>
+                      <button onClick={() => deleteSchool(s.id)} style={{ padding: "4px 10px", borderRadius: 7, fontSize: 11, background: "rgba(163,49,30,0.06)", border: "1px solid rgba(163,49,30,0.15)", color: "#A3311E", cursor: "pointer" }}>Delete</button>
                     </div>
                   </td>
                 </tr>

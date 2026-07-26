@@ -38,19 +38,19 @@ export default async function SchoolClassesPage() {
     <div style={{ maxWidth: 900, display: "flex", flexDirection: "column", gap: 20 }}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", margin: 0 }}>Classes</h2>
-          <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>{classes.length} class{classes.length !== 1 ? "es" : ""} at your school</p>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1C2620", fontFamily: "inherit", margin: 0 }}>Classes</h2>
+          <p style={{ fontSize: 12, color: "#6E7A6C", marginTop: 4 }}>{classes.length} class{classes.length !== 1 ? "es" : ""} at your school</p>
         </div>
         {schoolId && <CreateClassButton schoolId={schoolId} />}
       </div>
 
       {!schoolId ? (
-        <div style={{ background: "rgba(245,166,35,0.08)", border: "1px solid rgba(245,166,35,0.2)", borderRadius: 12, padding: 16, color: "#F5A623", fontSize: 13 }}>
+        <div style={{ background: "rgba(169,135,63,0.08)", border: "1px solid rgba(169,135,63,0.2)", borderRadius: 12, padding: 16, color: "#A9873F", fontSize: 13 }}>
           No school is linked to your account yet.
         </div>
       ) : classes.length === 0 ? (
-        <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: "48px", textAlign: "center" }}>
-          <p style={{ fontSize: 14, color: "#4A5170" }}>No classes created yet.</p>
+        <div style={{ background: "rgba(28,38,32,0.02)", border: "1px solid rgba(28,38,32,0.06)", borderRadius: 16, padding: "48px", textAlign: "center" }}>
+          <p style={{ fontSize: 14, color: "#6E7A6C" }}>No classes created yet.</p>
         </div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 14 }}>

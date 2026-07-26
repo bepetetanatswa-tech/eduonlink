@@ -6,7 +6,7 @@ export default async function OnboardingLayout({ children }: { children: React.R
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
   return (
-    <div className="min-h-screen" style={{ background: "#07080C" }}>
+    <div className="min-h-screen" style={{ background: "#F2EEE3" }}>
       {children}
     </div>
   );

@@ -24,8 +24,8 @@ export default async function SchoolAnnouncementsPage() {
   return (
     <div style={{ maxWidth: 800, display: "flex", flexDirection: "column", gap: 24 }}>
       <div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>Announcements</h2>
-        <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>Post and manage school announcements</p>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1C2620", fontFamily: "inherit", margin: 0 }}>Announcements</h2>
+        <p style={{ fontSize: 12, color: "#6E7A6C", marginTop: 4 }}>Post and manage school announcements</p>
       </div>
 
       <AnnouncementForm
@@ -37,7 +37,7 @@ export default async function SchoolAnnouncementsPage() {
       />
 
       <div>
-        <h3 style={{ fontSize: 15, fontWeight: 600, color: "#CDD6F4", fontFamily: "'Space Grotesk',sans-serif", margin: "0 0 12px" }}>Posted Announcements</h3>
+        <h3 style={{ fontSize: 15, fontWeight: 600, color: "#1C2620", fontFamily: "inherit", margin: "0 0 12px" }}>Posted Announcements</h3>
         <AnnouncementFeed
           profileId={profile.id}
           userRole="school_admin"

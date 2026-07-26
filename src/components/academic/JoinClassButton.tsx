@@ -12,7 +12,7 @@ export function JoinClassButton() {
   const [code, setCode] = useState("");
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const S = { border: "rgba(255,255,255,0.07)", accent: "#4D7FFF", text: "#CDD6F4", muted: "#8892B0", dim: "#4A5170" };
+  const S = { border: "rgba(28,38,32,0.07)", accent: "#B1502B", text: "#1C2620", muted: "#566257", dim: "#6E7A6C" };
 
   async function join() {
     if (!code.trim() || joining) return;
@@ -38,9 +38,9 @@ export function JoinClassButton() {
       </button>
       {open && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
-          <div style={{ background: "#0E1117", border: `1px solid ${S.border}`, borderRadius: 16, padding: 24, width: 320 }}>
+          <div style={{ background: "#F2EEE3", border: `1px solid ${S.border}`, borderRadius: 16, padding: 24, width: 320 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <span style={{ fontSize: 15, fontWeight: 700, color: S.text, fontFamily: "'Space Grotesk',sans-serif" }}>Join a Class</span>
+              <span style={{ fontSize: 15, fontWeight: 700, color: S.text, fontFamily: "inherit" }}>Join a Class</span>
               <button onClick={() => { setOpen(false); setError(null); }} style={{ background: "none", border: "none", color: S.dim, cursor: "pointer", fontSize: 18 }}>✕</button>
             </div>
             <label style={{ fontSize: 12, color: S.muted, display: "block", marginBottom: 6 }}>Enter the join code your teacher shared</label>
@@ -51,10 +51,10 @@ export function JoinClassButton() {
               placeholder="e.g. AB3XQ9"
               maxLength={6}
               autoFocus
-              style={{ width: "100%", background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}`, borderRadius: 8, padding: "10px 12px", fontSize: 18, letterSpacing: "0.15em", textAlign: "center", color: S.text, outline: "none", boxSizing: "border-box", textTransform: "uppercase" }}
+              style={{ width: "100%", background: "rgba(28,38,32,0.04)", border: `1px solid ${S.border}`, borderRadius: 8, padding: "10px 12px", fontSize: 18, letterSpacing: "0.15em", textAlign: "center", color: S.text, outline: "none", boxSizing: "border-box", textTransform: "uppercase" }}
             />
-            {error && <p style={{ fontSize: 12, color: "#FF6B6B", marginTop: 8 }}>{error}</p>}
-            <button onClick={join} disabled={!code.trim() || joining} style={{ width: "100%", padding: "10px", borderRadius: 10, background: !code.trim() ? "rgba(77,127,255,0.3)" : S.accent, border: "none", color: "#fff", cursor: "pointer", fontSize: 14, fontWeight: 600, marginTop: 16 }}>
+            {error && <p style={{ fontSize: 12, color: "#A3311E", marginTop: 8 }}>{error}</p>}
+            <button onClick={join} disabled={!code.trim() || joining} style={{ width: "100%", padding: "10px", borderRadius: 10, background: !code.trim() ? "rgba(177,80,43,0.3)" : S.accent, border: "none", color: "#fff", cursor: "pointer", fontSize: 14, fontWeight: 600, marginTop: 16 }}>
               {joining ? "Joining…" : "Join Class"}
             </button>
           </div>

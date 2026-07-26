@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { getPlan } from "@/lib/subscription/plans";
 import { AdminPaymentQueue } from "./AdminPaymentQueue";
 
-const S = { border: "rgba(255,255,255,0.07)", text: "#CDD6F4", muted: "#8892B0", dim: "#4A5170", accent: "#4D7FFF" };
+const S = { border: "rgba(28,38,32,0.07)", text: "#1C2620", muted: "#566257", dim: "#6E7A6C", accent: "#B1502B" };
 
 interface Pay { id: string; amount: number; status: string; plan_key: string | null; purchase_type: string | null; created_at: string; profile?: { full_name: string; email: string; role: string } | null; transaction_id: string | null; phone_number: string | null; }
 interface Sub { plan_key: string | null; status: string; }
@@ -90,28 +90,28 @@ export function AdminRevenueDashboard() {
       {/* Stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(170px,1fr))", gap: 12 }}>
         {[
-          { label: "Total Revenue", value: `$${totalRevenue.toFixed(2)}`, color: "#00E5A3", sub: "all time" },
+          { label: "Total Revenue", value: `$${totalRevenue.toFixed(2)}`, color: "#1F4738", sub: "all time" },
           { label: "This Month", value: `$${monthlyRevenue.toFixed(2)}`, color: S.accent, sub: new Date().toLocaleString("default", { month: "long" }) },
-          { label: "Active Subscriptions", value: activeCount, color: "#BD93F9", sub: "right now" },
-          { label: "Pending Review", value: pendingCount, color: "#F5A623", sub: "needs approval" },
+          { label: "Active Subscriptions", value: activeCount, color: "#A9873F", sub: "right now" },
+          { label: "Pending Review", value: pendingCount, color: "#A9873F", sub: "needs approval" },
           { label: "Total Transactions", value: payments.length, color: S.muted, sub: "all time" },
         ].map(stat => (
-          <div key={stat.label} style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${S.border}`, borderRadius: 14, padding: "18px 20px" }}>
+          <div key={stat.label} style={{ background: "rgba(28,38,32,0.02)", border: `1px solid ${S.border}`, borderRadius: 14, padding: "18px 20px" }}>
             <p style={{ fontSize: 10, color: S.dim, margin: "0 0 4px", textTransform: "uppercase", letterSpacing: 0.8 }}>{stat.label}</p>
-            <p style={{ fontSize: 26, fontWeight: 800, color: stat.color, fontFamily: "'Space Grotesk',sans-serif", margin: "0 0 2px" }}>{stat.value}</p>
+            <p style={{ fontSize: 26, fontWeight: 800, color: stat.color, fontFamily: "inherit", margin: "0 0 2px" }}>{stat.value}</p>
             <p style={{ fontSize: 10, color: S.dim, margin: 0 }}>{stat.sub}</p>
           </div>
         ))}
       </div>
 
       {/* Revenue chart */}
-      <div style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${S.border}`, borderRadius: 14, padding: "20px 24px" }}>
-        <h3 style={{ fontSize: 14, fontWeight: 600, color: S.text, fontFamily: "'Space Grotesk',sans-serif", margin: "0 0 20px" }}>Monthly Revenue (USD)</h3>
+      <div style={{ background: "rgba(28,38,32,0.02)", border: `1px solid ${S.border}`, borderRadius: 14, padding: "20px 24px" }}>
+        <h3 style={{ fontSize: 14, fontWeight: 600, color: S.text, fontFamily: "inherit", margin: "0 0 20px" }}>Monthly Revenue (USD)</h3>
         <div style={{ display: "flex", gap: 10, alignItems: "flex-end", height: 130, paddingBottom: 6 }}>
           {bars.map(b => (
             <div key={b.month} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
               {b.total > 0 && <span style={{ fontSize: 10, color: S.muted }}>${b.total}</span>}
-              <div style={{ width: "100%", borderRadius: "5px 5px 0 0", height: `${Math.max((b.total / maxBar) * 90, b.total > 0 ? 5 : 2)}px`, background: b.total > 0 ? `linear-gradient(180deg, ${S.accent}, rgba(77,127,255,0.35))` : "rgba(255,255,255,0.05)" }} />
+              <div style={{ width: "100%", borderRadius: "5px 5px 0 0", height: `${Math.max((b.total / maxBar) * 90, b.total > 0 ? 5 : 2)}px`, background: b.total > 0 ? `linear-gradient(180deg, ${S.accent}, rgba(177,80,43,0.35))` : "rgba(28,38,32,0.05)" }} />
               <span style={{ fontSize: 10, color: S.dim }}>{b.month}</span>
             </div>
           ))}
@@ -119,8 +119,8 @@ export function AdminRevenueDashboard() {
       </div>
 
       {/* Plan breakdown */}
-      <div style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${S.border}`, borderRadius: 14, padding: 20 }}>
-        <h3 style={{ fontSize: 14, fontWeight: 600, color: S.text, fontFamily: "'Space Grotesk',sans-serif", margin: "0 0 16px" }}>Active Subscriptions by Plan</h3>
+      <div style={{ background: "rgba(28,38,32,0.02)", border: `1px solid ${S.border}`, borderRadius: 14, padding: 20 }}>
+        <h3 style={{ fontSize: 14, fontWeight: 600, color: S.text, fontFamily: "inherit", margin: "0 0 16px" }}>Active Subscriptions by Plan</h3>
         {Object.keys(byPlan).length === 0 ? (
           <p style={{ fontSize: 13, color: S.dim }}>No active subscriptions yet.</p>
         ) : (
@@ -128,7 +128,7 @@ export function AdminRevenueDashboard() {
             {Object.entries(byPlan).sort((a, b) => b[1] - a[1]).map(([key, count]) => (
               <div key={key} style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <span style={{ fontSize: 12, color: S.muted, minWidth: 170, flexShrink: 0 }}>{getPlan(key).name}</span>
-                <div style={{ flex: 1, height: 8, background: "rgba(255,255,255,0.05)", borderRadius: 4 }}>
+                <div style={{ flex: 1, height: 8, background: "rgba(28,38,32,0.05)", borderRadius: 4 }}>
                   <div style={{ height: "100%", width: `${(count / Math.max(activeCount, 1)) * 100}%`, background: S.accent, borderRadius: 4 }} />
                 </div>
                 <span style={{ fontSize: 12, color: S.accent, fontWeight: 700, minWidth: 28, textAlign: "right" }}>{count}</span>
@@ -139,16 +139,16 @@ export function AdminRevenueDashboard() {
       </div>
 
       {/* Payment queue */}
-      <div style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${S.border}`, borderRadius: 14, padding: 20 }}>
+      <div style={{ background: "rgba(28,38,32,0.02)", border: `1px solid ${S.border}`, borderRadius: 14, padding: 20 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
-          <h3 style={{ fontSize: 14, fontWeight: 600, color: S.text, fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>Payment Verifications</h3>
+          <h3 style={{ fontSize: 14, fontWeight: 600, color: S.text, fontFamily: "inherit", margin: 0 }}>Payment Verifications</h3>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {(["pending", "approved", "rejected"] as QueueTab[]).map(t => (
-              <button key={t} onClick={() => setTab(t)} style={{ padding: "6px 14px", borderRadius: 8, background: tab === t ? S.accent : "rgba(255,255,255,0.04)", border: `1px solid ${tab === t ? S.accent : S.border}`, color: tab === t ? "#fff" : S.dim, fontSize: 12, cursor: "pointer", textTransform: "capitalize" }}>
+              <button key={t} onClick={() => setTab(t)} style={{ padding: "6px 14px", borderRadius: 8, background: tab === t ? S.accent : "rgba(28,38,32,0.04)", border: `1px solid ${tab === t ? S.accent : S.border}`, color: tab === t ? "#fff" : S.dim, fontSize: 12, cursor: "pointer", textTransform: "capitalize" }}>
                 {t}{t === "pending" ? ` (${pendingCount})` : ""}
               </button>
             ))}
-            <button onClick={exportCSV} style={{ padding: "6px 14px", borderRadius: 8, background: "rgba(0,229,163,0.08)", border: "1px solid rgba(0,229,163,0.2)", color: "#00E5A3", fontSize: 12, cursor: "pointer", fontWeight: 600 }}>
+            <button onClick={exportCSV} style={{ padding: "6px 14px", borderRadius: 8, background: "rgba(31,71,56,0.08)", border: "1px solid rgba(31,71,56,0.2)", color: "#1F4738", fontSize: 12, cursor: "pointer", fontWeight: 600 }}>
               ↓ Export CSV
             </button>
           </div>

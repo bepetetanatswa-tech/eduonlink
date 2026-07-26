@@ -4,7 +4,7 @@ import { useState } from "react";
 
 export function JoinCodeBadge({ code }: { code: string }) {
   const [copied, setCopied] = useState(false);
-  const S = { border: "rgba(255,255,255,0.07)", accent: "#4D7FFF" };
+  const S = { border: "rgba(28,38,32,0.07)", accent: "#B1502B" };
 
   const copy = async () => {
     try {

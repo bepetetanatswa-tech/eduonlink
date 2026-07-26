@@ -13,7 +13,7 @@ export interface PickedClass {
   school_name: string;
 }
 
-const S = { border: "rgba(255,255,255,0.07)", text: "#CDD6F4", muted: "#8892B0", dim: "#4A5170", accent: "#4D7FFF" };
+const S = { border: "rgba(28,38,32,0.07)", text: "#1C2620", muted: "#566257", dim: "#6E7A6C", accent: "#B1502B" };
 
 export function ClassPicker({ onSelect }: { onSelect: (cls: PickedClass) => void }) {
   const supabase = createClient();
@@ -56,14 +56,14 @@ export function ClassPicker({ onSelect }: { onSelect: (cls: PickedClass) => void
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Search by class, subject, teacher or school…"
-        style={{ padding: "9px 16px", background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}`, borderRadius: 10, fontSize: 13, color: S.text, outline: "none" }}
+        style={{ padding: "9px 16px", background: "rgba(28,38,32,0.04)", border: `1px solid ${S.border}`, borderRadius: 10, fontSize: 13, color: S.text, outline: "none" }}
       />
       {classes.length === 0 ? (
-        <div style={{ padding: 40, textAlign: "center", color: S.dim, fontSize: 13, background: "rgba(255,255,255,0.02)", border: `1px solid ${S.border}`, borderRadius: 16 }}>
+        <div style={{ padding: 40, textAlign: "center", color: S.dim, fontSize: 13, background: "rgba(28,38,32,0.02)", border: `1px solid ${S.border}`, borderRadius: 16 }}>
           No classes exist on the platform yet.
         </div>
       ) : Object.keys(bySchool).length === 0 ? (
-        <div style={{ padding: 40, textAlign: "center", color: S.dim, fontSize: 13, background: "rgba(255,255,255,0.02)", border: `1px solid ${S.border}`, borderRadius: 16 }}>
+        <div style={{ padding: 40, textAlign: "center", color: S.dim, fontSize: 13, background: "rgba(28,38,32,0.02)", border: `1px solid ${S.border}`, borderRadius: 16 }}>
           No classes match &quot;{search}&quot;.
         </div>
       ) : (
@@ -77,7 +77,7 @@ export function ClassPicker({ onSelect }: { onSelect: (cls: PickedClass) => void
                   onClick={() => onSelect(c)}
                   style={{
                     display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10,
-                    padding: "12px 16px", borderRadius: 12, background: "rgba(255,255,255,0.02)",
+                    padding: "12px 16px", borderRadius: 12, background: "rgba(28,38,32,0.02)",
                     border: `1px solid ${S.border}`, cursor: "pointer", textAlign: "left",
                   }}
                 >

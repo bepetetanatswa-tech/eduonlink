@@ -13,8 +13,8 @@ export default async function StudentLibraryPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>Digital Library</h2>
-        <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>Textbooks, notes, videos and reference material — searchable by subject and level</p>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1C2620", fontFamily: "inherit", margin: 0 }}>Digital Library</h2>
+        <p style={{ fontSize: 12, color: "#6E7A6C", marginTop: 4 }}>Textbooks, notes, videos and reference material — searchable by subject and level</p>
       </div>
       <LibraryBrowser profileId={profile.id} canUpload={false} />
     </div>

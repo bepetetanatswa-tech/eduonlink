@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { BrowseClassEnrollAction } from "@/components/academic/BrowseClassEnrollAction";
 
-const S = { border: "rgba(255,255,255,0.07)", accent: "#4D7FFF", text: "#CDD6F4", muted: "#8892B0", dim: "#4A5170" };
+const S = { border: "rgba(28,38,32,0.07)", accent: "#B1502B", text: "#1C2620", muted: "#566257", dim: "#6E7A6C" };
 
 function initials(name?: string) {
   if (!name) return "?";
@@ -40,33 +40,33 @@ export default async function BrowseClassesPage() {
     <div style={{ maxWidth: 900, display: "flex", flexDirection: "column", gap: 20 }}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
         <div>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: S.text, fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>Browse Classes</h2>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: S.text, fontFamily: "inherit", margin: 0 }}>Browse Classes</h2>
           <p style={{ fontSize: 12, color: S.dim, marginTop: 4 }}>Classes run by independent teachers — join free classes instantly, or enroll and pay for premium ones</p>
         </div>
         <Link href="/student/dashboard/classes" style={{ fontSize: 12, color: S.muted, textDecoration: "none" }}>← My Classes</Link>
       </div>
 
       {classes.length === 0 ? (
-        <div style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${S.border}`, borderRadius: 16, padding: "48px", textAlign: "center" }}>
+        <div style={{ background: "rgba(28,38,32,0.02)", border: `1px solid ${S.border}`, borderRadius: 16, padding: "48px", textAlign: "center" }}>
           <p style={{ fontSize: 14, color: S.dim }}>No independent classes available to join right now. Check back soon.</p>
         </div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))", gap: 14 }}>
           {classes.map((c: any) => (
-            <div key={c.id} style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${S.border}`, borderRadius: 16, padding: "20px", display: "flex", flexDirection: "column", gap: 14 }}>
+            <div key={c.id} style={{ background: "rgba(28,38,32,0.02)", border: `1px solid ${S.border}`, borderRadius: 16, padding: "20px", display: "flex", flexDirection: "column", gap: 14 }}>
               <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                 {c.teacherAvatar ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={c.teacherAvatar} alt={c.teacherName ?? ""} style={{ width: 36, height: 36, borderRadius: 10, objectFit: "cover", flexShrink: 0 }} />
                 ) : (
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#4D7FFF,#2D5BDF)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff", flexShrink: 0 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#B1502B,#8F4022)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff", flexShrink: 0 }}>
                     {initials(c.teacherName)}
                   </div>
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                    <h3 style={{ fontSize: 15, fontWeight: 700, color: S.text, fontFamily: "'Space Grotesk',sans-serif", margin: "0 0 3px" }}>{c.name}</h3>
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 20, color: c.price > 0 ? "#F5A623" : "#00E5A3", background: c.price > 0 ? "rgba(245,166,35,0.1)" : "rgba(0,229,163,0.1)" }}>
+                    <h3 style={{ fontSize: 15, fontWeight: 700, color: S.text, fontFamily: "inherit", margin: "0 0 3px" }}>{c.name}</h3>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 20, color: c.price > 0 ? "#A9873F" : "#1F4738", background: c.price > 0 ? "rgba(169,135,63,0.1)" : "rgba(31,71,56,0.1)" }}>
                       {c.price > 0 ? `$${c.price.toFixed(2)}` : "Free"}
                     </span>
                   </div>

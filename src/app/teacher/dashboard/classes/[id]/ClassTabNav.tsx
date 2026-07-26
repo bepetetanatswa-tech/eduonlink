@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const S = { border: "rgba(255,255,255,0.07)", accent: "#4D7FFF", muted: "#8892B0" };
+const S = { border: "rgba(28,38,32,0.07)", accent: "#B1502B", muted: "#566257" };
 
 const TABS = [
   { key: "chat", label: "Chat" },

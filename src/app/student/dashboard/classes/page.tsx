@@ -78,17 +78,17 @@ export default async function StudentClassesPage() {
     attendanceToday: attendanceByClass.get(c.id) ?? null,
   }));
 
-  const S = { border: "rgba(255,255,255,0.07)", accent: "#4D7FFF", text: "#CDD6F4", muted: "#8892B0", dim: "#4A5170" };
+  const S = { border: "rgba(28,38,32,0.07)", accent: "#B1502B", text: "#1C2620", muted: "#566257", dim: "#6E7A6C" };
 
   return (
     <div style={{ maxWidth: 900, display: "flex", flexDirection: "column", gap: 24 }}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
         <div>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: S.text, fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>My Classes</h2>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: S.text, fontFamily: "inherit", margin: 0 }}>My Classes</h2>
           <p style={{ fontSize: 12, color: S.dim, marginTop: 4 }}>{classes.length} class{classes.length !== 1 ? "es" : ""} enrolled</p>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <Link href="/student/dashboard/classes/browse" style={{ padding: "8px 16px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}`, color: S.text, fontSize: 13, fontWeight: 600, textDecoration: "none" }}>
+          <Link href="/student/dashboard/classes/browse" style={{ padding: "8px 16px", borderRadius: 10, background: "rgba(28,38,32,0.04)", border: `1px solid ${S.border}`, color: S.text, fontSize: 13, fontWeight: 600, textDecoration: "none" }}>
             Browse Classes
           </Link>
           <JoinClassButton />
@@ -96,7 +96,7 @@ export default async function StudentClassesPage() {
       </div>
 
       {enriched.length === 0 ? (
-        <div style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${S.border}`, borderRadius: 16, padding: "48px", textAlign: "center" }}>
+        <div style={{ background: "rgba(28,38,32,0.02)", border: `1px solid ${S.border}`, borderRadius: 16, padding: "48px", textAlign: "center" }}>
           <p style={{ fontSize: 14, color: S.dim }}>You are not enrolled in any classes yet. Ask your teacher for a join code, or ask your school administrator.</p>
         </div>
       ) : (

@@ -9,7 +9,7 @@ interface Course {
   materialCount: number;
 }
 
-const S = { border: "rgba(255,255,255,0.07)", text: "#CDD6F4", muted: "#8892B0", dim: "#4A5170", accent: "#4D7FFF" };
+const S = { border: "rgba(28,38,32,0.07)", text: "#1C2620", muted: "#566257", dim: "#6E7A6C", accent: "#B1502B" };
 
 export function ClassLessonsTeacher({ classId, profileId }: { classId: string; profileId: string }) {
   const supabase = createClient();
@@ -55,15 +55,15 @@ export function ClassLessonsTeacher({ classId, profileId }: { classId: string; p
 
   if (loading) return <p style={{ fontSize: 13, color: S.dim }}>Loading…</p>;
 
-  const inp: React.CSSProperties = { padding: "9px 12px", background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}`, borderRadius: 9, color: S.text, fontSize: 13, outline: "none" };
+  const inp: React.CSSProperties = { padding: "9px 12px", background: "rgba(28,38,32,0.04)", border: `1px solid ${S.border}`, borderRadius: 9, color: S.text, fontSize: 13, outline: "none" };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       <div style={{ display: "flex", gap: 8 }}>
         <select value={picked} onChange={(e) => setPicked(e.target.value)} style={{ ...inp, flex: 1 }}>
-          <option value="" style={{ background: "#0E1117" }}>Attach a published course…</option>
+          <option value="" style={{ background: "#F2EEE3" }}>Attach a published course…</option>
           {allCourses.map((c) => (
-            <option key={c.id} value={c.id} style={{ background: "#0E1117" }}>{c.title} — {c.subject}</option>
+            <option key={c.id} value={c.id} style={{ background: "#F2EEE3" }}>{c.title} — {c.subject}</option>
           ))}
         </select>
         <button onClick={attach} disabled={!picked || saving} style={{ padding: "9px 16px", borderRadius: 9, background: S.accent, border: "none", color: "#fff", fontSize: 13, fontWeight: 600, cursor: picked ? "pointer" : "default", opacity: picked ? 1 : 0.5 }}>
@@ -72,12 +72,12 @@ export function ClassLessonsTeacher({ classId, profileId }: { classId: string; p
       </div>
 
       {attached.length === 0 ? (
-        <div style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${S.border}`, borderRadius: 12, padding: "32px", textAlign: "center" }}>
+        <div style={{ background: "rgba(28,38,32,0.02)", border: `1px solid ${S.border}`, borderRadius: 12, padding: "32px", textAlign: "center" }}>
           <p style={{ color: S.dim, fontSize: 14 }}>No courses attached to this class yet.</p>
         </div>
       ) : (
         attached.map((c) => (
-          <div key={c.id} style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${S.border}`, borderRadius: 12, padding: "12px 16px", display: "flex", alignItems: "center", gap: 12 }}>
+          <div key={c.id} style={{ background: "rgba(28,38,32,0.02)", border: `1px solid ${S.border}`, borderRadius: 12, padding: "12px 16px", display: "flex", alignItems: "center", gap: 12 }}>
             <span style={{ fontSize: 20 }}>{c.thumbnail_emoji}</span>
             <div style={{ flex: 1, minWidth: 0 }}>
               <p style={{ fontSize: 13, fontWeight: 600, color: S.text, margin: 0 }}>{c.title}</p>

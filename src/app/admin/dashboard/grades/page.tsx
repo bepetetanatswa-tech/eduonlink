@@ -12,8 +12,8 @@ export default async function AdminGradesPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>Grade Book</h2>
-        <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>Pick any class platform-wide to view its term grades</p>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1C2620", fontFamily: "inherit", margin: 0 }}>Grade Book</h2>
+        <p style={{ fontSize: 12, color: "#6E7A6C", marginTop: 4 }}>Pick any class platform-wide to view its term grades</p>
       </div>
       <ClassScopedTools feature="grades" />
     </div>

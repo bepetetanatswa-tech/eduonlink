@@ -15,7 +15,7 @@ interface Withdrawal {
 }
 
 const STATUS_COLOR: Record<string, string> = {
-  pending: "#F5A623", approved: "#4D7FFF", paid: "#00E5A3", rejected: "#FF6B6B",
+  pending: "#A9873F", approved: "#B1502B", paid: "#1F4738", rejected: "#A3311E",
 };
 
 export function EarningsClient({
@@ -114,42 +114,42 @@ export function EarningsClient({
     <div style={{ maxWidth: 800, display: "flex", flexDirection: "column", gap: 20 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", margin: 0 }}>Earnings</h2>
-          <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>Revenue from your paid courses and classes, after the platform commission</p>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1C2620", fontFamily: "inherit", margin: 0 }}>Earnings</h2>
+          <p style={{ fontSize: 12, color: "#6E7A6C", marginTop: 4 }}>Revenue from your paid courses and classes, after the platform commission</p>
         </div>
-        <span style={{ fontSize: 11, color: live ? "#00E5A3" : "#4A5170", display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ width: 7, height: 7, borderRadius: "50%", background: live ? "#00E5A3" : "#4A5170" }} />
+        <span style={{ fontSize: 11, color: live ? "#1F4738" : "#6E7A6C", display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ width: 7, height: 7, borderRadius: "50%", background: live ? "#1F4738" : "#6E7A6C" }} />
           {live ? "Live" : "Connecting…"}
         </span>
       </div>
 
-      <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: "18px 20px" }}>
-        <p style={{ fontSize: 11, color: "#4A5170", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.04em" }}>How your earnings are calculated</p>
+      <div style={{ background: "rgba(28,38,32,0.02)", border: "1px solid rgba(28,38,32,0.06)", borderRadius: 16, padding: "18px 20px" }}>
+        <p style={{ fontSize: 11, color: "#6E7A6C", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.04em" }}>How your earnings are calculated</p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 16 }}>
           <div>
-            <p style={{ fontSize: 11, color: "#8892B0", margin: "0 0 4px" }}>Total sales (what students paid)</p>
-            <p style={{ fontSize: 20, fontWeight: 800, color: "#CDD6F4", fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>${localGross.toFixed(2)}</p>
+            <p style={{ fontSize: 11, color: "#566257", margin: "0 0 4px" }}>Total sales (what students paid)</p>
+            <p style={{ fontSize: 20, fontWeight: 800, color: "#1C2620", fontFamily: "inherit", margin: 0 }}>${localGross.toFixed(2)}</p>
           </div>
           <div>
-            <p style={{ fontSize: 11, color: "#8892B0", margin: "0 0 4px" }}>− Platform commission (20%)</p>
-            <p style={{ fontSize: 20, fontWeight: 800, color: "#FF9B6B", fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>−${localCommission.toFixed(2)}</p>
+            <p style={{ fontSize: 11, color: "#566257", margin: "0 0 4px" }}>− Platform commission (20%)</p>
+            <p style={{ fontSize: 20, fontWeight: 800, color: "#A3311E", fontFamily: "inherit", margin: 0 }}>−${localCommission.toFixed(2)}</p>
           </div>
           <div>
-            <p style={{ fontSize: 11, color: "#8892B0", margin: "0 0 4px" }}>= You earned</p>
-            <p style={{ fontSize: 20, fontWeight: 800, color: "#00E5A3", fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>${localEarned.toFixed(2)}</p>
+            <p style={{ fontSize: 11, color: "#566257", margin: "0 0 4px" }}>= You earned</p>
+            <p style={{ fontSize: 20, fontWeight: 800, color: "#1F4738", fontFamily: "inherit", margin: 0 }}>${localEarned.toFixed(2)}</p>
           </div>
         </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
         {[
-          { label: "Total earned (net)", value: localEarned, color: "#CDD6F4" },
-          { label: "Already withdrawn", value: totalWithdrawn, color: "#8892B0" },
-          { label: "Available to withdraw", value: localAvailable, color: "#00E5A3" },
+          { label: "Total earned (net)", value: localEarned, color: "#1C2620" },
+          { label: "Already withdrawn", value: totalWithdrawn, color: "#566257" },
+          { label: "Available to withdraw", value: localAvailable, color: "#1F4738" },
         ].map((s) => (
-          <div key={s.label} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: "16px 18px" }}>
-            <p style={{ fontSize: 11, color: "#4A5170", margin: "0 0 6px" }}>{s.label}</p>
-            <p style={{ fontSize: 22, fontWeight: 800, color: s.color, fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>${s.value.toFixed(2)}</p>
+          <div key={s.label} style={{ background: "rgba(28,38,32,0.02)", border: "1px solid rgba(28,38,32,0.06)", borderRadius: 16, padding: "16px 18px" }}>
+            <p style={{ fontSize: 11, color: "#6E7A6C", margin: "0 0 6px" }}>{s.label}</p>
+            <p style={{ fontSize: 22, fontWeight: 800, color: s.color, fontFamily: "inherit", margin: 0 }}>${s.value.toFixed(2)}</p>
           </div>
         ))}
       </div>
@@ -159,27 +159,27 @@ export function EarningsClient({
           <button
             onClick={() => setShowForm(true)}
             disabled={localAvailable <= 0}
-            style={{ padding: "10px 22px", borderRadius: 10, background: localAvailable > 0 ? "rgba(0,229,163,0.9)" : "rgba(255,255,255,0.05)", border: "none", color: localAvailable > 0 ? "#07080C" : "#4A5170", fontSize: 13, fontWeight: 700, cursor: localAvailable > 0 ? "pointer" : "not-allowed" }}
+            style={{ padding: "10px 22px", borderRadius: 10, background: localAvailable > 0 ? "rgba(31,71,56,0.9)" : "rgba(28,38,32,0.05)", border: "none", color: localAvailable > 0 ? "#F2EEE3" : "#6E7A6C", fontSize: 13, fontWeight: 700, cursor: localAvailable > 0 ? "pointer" : "not-allowed" }}
           >
             Request Withdrawal
           </button>
         ) : (
-          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: 20, display: "flex", flexDirection: "column", gap: 12, maxWidth: 400 }}>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: "#CDD6F4", margin: 0 }}>Request Withdrawal</h3>
-            {error && <p style={{ fontSize: 12, color: "#FF6B6B", margin: 0 }}>{error}</p>}
+          <div style={{ background: "rgba(28,38,32,0.02)", border: "1px solid rgba(28,38,32,0.06)", borderRadius: 16, padding: 20, display: "flex", flexDirection: "column", gap: 12, maxWidth: 400 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: "#1C2620", margin: 0 }}>Request Withdrawal</h3>
+            {error && <p style={{ fontSize: 12, color: "#A3311E", margin: 0 }}>{error}</p>}
             <div>
-              <label style={{ fontSize: 11, color: "#8892B0", display: "block", marginBottom: 5 }}>Amount (USD, max ${localAvailable.toFixed(2)})</label>
+              <label style={{ fontSize: 11, color: "#566257", display: "block", marginBottom: 5 }}>Amount (USD, max ${localAvailable.toFixed(2)})</label>
               <input type="number" min="0" max={localAvailable} step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)}
-                style={{ width: "100%", padding: "9px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 9, color: "#CDD6F4", fontSize: 13, outline: "none", boxSizing: "border-box" }} />
+                style={{ width: "100%", padding: "9px 12px", background: "rgba(28,38,32,0.04)", border: "1px solid rgba(28,38,32,0.08)", borderRadius: 9, color: "#1C2620", fontSize: 13, outline: "none", boxSizing: "border-box" }} />
             </div>
             <div>
-              <label style={{ fontSize: 11, color: "#8892B0", display: "block", marginBottom: 5 }}>EcoCash number to pay out to</label>
+              <label style={{ fontSize: 11, color: "#566257", display: "block", marginBottom: 5 }}>EcoCash number to pay out to</label>
               <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="0771234567"
-                style={{ width: "100%", padding: "9px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 9, color: "#CDD6F4", fontSize: 13, outline: "none", boxSizing: "border-box" }} />
+                style={{ width: "100%", padding: "9px 12px", background: "rgba(28,38,32,0.04)", border: "1px solid rgba(28,38,32,0.08)", borderRadius: 9, color: "#1C2620", fontSize: 13, outline: "none", boxSizing: "border-box" }} />
             </div>
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-              <button onClick={() => setShowForm(false)} style={{ padding: "8px 16px", borderRadius: 8, fontSize: 12, background: "none", border: "1px solid rgba(255,255,255,0.08)", color: "#6B7290", cursor: "pointer" }}>Cancel</button>
-              <button onClick={submitWithdrawal} disabled={submitting} style={{ padding: "8px 20px", borderRadius: 8, fontSize: 13, fontWeight: 700, background: "rgba(0,229,163,0.9)", border: "none", color: "#07080C", cursor: submitting ? "not-allowed" : "pointer" }}>
+              <button onClick={() => setShowForm(false)} style={{ padding: "8px 16px", borderRadius: 8, fontSize: 12, background: "none", border: "1px solid rgba(28,38,32,0.08)", color: "#566257", cursor: "pointer" }}>Cancel</button>
+              <button onClick={submitWithdrawal} disabled={submitting} style={{ padding: "8px 20px", borderRadius: 8, fontSize: 13, fontWeight: 700, background: "rgba(31,71,56,0.9)", border: "none", color: "#F2EEE3", cursor: submitting ? "not-allowed" : "pointer" }}>
                 {submitting ? "Submitting…" : "Submit Request"}
               </button>
             </div>
@@ -188,16 +188,16 @@ export function EarningsClient({
       </div>
 
       <div>
-        <p style={{ fontSize: 13, fontWeight: 600, color: "#8892B0", marginBottom: 8 }}>Withdrawal history</p>
+        <p style={{ fontSize: 13, fontWeight: 600, color: "#566257", marginBottom: 8 }}>Withdrawal history</p>
         {localWithdrawals.length === 0 ? (
-          <p style={{ fontSize: 12, color: "#4A5170" }}>No withdrawal requests yet.</p>
+          <p style={{ fontSize: 12, color: "#6E7A6C" }}>No withdrawal requests yet.</p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {localWithdrawals.map((w) => (
-              <div key={w.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10 }}>
+              <div key={w.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: "rgba(28,38,32,0.02)", border: "1px solid rgba(28,38,32,0.06)", borderRadius: 10 }}>
                 <div>
-                  <p style={{ fontSize: 13, color: "#CDD6F4", margin: 0 }}>${w.amount.toFixed(2)} → {w.payout_phone}</p>
-                  <p style={{ fontSize: 11, color: "#4A5170", margin: "2px 0 0" }}>{new Date(w.requested_at).toLocaleDateString()}{w.rejection_reason ? ` · ${w.rejection_reason}` : ""}</p>
+                  <p style={{ fontSize: 13, color: "#1C2620", margin: 0 }}>${w.amount.toFixed(2)} → {w.payout_phone}</p>
+                  <p style={{ fontSize: 11, color: "#6E7A6C", margin: "2px 0 0" }}>{new Date(w.requested_at).toLocaleDateString()}{w.rejection_reason ? ` · ${w.rejection_reason}` : ""}</p>
                 </div>
                 <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 6, textTransform: "capitalize", color: STATUS_COLOR[w.status], background: `${STATUS_COLOR[w.status]}18`, border: `1px solid ${STATUS_COLOR[w.status]}35` }}>
                   {w.status}
@@ -209,18 +209,18 @@ export function EarningsClient({
       </div>
 
       <div>
-        <p style={{ fontSize: 13, fontWeight: 600, color: "#8892B0", marginBottom: 8 }}>Recent sales</p>
+        <p style={{ fontSize: 13, fontWeight: 600, color: "#566257", marginBottom: 8 }}>Recent sales</p>
         {localSales.length === 0 ? (
-          <p style={{ fontSize: 12, color: "#4A5170" }}>No sales yet. Set a price on a course or independent class to start earning.</p>
+          <p style={{ fontSize: 12, color: "#6E7A6C" }}>No sales yet. Set a price on a course or independent class to start earning.</p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {localSales.map((s) => (
-              <div key={s.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10 }}>
+              <div key={s.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: "rgba(28,38,32,0.02)", border: "1px solid rgba(28,38,32,0.06)", borderRadius: 10 }}>
                 <div>
-                  <p style={{ fontSize: 13, color: "#CDD6F4", margin: 0 }}>{s.label}</p>
-                  <p style={{ fontSize: 11, color: "#4A5170", margin: "2px 0 0" }}>{new Date(s.created_at).toLocaleDateString()} · sold for ${s.amount_paid.toFixed(2)}, {s.platform_fee_pct}% fee</p>
+                  <p style={{ fontSize: 13, color: "#1C2620", margin: 0 }}>{s.label}</p>
+                  <p style={{ fontSize: 11, color: "#6E7A6C", margin: "2px 0 0" }}>{new Date(s.created_at).toLocaleDateString()} · sold for ${s.amount_paid.toFixed(2)}, {s.platform_fee_pct}% fee</p>
                 </div>
-                <p style={{ fontSize: 13, fontWeight: 700, color: "#00E5A3", margin: 0 }}>+${s.teacher_earning_amount.toFixed(2)}</p>
+                <p style={{ fontSize: 13, fontWeight: 700, color: "#1F4738", margin: 0 }}>+${s.teacher_earning_amount.toFixed(2)}</p>
               </div>
             ))}
           </div>

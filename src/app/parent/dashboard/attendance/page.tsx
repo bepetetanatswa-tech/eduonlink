@@ -17,13 +17,13 @@ export default async function ParentAttendancePage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       <div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>Attendance</h2>
-        <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>Your child&apos;s attendance record, updated as teachers mark it</p>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1C2620", fontFamily: "inherit", margin: 0 }}>Attendance</h2>
+        <p style={{ fontSize: 12, color: "#6E7A6C", marginTop: 4 }}>Your child&apos;s attendance record, updated as teachers mark it</p>
       </div>
 
       {children.length === 0 ? (
-        <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14, padding: "40px", textAlign: "center" }}>
-          <p style={{ fontSize: 14, color: "#4A5170" }}>No children linked to your account. Contact your school admin.</p>
+        <div style={{ background: "rgba(28,38,32,0.02)", border: "1px solid rgba(28,38,32,0.06)", borderRadius: 14, padding: "40px", textAlign: "center" }}>
+          <p style={{ fontSize: 14, color: "#6E7A6C" }}>No children linked to your account. Contact your school admin.</p>
         </div>
       ) : (
         children.map((child: { id: string; full_name: string }) => (

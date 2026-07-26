@@ -58,24 +58,24 @@ export function DocumentUpload({ category, ids, label, hint, currentKey, onUploa
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-sm font-medium" style={{ color: "#8892B0" }}>{label}</label>
+      <label className="text-sm font-medium" style={{ color: "#566257" }}>{label}</label>
       <div
         onClick={() => inputRef.current?.click()}
         className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl cursor-pointer transition-colors"
         style={{
-          background: "rgba(255,255,255,0.04)",
-          border: `1px solid ${fileName ? "rgba(0,229,163,0.3)" : "rgba(255,255,255,0.08)"}`,
+          background: "rgba(28,38,32,0.04)",
+          border: `1px solid ${fileName ? "rgba(31,71,56,0.3)" : "rgba(28,38,32,0.08)"}`,
         }}
       >
-        <span className="text-sm truncate" style={{ color: fileName ? "#00E5A3" : "#4A5170" }}>
+        <span className="text-sm truncate" style={{ color: fileName ? "#1F4738" : "#6E7A6C" }}>
           {uploading ? "Uploading…" : fileName ? `✓ ${fileName}` : "Click to upload a file"}
         </span>
-        <span className="text-xs font-semibold flex-shrink-0" style={{ color: "#4D7FFF" }}>
+        <span className="text-xs font-semibold flex-shrink-0" style={{ color: "#B1502B" }}>
           {fileName ? "Replace" : "Choose file"}
         </span>
       </div>
-      {hint && <p className="text-xs" style={{ color: "#4A5170" }}>{hint}</p>}
-      {error && <p className="text-xs" style={{ color: "#FF6B6B" }}>{error}</p>}
+      {hint && <p className="text-xs" style={{ color: "#6E7A6C" }}>{hint}</p>}
+      {error && <p className="text-xs" style={{ color: "#A3311E" }}>{error}</p>}
       <input
         ref={inputRef}
         type="file"

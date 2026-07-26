@@ -4,10 +4,10 @@ import { createClient } from "@/lib/supabase/server";
 
 interface Props { params: Promise<{ id: string }> }
 
-const S = { border: "rgba(255,255,255,0.07)", text: "#CDD6F4", muted: "#8892B0", dim: "#4A5170" };
+const S = { border: "rgba(28,38,32,0.07)", text: "#1C2620", muted: "#566257", dim: "#6E7A6C" };
 
 const ATTENDANCE_COLOR: Record<string, string> = {
-  present: "#00E5A3", absent: "#FF6B6B", late: "#F5A623", excused: "#4D7FFF",
+  present: "#1F4738", absent: "#A3311E", late: "#A9873F", excused: "#B1502B",
 };
 
 function initials(name: string) {
@@ -53,19 +53,19 @@ export default async function TeacherClassStudentsPage({ params }: Props) {
       <p style={{ fontSize: 12, color: S.dim, margin: 0 }}>{students.length} student{students.length !== 1 ? "s" : ""} enrolled</p>
 
       {students.length === 0 ? (
-        <div style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${S.border}`, borderRadius: 12, padding: "32px", textAlign: "center" }}>
+        <div style={{ background: "rgba(28,38,32,0.02)", border: `1px solid ${S.border}`, borderRadius: 12, padding: "32px", textAlign: "center" }}>
           <p style={{ color: S.dim, fontSize: 14 }}>No enrolled students.</p>
         </div>
       ) : (
         students.map((s: any) => {
           const status = attendanceByStudent.get(s.id);
           return (
-            <div key={s.id} style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${S.border}`, borderRadius: 12, padding: "12px 16px", display: "flex", alignItems: "center", gap: 12 }}>
+            <div key={s.id} style={{ background: "rgba(28,38,32,0.02)", border: `1px solid ${S.border}`, borderRadius: 12, padding: "12px 16px", display: "flex", alignItems: "center", gap: 12 }}>
               {s.avatar_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={s.avatar_url} alt={s.full_name} style={{ width: 36, height: 36, borderRadius: 10, objectFit: "cover", flexShrink: 0 }} />
               ) : (
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#4D7FFF,#2D5BDF)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff", flexShrink: 0 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#B1502B,#8F4022)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff", flexShrink: 0 }}>
                   {initials(s.full_name)}
                 </div>
               )}

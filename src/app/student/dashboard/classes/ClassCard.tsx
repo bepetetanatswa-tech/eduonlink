@@ -15,10 +15,10 @@ interface ClassInfo {
   attendanceToday?: string | null;
 }
 
-const S = { border: "rgba(255,255,255,0.07)", accent: "#4D7FFF", text: "#CDD6F4", muted: "#8892B0", dim: "#4A5170" };
+const S = { border: "rgba(28,38,32,0.07)", accent: "#B1502B", text: "#1C2620", muted: "#566257", dim: "#6E7A6C" };
 
 const ATTENDANCE_COLOR: Record<string, string> = {
-  present: "#00E5A3", absent: "#FF6B6B", late: "#F5A623", excused: "#4D7FFF",
+  present: "#1F4738", absent: "#A3311E", late: "#A9873F", excused: "#B1502B",
 };
 
 function initials(name?: string) {
@@ -49,7 +49,7 @@ function timeAgo(iso: string) {
 
 export function ClassCard({ c }: { c: ClassInfo }) {
   return (
-    <div style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${S.border}`, borderRadius: 16, padding: "20px", display: "flex", flexDirection: "column", gap: 14, transition: "border-color 0.15s" }}
+    <div style={{ background: "rgba(28,38,32,0.02)", border: `1px solid ${S.border}`, borderRadius: 16, padding: "20px", display: "flex", flexDirection: "column", gap: 14, transition: "border-color 0.15s" }}
       onMouseEnter={(e) => (e.currentTarget.style.borderColor = `${S.accent}40`)}
       onMouseLeave={(e) => (e.currentTarget.style.borderColor = S.border)}>
       <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
@@ -57,12 +57,12 @@ export function ClassCard({ c }: { c: ClassInfo }) {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={c.teacherAvatar} alt={c.teacherName ?? ""} style={{ width: 36, height: 36, borderRadius: 10, objectFit: "cover", flexShrink: 0 }} />
         ) : (
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#4D7FFF,#2D5BDF)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff", flexShrink: 0 }}>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#B1502B,#8F4022)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff", flexShrink: 0 }}>
             {initials(c.teacherName)}
           </div>
         )}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <h3 style={{ fontSize: 15, fontWeight: 700, color: S.text, fontFamily: "'Space Grotesk',sans-serif", margin: "0 0 3px" }}>{c.name}</h3>
+          <h3 style={{ fontSize: 15, fontWeight: 700, color: S.text, fontFamily: "inherit", margin: "0 0 3px" }}>{c.name}</h3>
           {c.subject && <p style={{ fontSize: 12, color: S.muted, margin: 0 }}>{c.subject}{c.grade_level ? ` · Grade ${c.grade_level}` : ""}</p>}
           {c.teacherName && <p style={{ fontSize: 11, color: S.dim, marginTop: 3 }}>{c.teacherName}</p>}
         </div>
@@ -75,7 +75,7 @@ export function ClassCard({ c }: { c: ClassInfo }) {
 
       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
         {c.nextSessionAt && (
-          <p style={{ fontSize: 11, color: "#00E5A3", margin: 0 }}>● Next live: {formatWhen(c.nextSessionAt)}</p>
+          <p style={{ fontSize: 11, color: "#1F4738", margin: 0 }}>● Next live: {formatWhen(c.nextSessionAt)}</p>
         )}
         {c.lastActivityAt && (
           <p style={{ fontSize: 11, color: S.dim, margin: 0 }}>Last activity {timeAgo(c.lastActivityAt)}</p>
@@ -92,14 +92,14 @@ export function ClassCard({ c }: { c: ClassInfo }) {
           <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
           Chat
         </Link>
-        <Link href={`/student/dashboard/classes/${c.id}/live`} style={{ flex: "1 1 40%", padding: "8px", borderRadius: 8, background: "rgba(0,229,163,0.1)", border: "1px solid rgba(0,229,163,0.25)", color: "#00E5A3", fontSize: 12, fontWeight: 600, textAlign: "center", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+        <Link href={`/student/dashboard/classes/${c.id}/live`} style={{ flex: "1 1 40%", padding: "8px", borderRadius: 8, background: "rgba(31,71,56,0.1)", border: "1px solid rgba(31,71,56,0.25)", color: "#1F4738", fontSize: 12, fontWeight: 600, textAlign: "center", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
           <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
           Live
         </Link>
-        <Link href={`/student/dashboard/classes/${c.id}/lessons`} style={{ flex: "1 1 40%", padding: "8px", borderRadius: 8, background: "rgba(189,147,249,0.1)", border: "1px solid rgba(189,147,249,0.25)", color: "#BD93F9", fontSize: 12, fontWeight: 600, textAlign: "center", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+        <Link href={`/student/dashboard/classes/${c.id}/lessons`} style={{ flex: "1 1 40%", padding: "8px", borderRadius: 8, background: "rgba(169,135,63,0.1)", border: "1px solid rgba(169,135,63,0.25)", color: "#A9873F", fontSize: 12, fontWeight: 600, textAlign: "center", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
           Lessons
         </Link>
-        <Link href={`/student/dashboard/classes/${c.id}/assignments`} style={{ flex: "1 1 40%", padding: "8px", borderRadius: 8, background: "rgba(245,166,35,0.1)", border: "1px solid rgba(245,166,35,0.25)", color: "#F5A623", fontSize: 12, fontWeight: 600, textAlign: "center", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+        <Link href={`/student/dashboard/classes/${c.id}/assignments`} style={{ flex: "1 1 40%", padding: "8px", borderRadius: 8, background: "rgba(169,135,63,0.1)", border: "1px solid rgba(169,135,63,0.25)", color: "#A9873F", fontSize: 12, fontWeight: 600, textAlign: "center", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
           Assignments
         </Link>
       </div>

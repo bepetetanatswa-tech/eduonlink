@@ -19,10 +19,10 @@ export default async function ParentGradesPage() {
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <div>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>Report Cards</h2>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1C2620", fontFamily: "inherit", margin: 0 }}>Report Cards</h2>
         </div>
-        <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14, padding: "40px", textAlign: "center" }}>
-          <p style={{ fontSize: 14, color: "#4A5170" }}>No children linked to your account. Contact your school admin.</p>
+        <div style={{ background: "rgba(28,38,32,0.02)", border: "1px solid rgba(28,38,32,0.06)", borderRadius: 14, padding: "40px", textAlign: "center" }}>
+          <p style={{ fontSize: 14, color: "#6E7A6C" }}>No children linked to your account. Contact your school admin.</p>
         </div>
       </div>
     );
@@ -31,12 +31,12 @@ export default async function ParentGradesPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       <div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>Report Cards</h2>
-        <p style={{ fontSize: 12, color: "#4A5170", marginTop: 4 }}>View your child&apos;s grades and teacher comments</p>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1C2620", fontFamily: "inherit", margin: 0 }}>Report Cards</h2>
+        <p style={{ fontSize: 12, color: "#6E7A6C", marginTop: 4 }}>View your child&apos;s grades and teacher comments</p>
       </div>
       {children.map((child: { id: string; full_name: string }) => (
         <div key={child.id}>
-          <h3 style={{ fontSize: 15, fontWeight: 600, color: "#CDD6F4", fontFamily: "'Space Grotesk',sans-serif", margin: "0 0 12px" }}>{child.full_name}</h3>
+          <h3 style={{ fontSize: 15, fontWeight: 600, color: "#1C2620", fontFamily: "inherit", margin: "0 0 12px" }}>{child.full_name}</h3>
           <StudentGrades profileId={child.id} parentView />
         </div>
       ))}

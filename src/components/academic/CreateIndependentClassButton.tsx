@@ -7,8 +7,8 @@ const GRADE_LEVELS = [
   "Form 1", "Form 2", "Form 3", "Form 4", "Form 5", "Form 6",
 ];
 
-const S = { border: "rgba(255,255,255,0.07)", accent: "#4D7FFF", text: "#CDD6F4", muted: "#8892B0", dim: "#4A5170" };
-const inp: React.CSSProperties = { width: "100%", padding: "9px 12px", background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}`, borderRadius: 9, color: S.text, fontSize: 13, outline: "none", boxSizing: "border-box" };
+const S = { border: "rgba(28,38,32,0.07)", accent: "#B1502B", text: "#1C2620", muted: "#566257", dim: "#6E7A6C" };
+const inp: React.CSSProperties = { width: "100%", padding: "9px 12px", background: "rgba(28,38,32,0.04)", border: `1px solid ${S.border}`, borderRadius: 9, color: S.text, fontSize: 13, outline: "none", boxSizing: "border-box" };
 
 export function CreateIndependentClassButton() {
   const router = useRouter();
@@ -62,25 +62,25 @@ export function CreateIndependentClassButton() {
       </button>
       {open && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-          <div style={{ background: "#0E1117", border: `1px solid ${S.border}`, borderRadius: 18, padding: 28, width: "100%", maxWidth: 440, display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ background: "#F2EEE3", border: `1px solid ${S.border}`, borderRadius: 18, padding: 28, width: "100%", maxWidth: 440, display: "flex", flexDirection: "column", gap: 14 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h3 style={{ fontSize: 15, fontWeight: 700, color: S.text, fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>New Class</h3>
+              <h3 style={{ fontSize: 15, fontWeight: 700, color: S.text, fontFamily: "inherit", margin: 0 }}>New Class</h3>
               <button onClick={close} style={{ background: "none", border: "none", color: S.dim, cursor: "pointer", fontSize: 18 }}>✕</button>
             </div>
 
             {created ? (
               <>
-                <p style={{ fontSize: 13, color: "#00E5A3", margin: 0 }}>✓ Class created</p>
+                <p style={{ fontSize: 13, color: "#1F4738", margin: 0 }}>✓ Class created</p>
                 {created.price > 0 ? (
-                  <div style={{ background: "rgba(245,166,35,0.08)", border: "1px solid rgba(245,166,35,0.2)", borderRadius: 10, padding: 16, textAlign: "center" }}>
+                  <div style={{ background: "rgba(169,135,63,0.08)", border: "1px solid rgba(169,135,63,0.2)", borderRadius: 10, padding: 16, textAlign: "center" }}>
                     <p style={{ fontSize: 11, color: S.muted, margin: "0 0 6px" }}>Price per student</p>
-                    <p style={{ fontSize: 24, fontWeight: 700, color: "#F5A623", fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>${created.price.toFixed(2)}</p>
+                    <p style={{ fontSize: 24, fontWeight: 700, color: "#A9873F", fontFamily: "inherit", margin: 0 }}>${created.price.toFixed(2)}</p>
                     <p style={{ fontSize: 11, color: S.dim, margin: "8px 0 0" }}>Students enroll and pay via the Browse Classes page — join codes don&apos;t work for paid classes.</p>
                   </div>
                 ) : (
-                  <div style={{ background: "rgba(77,127,255,0.08)", border: "1px solid rgba(77,127,255,0.2)", borderRadius: 10, padding: 16, textAlign: "center" }}>
+                  <div style={{ background: "rgba(177,80,43,0.08)", border: "1px solid rgba(177,80,43,0.2)", borderRadius: 10, padding: 16, textAlign: "center" }}>
                     <p style={{ fontSize: 11, color: S.muted, margin: "0 0 6px" }}>Student join code</p>
-                    <p style={{ fontSize: 24, fontWeight: 700, letterSpacing: "0.15em", color: S.accent, fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>{created.joinCode}</p>
+                    <p style={{ fontSize: 24, fontWeight: 700, letterSpacing: "0.15em", color: S.accent, fontFamily: "inherit", margin: 0 }}>{created.joinCode}</p>
                   </div>
                 )}
                 <p style={{ fontSize: 11, color: S.dim, margin: 0 }}>Students can also find this class from the Browse Classes page.</p>
@@ -100,7 +100,7 @@ export function CreateIndependentClassButton() {
                   <div>
                     <label style={{ fontSize: 11, fontWeight: 600, color: S.muted, display: "block", marginBottom: 5 }}>Grade Level</label>
                     <select value={gradeLevel} onChange={e => setGradeLevel(e.target.value)} style={{ ...inp, cursor: "pointer" }}>
-                      {GRADE_LEVELS.map(g => <option key={g} value={g} style={{ background: "#0E1117" }}>{g}</option>)}
+                      {GRADE_LEVELS.map(g => <option key={g} value={g} style={{ background: "#F2EEE3" }}>{g}</option>)}
                     </select>
                   </div>
                   <div>
@@ -113,7 +113,7 @@ export function CreateIndependentClassButton() {
                   <input value={price} onChange={e => setPrice(e.target.value)} type="number" min={0} step="0.01" placeholder="0" style={inp} />
                   <p style={{ fontSize: 11, color: S.dim, marginTop: 5 }}>Leave at 0 for a free class with instant join-code enrollment. A price requires students to pay and wait for approval.</p>
                 </div>
-                {error && <p style={{ fontSize: 12, color: "#FF6B6B", margin: 0 }}>{error}</p>}
+                {error && <p style={{ fontSize: 12, color: "#A3311E", margin: 0 }}>{error}</p>}
                 <button onClick={create} disabled={!name.trim() || !subject.trim() || saving}
                   style={{ padding: "10px", borderRadius: 10, background: S.accent, border: "none", color: "#fff", cursor: "pointer", fontSize: 14, fontWeight: 600, opacity: (!name.trim() || !subject.trim() || saving) ? 0.5 : 1 }}>
                   {saving ? "Creating…" : "Create Class"}

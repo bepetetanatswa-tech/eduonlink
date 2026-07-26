@@ -5,10 +5,10 @@ import { CourseAccessGate } from "@/components/academic/CourseAccessGate";
 
 interface Props { params: Promise<{ id: string }> }
 
-const S = { border: "rgba(255,255,255,0.07)", text: "#CDD6F4", muted: "#8892B0", dim: "#4A5170" };
+const S = { border: "rgba(28,38,32,0.07)", text: "#1C2620", muted: "#566257", dim: "#6E7A6C" };
 const SUBJECT_COLORS: Record<string, string> = {
-  Mathematics: "#4D7FFF", "English Language": "#00E5A3", Chemistry: "#FF6B6B", Physics: "#4D7FFF",
-  Biology: "#00E5A3", History: "#F5A623", Geography: "#00B4D8", default: "#BD93F9",
+  Mathematics: "#B1502B", "English Language": "#1F4738", Chemistry: "#A3311E", Physics: "#B1502B",
+  Biology: "#1F4738", History: "#A9873F", Geography: "#00B4D8", default: "#A9873F",
 };
 
 export default async function StudentClassLessonsPage({ params }: Props) {
@@ -44,7 +44,7 @@ export default async function StudentClassLessonsPage({ params }: Props) {
 
   if (courses.length === 0) {
     return (
-      <div style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${S.border}`, borderRadius: 16, padding: "48px 24px", textAlign: "center" }}>
+      <div style={{ background: "rgba(28,38,32,0.02)", border: `1px solid ${S.border}`, borderRadius: 16, padding: "48px 24px", textAlign: "center" }}>
         <p style={{ fontSize: 14, color: S.dim }}>No lessons attached to this class yet. Your teacher will add them here.</p>
       </div>
     );
@@ -58,12 +58,12 @@ export default async function StudentClassLessonsPage({ params }: Props) {
         const pct = mats.length > 0 ? Math.round((done / mats.length) * 100) : 0;
         const accentColor = SUBJECT_COLORS[c.subject] ?? SUBJECT_COLORS.default;
         return (
-          <div key={c.id} style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${S.border}`, borderRadius: 18, overflow: "hidden" }}>
-            <div style={{ padding: "16px 18px 12px", background: `${accentColor}08`, borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+          <div key={c.id} style={{ background: "rgba(28,38,32,0.02)", border: `1px solid ${S.border}`, borderRadius: 18, overflow: "hidden" }}>
+            <div style={{ padding: "16px 18px 12px", background: `${accentColor}08`, borderBottom: "1px solid rgba(28,38,32,0.05)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ fontSize: 22 }}>{c.thumbnail_emoji}</span>
                 <div>
-                  <p style={{ fontSize: 14, fontWeight: 700, color: S.text, fontFamily: "'Space Grotesk',sans-serif", margin: 0 }}>{c.title}</p>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: S.text, fontFamily: "inherit", margin: 0 }}>{c.title}</p>
                   <p style={{ fontSize: 11, color: S.dim, margin: "2px 0 0" }}>{c.subject}{c.grade_level ? ` · Grade ${c.grade_level}` : ""}</p>
                 </div>
               </div>
@@ -71,10 +71,10 @@ export default async function StudentClassLessonsPage({ params }: Props) {
                 <div style={{ marginTop: 10 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
                     <span style={{ fontSize: 10, color: S.dim }}>Progress</span>
-                    <span style={{ fontSize: 10, fontWeight: 600, color: pct === 100 ? "#00E5A3" : S.text }}>{done}/{mats.length} · {pct}%</span>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: pct === 100 ? "#1F4738" : S.text }}>{done}/{mats.length} · {pct}%</span>
                   </div>
-                  <div style={{ height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 2 }}>
-                    <div style={{ height: "100%", width: `${pct}%`, background: pct === 100 ? "#00E5A3" : accentColor, borderRadius: 2 }} />
+                  <div style={{ height: 4, background: "rgba(28,38,32,0.06)", borderRadius: 2 }}>
+                    <div style={{ height: "100%", width: `${pct}%`, background: pct === 100 ? "#1F4738" : accentColor, borderRadius: 2 }} />
                   </div>
                 </div>
               )}

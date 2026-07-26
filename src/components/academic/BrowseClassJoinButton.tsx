@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-const S = { accent: "#4D7FFF", dim: "#4A5170" };
+const S = { accent: "#B1502B", dim: "#6E7A6C" };
 
 export function BrowseClassJoinButton({ joinCode }: { joinCode: string }) {
   const supabase = createClient();
@@ -34,7 +34,7 @@ export function BrowseClassJoinButton({ joinCode }: { joinCode: string }) {
         style={{ width: "100%", padding: "8px", borderRadius: 8, background: `${S.accent}15`, border: `1px solid ${S.accent}30`, color: S.accent, fontSize: 12, fontWeight: 600, cursor: "pointer", opacity: joining ? 0.6 : 1 }}>
         {joining ? "Joining…" : "Join Class"}
       </button>
-      {error && <p style={{ fontSize: 11, color: "#FF6B6B", marginTop: 6 }}>{error}</p>}
+      {error && <p style={{ fontSize: 11, color: "#A3311E", marginTop: 6 }}>{error}</p>}
     </div>
   );
 }

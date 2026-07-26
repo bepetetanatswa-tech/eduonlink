@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { StatCard } from "@/components/dashboard/StatCard";
+import { IconFamily, IconSchool, IconChip, IconCoins } from "@/components/icons";
 
 function timeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
@@ -14,13 +15,23 @@ function timeAgo(iso: string) {
 }
 
 const ROLE_COLOR: Record<string, string> = {
-  super_admin: "#F5A623", school_admin: "#4D7FFF", teacher: "#00E5A3",
-  student: "#BD93F9", parent: "#FF9A3C",
+  super_admin: "#A9873F", school_admin: "#B1502B", teacher: "#1F4738",
+  student: "#566257", parent: "#3E4A41",
 };
 const ROLE_LABEL: Record<string, string> = {
   super_admin: "Super Admin", school_admin: "School Admin",
   teacher: "Teacher", student: "Student", parent: "Parent",
 };
+
+const QUICK_ACTIONS = [
+  { label: "User management", href: "/admin/dashboard/users" },
+  { label: "School management", href: "/admin/dashboard/schools" },
+  { label: "Verify payments", href: "/admin/dashboard/payments" },
+  { label: "AI monitor", href: "/admin/dashboard/ai" },
+  { label: "Analytics", href: "/admin/dashboard/analytics" },
+  { label: "Broadcast", href: "/admin/dashboard/broadcast" },
+  { label: "Platform settings", href: "/admin/dashboard/settings" },
+];
 
 export default async function AdminOverviewPage() {
   const supabase = await createClient();
@@ -68,97 +79,86 @@ export default async function AdminOverviewPage() {
   }
 
   return (
-    <div style={{ maxWidth: 1200, display: "flex", flexDirection: "column", gap: "24px" }}>
+    <div className="max-w-[1200px] flex flex-col gap-6">
       {/* Welcome */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 style={{ fontSize: "22px", fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif" }}>
-            God-Mode Overview ⚡
-          </h2>
-          <p style={{ fontSize: "13px", color: "#4A5170", marginTop: 2 }}>
+          <h2 className="font-display font-semibold text-xl text-edu-ink">Platform overview</h2>
+          <p className="text-[13px] text-edu-slate-500 mt-0.5">
             Everything happening on the EduOnLink platform, right now.
           </p>
         </div>
-        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-          <Link href="/admin/dashboard/users" style={{
-            padding: "8px 16px", borderRadius: "10px", fontSize: "12px", fontWeight: 600,
-            background: "rgba(77,127,255,0.15)", border: "1px solid rgba(77,127,255,0.25)",
-            color: "#4D7FFF", textDecoration: "none",
-          }}>
-            Manage Users
+        <div className="flex gap-2 flex-wrap">
+          <Link href="/admin/dashboard/users" className="btn-primary py-2 px-4 text-xs">
+            Manage users
           </Link>
           {!!pendingPayments && (
-            <Link href="/admin/dashboard/payments" style={{
-              padding: "8px 16px", borderRadius: "10px", fontSize: "12px", fontWeight: 600,
-              background: "rgba(245,166,35,0.15)", border: "1px solid rgba(245,166,35,0.3)",
-              color: "#F5A623", textDecoration: "none",
-            }}>
-              {pendingPayments} Pending Payments
+            <Link href="/admin/dashboard/payments" className="btn-gold py-2 px-4 text-xs">
+              {pendingPayments} pending payments
             </Link>
           )}
         </div>
       </div>
 
       {/* Stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "16px" }}>
-        <StatCard label="Total Users" value={totalUsers ?? 0} subtitle="All registered accounts"
-          accentColor="#4D7FFF" trend={{ value: recentSignups ?? 0, label: "new this week" }}
-          icon={<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>}
+      <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))" }}>
+        <StatCard label="Total users" value={totalUsers ?? 0} subtitle="All registered accounts"
+          accentColor="#B1502B" trend={{ value: recentSignups ?? 0, label: "new this week" }}
+          icon={<IconFamily size={18} />}
         />
-        <StatCard label="Partner Schools" value={totalSchools ?? 0} subtitle="Registered institutions"
-          accentColor="#00E5A3"
-          icon={<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
+        <StatCard label="Partner schools" value={totalSchools ?? 0} subtitle="Registered institutions"
+          accentColor="#1F4738" icon={<IconSchool size={18} />}
         />
-        <StatCard label="AI Conversations" value={totalAI ?? 0} subtitle="Sir Taks sessions total"
-          accentColor="#BD93F9"
-          icon={<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>}
+        <StatCard label="AI conversations" value={totalAI ?? 0} subtitle="Sir Taks sessions total"
+          accentColor="#A9873F" icon={<IconChip size={18} />}
         />
-        <StatCard label="Pending Payments" value={pendingPayments ?? 0} subtitle="EcoCash verifications"
-          accentColor="#F5A623"
-          icon={<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>}
+        <StatCard label="Pending payments" value={pendingPayments ?? 0} subtitle="EcoCash verifications"
+          accentColor="#A9873F" icon={<IconCoins size={18} />}
         />
       </div>
 
       {/* Two-column layout */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: "20px" }}>
-
+      <div className="grid gap-5" style={{ gridTemplateColumns: "1fr 320px" }}>
         {/* Recent users table */}
-        <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "16px", overflow: "hidden" }}>
-          <div style={{ padding: "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <h3 style={{ fontSize: "14px", fontWeight: 600, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif" }}>Recent Signups</h3>
-            <Link href="/admin/dashboard/users" style={{ fontSize: "12px", color: "#4D7FFF", textDecoration: "none" }}>View all →</Link>
+        <div className="border border-edu-slate-200 rounded overflow-hidden">
+          <div className="px-5 py-4 border-b border-edu-slate-200 flex justify-between items-center">
+            <h3 className="font-display font-semibold text-sm text-edu-ink">Recent signups</h3>
+            <Link href="/admin/dashboard/users" className="text-xs text-edu-copper">View all</Link>
           </div>
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
               <thead>
-                <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                <tr className="border-b border-edu-slate-200">
                   {["User", "Role", "Joined"].map((h) => (
-                    <th key={h} style={{ padding: "10px 20px", textAlign: "left", fontSize: "10px", fontWeight: 600, color: "#4A5170", letterSpacing: "0.06em", textTransform: "uppercase" }}>{h}</th>
+                    <th key={h} className="px-5 py-2.5 text-left text-[10px] font-semibold text-edu-slate-500 tracking-[0.06em] uppercase">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {(recentUsers ?? []).length === 0 ? (
-                  <tr><td colSpan={3} style={{ padding: "32px", textAlign: "center", color: "#4A5170", fontSize: "13px" }}>No users yet</td></tr>
+                  <tr><td colSpan={3} className="px-8 py-8 text-center text-edu-slate-500 text-[13px]">No users yet</td></tr>
                 ) : (recentUsers ?? []).map((u: { id: string; full_name: string; email: string; role: string; created_at: string }) => (
-                  <tr key={u.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.03)" }}>
-                    <td style={{ padding: "12px 20px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <div style={{ width: 30, height: 30, borderRadius: "8px", background: "linear-gradient(135deg, #1A3575, #4D7FFF)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, color: "#fff", flexShrink: 0 }}>
+                  <tr key={u.id} className="border-b border-edu-slate-100">
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded flex items-center justify-center flex-shrink-0 text-[11px] font-bold text-edu-paper bg-edu-copper">
                           {u.full_name.split(" ").map((w: string) => w[0]).slice(0, 2).join("")}
                         </div>
                         <div>
-                          <p style={{ fontSize: "13px", fontWeight: 500, color: "#CDD6F4" }}>{u.full_name}</p>
-                          <p style={{ fontSize: "11px", color: "#4A5170" }}>{u.email}</p>
+                          <p className="text-[13px] font-medium text-edu-ink">{u.full_name}</p>
+                          <p className="text-[11px] text-edu-slate-500">{u.email}</p>
                         </div>
                       </div>
                     </td>
-                    <td style={{ padding: "12px 20px" }}>
-                      <span style={{ fontSize: "10px", fontWeight: 600, padding: "2px 8px", borderRadius: "6px", color: ROLE_COLOR[u.role] ?? "#8892B0", background: `${ROLE_COLOR[u.role] ?? "#8892B0"}15`, border: `1px solid ${ROLE_COLOR[u.role] ?? "#8892B0"}30` }}>
+                    <td className="px-5 py-3">
+                      <span
+                        className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                        style={{ color: ROLE_COLOR[u.role] ?? "#566257", background: `${ROLE_COLOR[u.role] ?? "#566257"}15`, border: `1px solid ${ROLE_COLOR[u.role] ?? "#566257"}30` }}
+                      >
                         {ROLE_LABEL[u.role] ?? u.role}
                       </span>
                     </td>
-                    <td style={{ padding: "12px 20px", fontSize: "11px", color: "#4A5170" }}>{timeAgo(u.created_at)}</td>
+                    <td className="px-5 py-3 text-[11px] text-edu-slate-500">{timeAgo(u.created_at)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -167,23 +167,22 @@ export default async function AdminOverviewPage() {
         </div>
 
         {/* Right sidebar */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-
+        <div className="flex flex-col gap-4">
           {/* Role breakdown */}
-          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "16px", padding: "16px 20px" }}>
-            <h3 style={{ fontSize: "14px", fontWeight: 600, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", marginBottom: "14px" }}>User Breakdown</h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          <div className="border border-edu-slate-200 rounded px-5 py-4">
+            <h3 className="font-display font-semibold text-sm text-edu-ink mb-3.5">User breakdown</h3>
+            <div className="flex flex-col gap-2.5">
               {Object.entries(ROLE_LABEL).map(([role, label]) => {
                 const count = breakdown[role] ?? 0;
                 const pct = totalUsers ? Math.round((count / totalUsers) * 100) : 0;
                 return (
                   <div key={role}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                      <span style={{ fontSize: "12px", color: "#8892B0" }}>{label}</span>
-                      <span style={{ fontSize: "12px", fontWeight: 600, color: "#CDD6F4" }}>{count}</span>
+                    <div className="flex justify-between mb-1">
+                      <span className="text-xs text-edu-slate-600">{label}</span>
+                      <span className="text-xs font-semibold text-edu-ink">{count}</span>
                     </div>
-                    <div style={{ height: 4, borderRadius: "2px", background: "rgba(255,255,255,0.05)" }}>
-                      <div style={{ height: "100%", borderRadius: "2px", width: `${pct}%`, background: ROLE_COLOR[role] ?? "#4D7FFF" }} />
+                    <div className="h-1 rounded-full bg-edu-slate-100">
+                      <div className="h-full rounded-full" style={{ width: `${pct}%`, background: ROLE_COLOR[role] }} />
                     </div>
                   </div>
                 );
@@ -192,51 +191,40 @@ export default async function AdminOverviewPage() {
           </div>
 
           {/* Recent payments */}
-          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "16px", padding: "16px 20px", flex: 1 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-              <h3 style={{ fontSize: "14px", fontWeight: 600, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif" }}>Recent Payments</h3>
-              <Link href="/admin/dashboard/payments" style={{ fontSize: "11px", color: "#4D7FFF", textDecoration: "none" }}>View all →</Link>
+          <div className="border border-edu-slate-200 rounded px-5 py-4 flex-1">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="font-display font-semibold text-sm text-edu-ink">Recent payments</h3>
+              <Link href="/admin/dashboard/payments" className="text-[11px] text-edu-copper">View all</Link>
             </div>
             {(payments ?? []).length === 0 ? (
-              <p style={{ fontSize: "13px", color: "#4A5170", textAlign: "center", padding: "20px 0" }}>No payments yet</p>
-            ) : (payments ?? []).map((p: { id: string; amount: number; status: string; phone_number: string | null; created_at: string }) => (
-              <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                <div>
-                  <p style={{ fontSize: "12px", color: "#CDD6F4", fontWeight: 600 }}>${p.amount.toFixed(2)}</p>
-                  <p style={{ fontSize: "10px", color: "#4A5170" }}>{p.phone_number ?? "—"} · {timeAgo(p.created_at)}</p>
+              <p className="text-[13px] text-edu-slate-500 text-center py-5">No payments yet</p>
+            ) : (payments ?? []).map((p: { id: string; amount: number; status: string; phone_number: string | null; created_at: string }) => {
+              const statusColor = p.status === "approved" ? "#1F4738" : p.status === "rejected" ? "#A3311E" : "#A9873F";
+              return (
+                <div key={p.id} className="flex justify-between items-center py-2 border-b border-edu-slate-100">
+                  <div>
+                    <p className="text-xs font-semibold text-edu-ink">${p.amount.toFixed(2)}</p>
+                    <p className="text-[10px] text-edu-slate-500">{p.phone_number ?? "—"} · {timeAgo(p.created_at)}</p>
+                  </div>
+                  <span
+                    className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                    style={{ color: statusColor, background: `${statusColor}15`, border: `1px solid ${statusColor}30` }}
+                  >
+                    {p.status}
+                  </span>
                 </div>
-                <span style={{
-                  fontSize: "10px", fontWeight: 600, padding: "2px 8px", borderRadius: "6px",
-                  color: p.status === "approved" ? "#00E5A3" : p.status === "rejected" ? "#FF6B6B" : "#F5A623",
-                  background: p.status === "approved" ? "rgba(0,229,163,0.1)" : p.status === "rejected" ? "rgba(255,107,107,0.1)" : "rgba(245,166,35,0.1)",
-                  border: `1px solid ${p.status === "approved" ? "rgba(0,229,163,0.2)" : p.status === "rejected" ? "rgba(255,107,107,0.2)" : "rgba(245,166,35,0.2)"}`,
-                }}>
-                  {p.status}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
 
       {/* Quick actions */}
-      <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "16px", padding: "20px" }}>
-        <h3 style={{ fontSize: "14px", fontWeight: 600, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", marginBottom: "14px" }}>Quick Actions</h3>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
-          {[
-            { label: "User Management", href: "/admin/dashboard/users", color: "#4D7FFF" },
-            { label: "School Management", href: "/admin/dashboard/schools", color: "#00E5A3" },
-            { label: "Verify Payments", href: "/admin/dashboard/payments", color: "#F5A623" },
-            { label: "AI Monitor", href: "/admin/dashboard/ai", color: "#BD93F9" },
-            { label: "Analytics", href: "/admin/dashboard/analytics", color: "#FF9A3C" },
-            { label: "Broadcast", href: "/admin/dashboard/broadcast", color: "#4D7FFF" },
-            { label: "Platform Settings", href: "/admin/dashboard/settings", color: "#8892B0" },
-          ].map((a) => (
-            <Link key={a.href} href={a.href} style={{
-              padding: "8px 16px", borderRadius: "10px", fontSize: "12px", fontWeight: 600,
-              background: `${a.color}12`, border: `1px solid ${a.color}25`,
-              color: a.color, textDecoration: "none",
-            }}>
+      <div className="border border-edu-slate-200 rounded p-5">
+        <h3 className="font-display font-semibold text-sm text-edu-ink mb-3.5">Quick actions</h3>
+        <div className="flex flex-wrap gap-2">
+          {QUICK_ACTIONS.map((a) => (
+            <Link key={a.href} href={a.href} className="btn-ghost py-2 px-4 text-xs">
               {a.label}
             </Link>
           ))}

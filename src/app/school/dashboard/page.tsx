@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { getEffectiveProfile } from "@/lib/impersonation";
+import { IconFamily, IconChalkboard, IconBook, IconMessage, IconAlertTriangle } from "@/components/icons";
 
 export default async function SchoolDashboardPage() {
   const supabase = await createClient();
@@ -21,15 +22,18 @@ export default async function SchoolDashboardPage() {
     .single();
 
   if (school && school.status !== "approved") {
+    const rejected = school.status === "rejected";
     return (
-      <div style={{ maxWidth: 560, margin: "60px auto", textAlign: "center" }}>
-        <div style={{ fontSize: 40, marginBottom: 16 }}>{school.status === "rejected" ? "⚠️" : "⏳"}</div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif", marginBottom: 8 }}>
-          {school.status === "rejected" ? "Registration not approved" : "Verification pending"}
+      <div className="max-w-[520px] mx-auto mt-16 text-center">
+        <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 border ${rejected ? "bg-edu-clay-100 border-edu-clay-200 text-edu-clay" : "bg-edu-gold-100 border-edu-gold-300 text-edu-gold-dark"}`}>
+          <IconAlertTriangle size={20} />
+        </div>
+        <h2 className="font-display font-semibold text-xl text-edu-ink mb-2">
+          {rejected ? "Registration not approved" : "Verification pending"}
         </h2>
-        <p style={{ color: "#8892B0", fontSize: 14, lineHeight: 1.6, marginBottom: 16 }}>
-          {school.status === "rejected"
-            ? `${school.name} was not approved. Reason: ${school.rejection_reason ?? "No reason given."}`
+        <p className="text-sm leading-relaxed text-edu-slate-600">
+          {rejected
+            ? `${school.name} wasn't approved. Reason: ${school.rejection_reason ?? "No reason given."}`
             : `${school.name} is awaiting review by the EduOnLink team. We'll email you once a decision is made — usually within 1-2 business days.`}
         </p>
       </div>
@@ -71,75 +75,75 @@ export default async function SchoolDashboardPage() {
   ]);
 
   return (
-    <div style={{ maxWidth: 1100, display: "flex", flexDirection: "column", gap: "24px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
+    <div className="max-w-[1100px] flex flex-col gap-6">
+      <div className="flex justify-between items-start flex-wrap gap-3">
         <div>
-          <h2 style={{ fontSize: "22px", fontWeight: 700, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif" }}>
-            {school ? school.name : "School Overview"}
+          <h2 className="font-display font-semibold text-xl text-edu-ink">
+            {school ? school.name : "School overview"}
           </h2>
-          <div style={{ display: "flex", gap: "8px", marginTop: 6, flexWrap: "wrap", alignItems: "center" }}>
-            {school?.province && <span style={{ fontSize: "12px", color: "#4A5170" }}>{school.province}</span>}
+          <div className="flex gap-2 mt-1.5 flex-wrap items-center">
+            {school?.province && <span className="text-xs text-edu-slate-500">{school.province}</span>}
             {school && (
-              <span style={{ fontSize: "10px", fontWeight: 600, padding: "2px 8px", borderRadius: "6px", color: school.is_verified ? "#00E5A3" : "#F5A623", background: school.is_verified ? "rgba(0,229,163,0.1)" : "rgba(245,166,35,0.1)", border: `1px solid ${school.is_verified ? "rgba(0,229,163,0.2)" : "rgba(245,166,35,0.2)"}` }}>
-                {school.is_verified ? "Verified" : "Pending Verification"}
+              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${school.is_verified ? "text-edu-bottle bg-edu-bottle-100 border-edu-bottle-200" : "text-edu-gold-dark bg-edu-gold-100 border-edu-gold-300"}`}>
+                {school.is_verified ? "Verified" : "Pending verification"}
               </span>
             )}
           </div>
         </div>
-        <div style={{ display: "flex", gap: "8px" }}>
-          <Link href="/school/dashboard/teachers" style={{ padding: "8px 16px", borderRadius: "10px", fontSize: "12px", fontWeight: 600, background: "rgba(0,229,163,0.12)", border: "1px solid rgba(0,229,163,0.25)", color: "#00E5A3", textDecoration: "none" }}>+ Invite Teacher</Link>
-          <Link href="/school/dashboard/announcements" style={{ padding: "8px 16px", borderRadius: "10px", fontSize: "12px", fontWeight: 600, background: "rgba(77,127,255,0.12)", border: "1px solid rgba(77,127,255,0.25)", color: "#4D7FFF", textDecoration: "none" }}>Post Announcement</Link>
+        <div className="flex gap-2">
+          <Link href="/school/dashboard/teachers" className="btn-ghost py-2 px-4 text-xs">Invite teacher</Link>
+          <Link href="/school/dashboard/announcements" className="btn-primary py-2 px-4 text-xs">Post announcement</Link>
         </div>
       </div>
 
       {!school && (
-        <div style={{ padding: "16px 20px", background: "rgba(245,166,35,0.08)", border: "1px solid rgba(245,166,35,0.2)", borderRadius: "12px", color: "#F5A623", fontSize: "13px" }}>
+        <div className="px-5 py-4 rounded border border-edu-gold-300 bg-edu-gold-50 text-edu-gold-dark text-[13px]">
           No school is linked to your account yet. Contact the EduOnLink super admin to set up your school profile.
         </div>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "14px" }}>
-        <StatCard label="Students" value={studentCount ?? 0} accentColor="#BD93F9" icon={<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>} />
-        <StatCard label="Teachers" value={teacherCount ?? 0} accentColor="#00E5A3" icon={<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>} />
-        <StatCard label="Classes" value={classCount ?? 0} accentColor="#4D7FFF" icon={<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>} />
-        <StatCard label="Students on EduOnLink" value={Number(platformStudentCount ?? 0)} subtitle="Platform-wide — grow your school's reach" accentColor="#00E5A3" icon={<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>} />
+      <div className="grid gap-3.5" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))" }}>
+        <StatCard label="Students" value={studentCount ?? 0} accentColor="#B1502B" icon={<IconFamily size={18} />} />
+        <StatCard label="Teachers" value={teacherCount ?? 0} accentColor="#1F4738" icon={<IconChalkboard size={18} />} />
+        <StatCard label="Classes" value={classCount ?? 0} accentColor="#A9873F" icon={<IconBook size={18} />} />
+        <StatCard label="Students on EduOnLink" value={Number(platformStudentCount ?? 0)} subtitle="Platform-wide — grow your school's reach" accentColor="#1F4738" icon={<IconFamily size={18} />} />
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-        <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "16px", overflow: "hidden" }}>
-          <div style={{ padding: "14px 18px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <h3 style={{ fontSize: "14px", fontWeight: 600, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif" }}>Announcements</h3>
-            <Link href="/school/dashboard/announcements" style={{ fontSize: "11px", color: "#4D7FFF", textDecoration: "none" }}>View all →</Link>
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="border border-edu-slate-200 rounded overflow-hidden">
+          <div className="px-4 py-3 border-b border-edu-slate-200 flex justify-between items-center">
+            <h3 className="font-display font-semibold text-sm text-edu-ink">Announcements</h3>
+            <Link href="/school/dashboard/announcements" className="text-[11px] text-edu-copper">View all</Link>
           </div>
-          <div style={{ padding: "8px" }}>
+          <div className="p-2">
             {(announcements ?? []).length === 0 ? (
-              <EmptyState icon={<svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" /></svg>} title="No announcements" description="Post an announcement to inform your school community." />
+              <EmptyState icon={<IconMessage size={20} />} title="No announcements" description="Post an announcement to inform your school community." />
             ) : (announcements ?? []).map((a: { id: string; title: string; content: string; created_at: string }) => (
-              <div key={a.id} style={{ padding: "10px", borderRadius: "10px", marginBottom: 4 }}>
-                <p style={{ fontSize: "13px", fontWeight: 600, color: "#CDD6F4" }}>{a.title}</p>
-                <p style={{ fontSize: "11px", color: "#6B7290", marginTop: 2 }}>{a.content.slice(0, 80)}{a.content.length > 80 ? "…" : ""}</p>
-                <p style={{ fontSize: "10px", color: "#4A5170", marginTop: 4 }}>{new Date(a.created_at).toLocaleDateString()}</p>
+              <div key={a.id} className="px-2.5 py-2.5 rounded mb-0.5">
+                <p className="text-[13px] font-semibold text-edu-ink">{a.title}</p>
+                <p className="text-[11px] text-edu-slate-600 mt-0.5">{a.content.slice(0, 80)}{a.content.length > 80 ? "…" : ""}</p>
+                <p className="text-[10px] text-edu-slate-500 mt-1">{new Date(a.created_at).toLocaleDateString()}</p>
               </div>
             ))}
           </div>
         </div>
 
-        <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "16px", overflow: "hidden" }}>
-          <div style={{ padding: "14px 18px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <h3 style={{ fontSize: "14px", fontWeight: 600, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif" }}>Recent Teachers</h3>
-            <Link href="/school/dashboard/teachers" style={{ fontSize: "11px", color: "#4D7FFF", textDecoration: "none" }}>View all →</Link>
+        <div className="border border-edu-slate-200 rounded overflow-hidden">
+          <div className="px-4 py-3 border-b border-edu-slate-200 flex justify-between items-center">
+            <h3 className="font-display font-semibold text-sm text-edu-ink">Recent teachers</h3>
+            <Link href="/school/dashboard/teachers" className="text-[11px] text-edu-copper">View all</Link>
           </div>
-          <div style={{ padding: "8px" }}>
+          <div className="p-2">
             {(recentTeachers ?? []).length === 0 ? (
-              <EmptyState icon={<svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>} title="No teachers yet" description="Invite teachers to join your school." />
+              <EmptyState icon={<IconChalkboard size={20} />} title="No teachers yet" description="Invite teachers to join your school." />
             ) : (recentTeachers ?? []).map((t: { id: string; joined_at: string; profiles: { full_name: string; email: string } | null }) => (
-              <div key={t.id} style={{ padding: "10px", borderRadius: "10px", marginBottom: 4, display: "flex", alignItems: "center", gap: "10px" }}>
-                <div style={{ width: 28, height: 28, borderRadius: "8px", background: "rgba(0,229,163,0.1)", border: "1px solid rgba(0,229,163,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "10px", fontWeight: 700, color: "#00E5A3" }}>
+              <div key={t.id} className="px-2.5 py-2.5 rounded mb-0.5 flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0 text-[10px] font-bold bg-edu-bottle-100 border border-edu-bottle-200 text-edu-bottle">
                   {t.profiles?.full_name?.charAt(0).toUpperCase() ?? "?"}
                 </div>
                 <div>
-                  <p style={{ fontSize: "12px", fontWeight: 600, color: "#CDD6F4" }}>{t.profiles?.full_name ?? "Unknown"}</p>
-                  <p style={{ fontSize: "10px", color: "#4A5170" }}>Joined {new Date(t.joined_at).toLocaleDateString()}</p>
+                  <p className="text-xs font-semibold text-edu-ink">{t.profiles?.full_name ?? "Unknown"}</p>
+                  <p className="text-[10px] text-edu-slate-500">Joined {new Date(t.joined_at).toLocaleDateString()}</p>
                 </div>
               </div>
             ))}

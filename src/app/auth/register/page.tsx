@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
 import AuthCard, { AuthButton, AuthError } from "@/components/auth/AuthCard";
 import { FormInput, FormSelect, FormCheckbox, PasswordStrength } from "@/components/auth/FormInput";
-import RoleSelector from "@/components/auth/RoleSelector";
+import RoleSelector, { ROLE_ICONS } from "@/components/auth/RoleSelector";
 import { createClient } from "@/lib/supabase/client";
+import { IconMail, IconLock, IconChevronRight, IconFamily } from "@/components/icons";
 import {
   FORM_LEVELS,
   ZIMSEC_SUBJECTS,
@@ -205,30 +205,17 @@ export default function RegisterPage() {
   // ── Progress indicator ─────────────────────────────────────────
 
   const StepProgress = () => (
-    <div className="flex items-center gap-2 mb-8">
-      {([1, 2, 3] as Step[]).map((s) => (
-        <div key={s} className="flex items-center gap-2">
-          <div
-            className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-mono transition-all duration-300"
-            style={{
-              background: s < step ? "#00E5A3" : s === step ? "rgba(77,127,255,0.2)" : "rgba(255,255,255,0.04)",
-              border: `1px solid ${s < step ? "#00E5A3" : s === step ? "rgba(77,127,255,0.6)" : "rgba(255,255,255,0.08)"}`,
-              color: s < step ? "#07080C" : s === step ? "#4D7FFF" : "#4A5170",
-            }}
-          >
-            {s < step ? (
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-            ) : s}
-          </div>
-          {s < 3 && (
-            <div className="w-8 h-px transition-all duration-300" style={{ background: s < step ? "#00E5A3" : "rgba(255,255,255,0.08)" }} />
-          )}
-        </div>
-      ))}
+    <div className="flex flex-col gap-2 mb-8">
+      <div className="flex gap-1.5">
+        {([1, 2, 3] as Step[]).map((s) => (
+          <div key={s} className="flex-1 h-[3px]" style={{ background: s <= step ? "#B1502B" : "#CCD0C0" }} />
+        ))}
+      </div>
+      <span className="text-xs text-edu-slate-500">Step {step} of 3</span>
     </div>
   );
+
+  const RoleIcon = form.role ? ROLE_ICONS[form.role] : null;
 
   // ── Render ─────────────────────────────────────────────────────
 
@@ -243,331 +230,274 @@ export default function RegisterPage() {
 
       <AuthError message={error} />
 
-      <AnimatePresence mode="wait">
-        {/* ── Step 1: Role ── */}
-        {step === 1 && (
-          <motion.div
-            key="step1"
-            initial={{ opacity: 0, x: 16 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -16 }}
-            transition={{ duration: 0.2 }}
-            className="flex flex-col gap-6"
-          >
-            <RoleSelector value={form.role} onChange={(r) => set("role", r)} />
-            <AuthButton type="button" onClick={nextStep}>
-              Continue
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-              </svg>
-            </AuthButton>
+      {/* ── Step 1: Role ── */}
+      {step === 1 && (
+        <div className="flex flex-col gap-6">
+          <RoleSelector value={form.role} onChange={(r) => set("role", r)} />
+          <AuthButton type="button" onClick={nextStep}>
+            Continue
+            <IconChevronRight size={16} />
+          </AuthButton>
 
-            <p className="text-sm text-center" style={{ color: "#4A5170" }}>
-              Already have an account?{" "}
-              <Link href="/auth/login" className="font-semibold" style={{ color: "#4D7FFF" }}>Sign in</Link>
-            </p>
-          </motion.div>
-        )}
+          <p className="text-sm text-center text-edu-slate-500">
+            Already have an account?{" "}
+            <Link href="/auth/login" className="font-semibold text-edu-copper">Sign in</Link>
+          </p>
+        </div>
+      )}
 
-        {/* ── Step 2: Account details ── */}
-        {step === 2 && (
-          <motion.form
-            key="step2"
-            initial={{ opacity: 0, x: 16 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -16 }}
-            transition={{ duration: 0.2 }}
-            onSubmit={(e) => { e.preventDefault(); nextStep(); }}
-            className="flex flex-col gap-4"
-          >
-            {/* Role badge */}
-            {form.role && (
-              <div
-                className="flex items-center gap-2 px-3 py-2 rounded-lg w-fit"
-                style={{ background: `${ROLE_META[form.role].accent}12`, border: `1px solid ${ROLE_META[form.role].accent}25` }}
+      {/* ── Step 2: Account details ── */}
+      {step === 2 && (
+        <form onSubmit={(e) => { e.preventDefault(); nextStep(); }} className="flex flex-col gap-4">
+          {form.role && RoleIcon && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded w-fit bg-edu-copper-50 border border-edu-copper-200">
+              <RoleIcon size={16} className="text-edu-copper" />
+              <span className="text-sm font-semibold text-edu-copper">
+                {ROLE_META[form.role].label}
+              </span>
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="ml-1 text-xs text-edu-copper opacity-70 hover:opacity-100 transition-opacity"
               >
-                <span className="text-base">{ROLE_META[form.role].icon}</span>
-                <span className="text-sm font-semibold" style={{ color: ROLE_META[form.role].accent }}>
-                  {ROLE_META[form.role].label}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setStep(1)}
-                  className="ml-1 text-xs opacity-60 hover:opacity-100 transition-opacity"
-                  style={{ color: ROLE_META[form.role].accent }}
-                >
-                  Change
-                </button>
-              </div>
-            )}
-
-            <div className="grid grid-cols-2 gap-3">
-              <FormInput
-                label="First name"
-                type="text"
-                value={form.firstName}
-                onChange={(e) => set("firstName", e.target.value)}
-                placeholder="Taks"
-                autoComplete="given-name"
-              />
-              <FormInput
-                label="Last name"
-                type="text"
-                value={form.lastName}
-                onChange={(e) => set("lastName", e.target.value)}
-                placeholder="Bepete"
-                autoComplete="family-name"
-              />
+                Change
+              </button>
             </div>
+          )}
 
+          <div className="grid grid-cols-2 gap-3">
             <FormInput
-              label="Email address"
-              type="email"
-              value={form.email}
-              onChange={(e) => set("email", e.target.value)}
-              placeholder="you@example.com"
-              autoComplete="email"
-              icon={
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-              }
+              label="First name"
+              type="text"
+              value={form.firstName}
+              onChange={(e) => set("firstName", e.target.value)}
+              placeholder="Taks"
+              autoComplete="given-name"
             />
-
-            <div>
-              <FormInput
-                label="Password"
-                type="password"
-                value={form.password}
-                onChange={(e) => set("password", e.target.value)}
-                placeholder="Create a strong password"
-                autoComplete="new-password"
-                icon={
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                }
-              />
-              <PasswordStrength password={form.password} />
-            </div>
-
             <FormInput
-              label="Confirm password"
+              label="Last name"
+              type="text"
+              value={form.lastName}
+              onChange={(e) => set("lastName", e.target.value)}
+              placeholder="Bepete"
+              autoComplete="family-name"
+            />
+          </div>
+
+          <FormInput
+            label="Email address"
+            type="email"
+            value={form.email}
+            onChange={(e) => set("email", e.target.value)}
+            placeholder="you@example.com"
+            autoComplete="email"
+            icon={<IconMail />}
+          />
+
+          <div>
+            <FormInput
+              label="Password"
               type="password"
-              value={form.confirmPassword}
-              onChange={(e) => set("confirmPassword", e.target.value)}
-              placeholder="Repeat your password"
+              value={form.password}
+              onChange={(e) => set("password", e.target.value)}
+              placeholder="Create a strong password"
               autoComplete="new-password"
-              error={form.confirmPassword && form.password !== form.confirmPassword ? "Passwords don't match" : undefined}
+              icon={<IconLock />}
             />
+            <PasswordStrength password={form.password} />
+          </div>
 
-            <FormCheckbox
-              label={
-                <span>
-                  I agree to the{" "}
-                  <a href="/terms" className="underline" style={{ color: "#4D7FFF" }}>Terms of Service</a>
-                  {" "}and{" "}
-                  <a href="/privacy" className="underline" style={{ color: "#4D7FFF" }}>Privacy Policy</a>
-                </span>
-              }
-              checked={form.agreeToTerms}
-              onChange={(v) => set("agreeToTerms", v)}
-            />
+          <FormInput
+            label="Confirm password"
+            type="password"
+            value={form.confirmPassword}
+            onChange={(e) => set("confirmPassword", e.target.value)}
+            placeholder="Repeat your password"
+            autoComplete="new-password"
+            error={form.confirmPassword && form.password !== form.confirmPassword ? "Passwords don't match" : undefined}
+          />
 
-            <AuthButton type="submit">
-              Continue
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-              </svg>
-            </AuthButton>
+          <FormCheckbox
+            label={
+              <span>
+                I agree to the{" "}
+                <a href="/terms" className="underline text-edu-copper">Terms of Service</a>
+                {" "}and{" "}
+                <a href="/privacy" className="underline text-edu-copper">Privacy Policy</a>
+              </span>
+            }
+            checked={form.agreeToTerms}
+            onChange={(v) => set("agreeToTerms", v)}
+          />
 
-            <button
-              type="button"
-              onClick={() => setStep(1)}
-              className="text-sm text-center transition-colors"
-              style={{ color: "#4A5170" }}
-            >
-              ← Back to role selection
-            </button>
-          </motion.form>
-        )}
+          <AuthButton type="submit">
+            Continue
+            <IconChevronRight size={16} />
+          </AuthButton>
 
-        {/* ── Step 3: Role-specific profile ── */}
-        {step === 3 && (
-          <motion.form
-            key="step3"
-            initial={{ opacity: 0, x: 16 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -16 }}
-            transition={{ duration: 0.2 }}
-            onSubmit={handleSubmit}
-            className="flex flex-col gap-4"
+          <button
+            type="button"
+            onClick={() => setStep(1)}
+            className="text-sm text-center text-edu-slate-500 hover:text-edu-ink transition-colors"
           >
-            {/* Student */}
-            {form.role === "student" && (
-              <>
-                <FormSelect
-                  label="Your form / grade level"
-                  value={form.formLevel}
-                  onChange={(e) => set("formLevel", e.target.value)}
-                >
-                  <option value="" disabled>Select your level</option>
-                  {["Primary", "O-Level", "A-Level"].map((group) => (
-                    <optgroup key={group} label={group}>
-                      {FORM_LEVELS.filter((f) => f.group === group).map((f) => (
-                        <option key={f.value} value={f.value}>{f.label}</option>
-                      ))}
-                    </optgroup>
-                  ))}
-                </FormSelect>
-                <FormInput
-                  label="School name (optional)"
-                  type="text"
-                  value={form.schoolName}
-                  onChange={(e) => set("schoolName", e.target.value)}
-                  placeholder="e.g. Harare High School"
-                />
-              </>
-            )}
+            Back to role selection
+          </button>
+        </form>
+      )}
 
-            {/* Teacher */}
-            {form.role === "teacher" && (
-              <>
-                <div
-                  className="p-4 rounded-xl text-sm"
-                  style={{ background: "rgba(245,166,35,0.06)", border: "1px solid rgba(245,166,35,0.15)", color: "#8892B0" }}
-                >
-                  Teacher accounts are reviewed before you can access teaching features. After registering, you&apos;ll be asked to upload proof of your qualifications and ID — approval usually takes 1-2 business days.
+      {/* ── Step 3: Role-specific profile ── */}
+      {step === 3 && (
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {/* Student */}
+          {form.role === "student" && (
+            <>
+              <FormSelect
+                label="Your form / grade level"
+                value={form.formLevel}
+                onChange={(e) => set("formLevel", e.target.value)}
+              >
+                <option value="" disabled>Select your level</option>
+                {["Primary", "O-Level", "A-Level"].map((group) => (
+                  <optgroup key={group} label={group}>
+                    {FORM_LEVELS.filter((f) => f.group === group).map((f) => (
+                      <option key={f.value} value={f.value}>{f.label}</option>
+                    ))}
+                  </optgroup>
+                ))}
+              </FormSelect>
+              <FormInput
+                label="School name (optional)"
+                type="text"
+                value={form.schoolName}
+                onChange={(e) => set("schoolName", e.target.value)}
+                placeholder="e.g. Harare High School"
+              />
+            </>
+          )}
+
+          {/* Teacher */}
+          {form.role === "teacher" && (
+            <>
+              <div className="p-4 rounded text-sm bg-edu-gold-50 border border-edu-gold-200 text-edu-slate-600">
+                Teacher accounts are reviewed before you can access teaching features. After registering, you&apos;ll be asked to upload proof of your qualifications and ID — approval usually takes 1-2 business days.
+              </div>
+              <FormInput
+                label="Zimbabwe Teachers Council (ZTC) number"
+                type="text"
+                value={form.ztcNumber}
+                onChange={(e) => set("ztcNumber", e.target.value)}
+                placeholder="e.g. ZTC-2019-04521"
+              />
+              <FormInput
+                label="Qualifications"
+                type="text"
+                value={form.qualifications}
+                onChange={(e) => set("qualifications", e.target.value)}
+                placeholder="e.g. BSc Education, PGDE"
+              />
+              <FormInput
+                label="Years of teaching experience"
+                type="number"
+                value={form.yearsExperience}
+                onChange={(e) => set("yearsExperience", e.target.value)}
+                placeholder="5"
+                min="0"
+                max="50"
+              />
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-edu-slate-600">
+                  Teaching subjects <span className="text-xs font-normal ml-1 text-edu-slate-500">({form.teachingSubjects.length} selected)</span>
+                </label>
+                <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
+                  {ZIMSEC_SUBJECTS.map((subject) => {
+                    const active = form.teachingSubjects.includes(subject);
+                    return (
+                      <button
+                        key={subject}
+                        type="button"
+                        onClick={() => toggleSubject(subject)}
+                        className={`px-2.5 py-1 rounded text-xs font-medium border transition-colors duration-150 ${
+                          active ? "bg-edu-copper-100 border-edu-copper-300 text-edu-copper-dark" : "border-edu-slate-300 text-edu-slate-500"
+                        }`}
+                      >
+                        {subject}
+                      </button>
+                    );
+                  })}
                 </div>
-                <FormInput
-                  label="Zimbabwe Teachers Council (ZTC) number"
-                  type="text"
-                  value={form.ztcNumber}
-                  onChange={(e) => set("ztcNumber", e.target.value)}
-                  placeholder="e.g. ZTC-2019-04521"
-                />
-                <FormInput
-                  label="Qualifications"
-                  type="text"
-                  value={form.qualifications}
-                  onChange={(e) => set("qualifications", e.target.value)}
-                  placeholder="e.g. BSc Education, PGDE"
-                />
-                <FormInput
-                  label="Years of teaching experience"
-                  type="number"
-                  value={form.yearsExperience}
-                  onChange={(e) => set("yearsExperience", e.target.value)}
-                  placeholder="5"
-                  min="0"
-                  max="50"
-                />
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium" style={{ color: "#8892B0" }}>
-                    Teaching subjects <span className="text-xs font-normal ml-1" style={{ color: "#4A5170" }}>({form.teachingSubjects.length} selected)</span>
-                  </label>
-                  <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
-                    {ZIMSEC_SUBJECTS.map((subject) => {
-                      const active = form.teachingSubjects.includes(subject);
-                      return (
-                        <button
-                          key={subject}
-                          type="button"
-                          onClick={() => toggleSubject(subject)}
-                          className="px-2.5 py-1 rounded-lg text-xs font-medium transition-all duration-150"
-                          style={{
-                            background: active ? "rgba(77,127,255,0.15)" : "rgba(255,255,255,0.04)",
-                            border: `1px solid ${active ? "rgba(77,127,255,0.4)" : "rgba(255,255,255,0.08)"}`,
-                            color: active ? "#7AA5FF" : "#4A5170",
-                          }}
-                        >
-                          {subject}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </>
-            )}
+              </div>
+            </>
+          )}
 
-            {/* Parent */}
-            {form.role === "parent" && (
-              <>
-                <div
-                  className="p-4 rounded-xl text-sm"
-                  style={{ background: "rgba(77,127,255,0.06)", border: "1px solid rgba(77,127,255,0.12)", color: "#6B7290" }}
-                >
-                  You can link your child&apos;s account now or do it later from your parent dashboard.
-                </div>
-                <FormInput
-                  label="Child's email address (optional)"
-                  type="email"
-                  value={form.childEmail}
-                  onChange={(e) => set("childEmail", e.target.value)}
-                  placeholder="child@example.com"
-                  hint="Your child must already have a EduOnLink student account"
-                  icon={
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  }
-                />
-              </>
-            )}
+          {/* Parent */}
+          {form.role === "parent" && (
+            <>
+              <div className="p-4 rounded text-sm bg-edu-copper-50 border border-edu-copper-200 text-edu-slate-600">
+                You can link your child&apos;s account now or do it later from your parent dashboard.
+              </div>
+              <FormInput
+                label="Child's email address (optional)"
+                type="email"
+                value={form.childEmail}
+                onChange={(e) => set("childEmail", e.target.value)}
+                placeholder="child@example.com"
+                hint="Your child must already have a EduOnLink student account"
+                icon={<IconFamily size={16} />}
+              />
+            </>
+          )}
 
-            {/* School admin */}
-            {form.role === "school_admin" && (
-              <>
-                <FormInput
-                  label="School name"
-                  type="text"
-                  value={form.schoolName}
-                  onChange={(e) => set("schoolName", e.target.value)}
-                  placeholder="e.g. St George's College"
-                />
-                <FormSelect
-                  label="Province"
-                  value={form.province}
-                  onChange={(e) => set("province", e.target.value)}
-                >
-                  <option value="" disabled>Select a province</option>
-                  {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
-                </FormSelect>
-                <FormInput
-                  label="District"
-                  type="text"
-                  value={form.district}
-                  onChange={(e) => set("district", e.target.value)}
-                  placeholder="e.g. Goromonzi"
-                />
-                <FormSelect
-                  label="School type"
-                  value={form.schoolType}
-                  onChange={(e) => set("schoolType", e.target.value)}
-                >
-                  <option value="government">Government</option>
-                  <option value="private">Private</option>
-                  <option value="mission">Mission</option>
-                  <option value="international">International</option>
-                </FormSelect>
-              </>
-            )}
+          {/* School admin */}
+          {form.role === "school_admin" && (
+            <>
+              <FormInput
+                label="School name"
+                type="text"
+                value={form.schoolName}
+                onChange={(e) => set("schoolName", e.target.value)}
+                placeholder="e.g. St George's College"
+              />
+              <FormSelect
+                label="Province"
+                value={form.province}
+                onChange={(e) => set("province", e.target.value)}
+              >
+                <option value="" disabled>Select a province</option>
+                {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
+              </FormSelect>
+              <FormInput
+                label="District"
+                type="text"
+                value={form.district}
+                onChange={(e) => set("district", e.target.value)}
+                placeholder="e.g. Goromonzi"
+              />
+              <FormSelect
+                label="School type"
+                value={form.schoolType}
+                onChange={(e) => set("schoolType", e.target.value)}
+              >
+                <option value="government">Government</option>
+                <option value="private">Private</option>
+                <option value="mission">Mission</option>
+                <option value="international">International</option>
+              </FormSelect>
+            </>
+          )}
 
-            <AuthButton loading={loading} type="submit">
-              Create Account
-            </AuthButton>
+          <AuthButton loading={loading} type="submit">
+            Create Account
+          </AuthButton>
 
-            <button
-              type="button"
-              onClick={() => { setStep(2); setError(null); }}
-              className="text-sm text-center transition-colors"
-              style={{ color: "#4A5170" }}
-            >
-              ← Back
-            </button>
-          </motion.form>
-        )}
-      </AnimatePresence>
+          <button
+            type="button"
+            onClick={() => { setStep(2); setError(null); }}
+            className="text-sm text-center text-edu-slate-500 hover:text-edu-ink transition-colors"
+          >
+            Back
+          </button>
+        </form>
+      )}
     </AuthCard>
   );
 }

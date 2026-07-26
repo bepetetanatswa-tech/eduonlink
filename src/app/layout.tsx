@@ -1,16 +1,32 @@
 import type { Metadata } from "next";
+import { Fraunces, Public_Sans } from "next/font/google";
 import "./globals.css";
 import { IdleLogout } from "@/components/auth/IdleLogout";
 import { NativeBridge } from "@/components/capacitor/NativeBridge";
 
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-display",
+  weight: ["500", "600", "700", "900"],
+  style: ["normal", "italic"],
+  display: "swap",
+});
+
+const publicSans = Public_Sans({
+  subsets: ["latin"],
+  variable: "--font-body",
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "EduOnLink — The Intelligence Behind Zimbabwe's Education",
+  title: "EduOnLink — ZIMSEC learning for every Zimbabwean student",
   description:
-    "EduOnLink: AI-powered learning for every ZIMSEC level. Sir Taks AI tutor, HBC project blueprints, live classes and exam prep — built from the ground up for Zimbabwe.",
+    "EduOnLink is a ZIMSEC-aligned learning platform built for Zimbabwean students, from ECD through A-Level. Sir Taks marks your work, guides your HBC project, and gets you exam-ready.",
   keywords: ["ZIMSEC", "Zimbabwe education", "Heritage-Based Curriculum", "HBC", "AI tutor", "Sir Taks", "EduOnLink", "O-Level", "A-Level"],
   openGraph: {
-    title: "EduOnLink — The Intelligence Behind Zimbabwe's Education",
-    description: "Sir Taks AI tutor + ZIMSEC curriculum + live classes. Premium. Global. Built for Zimbabwe.",
+    title: "EduOnLink — ZIMSEC learning for every Zimbabwean student",
+    description: "Sir Taks AI tutor, the full ZIMSEC curriculum, live classes and HBC project support — built for Zimbabwe.",
     type: "website",
     locale: "en_ZW",
   },
@@ -18,18 +34,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${fraunces.variable} ${publicSans.variable}`}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap"
-          rel="stylesheet"
-        />
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#4D7FFF" />
+        <meta name="theme-color" content="#F2EEE3" />
       </head>
-      <body className="antialiased">
+      <body className="antialiased font-sans">
         <NativeBridge />
         <IdleLogout />
         {children}

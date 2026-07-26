@@ -54,28 +54,16 @@ export function NotificationBell({ profileId, role }: { profileId: string; role:
   return (
     <button
       onClick={() => router.push(ROLE_PATH[role])}
-      style={{
-        position: "relative", width: 36, height: 36, borderRadius: "10px",
-        background: "rgba(255,255,255,0.03)",
-        border: "1px solid rgba(255,255,255,0.08)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        cursor: "pointer", color: "#8892B0", transition: "all 0.15s",
-      }}
-      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.06)"; }}
-      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.03)"; }}
+      className="relative w-9 h-9 rounded flex items-center justify-center border border-edu-slate-300 text-edu-slate-600 hover:bg-edu-slate-100 transition-colors duration-150"
     >
       <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
       </svg>
       {unread > 0 && (
-        <span style={{
-          position: "absolute", top: -4, right: -4,
-          width: 16, height: 16, borderRadius: "50%",
-          background: "#4D7FFF", color: "#fff",
-          fontSize: "9px", fontWeight: 700,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          border: "2px solid #07080C",
-        }}>
+        <span
+          className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-white font-bold bg-edu-copper"
+          style={{ fontSize: 9, border: "2px solid #F2EEE3" }}
+        >
           {unread > 9 ? "9+" : unread}
         </span>
       )}

@@ -1,14 +1,31 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { IconChevronRight } from "@/components/icons";
+
+const HeroScene = dynamic(() => import("./HeroScene"), { ssr: false, loading: () => null });
 
 export default function HeroSection() {
   const router = useRouter();
+  const [show3D, setShow3D] = useState(false);
+
+  useEffect(() => {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const lowEnd =
+      typeof navigator !== "undefined" &&
+      navigator.hardwareConcurrency !== undefined &&
+      navigator.hardwareConcurrency < 4;
+    // Desktop-only decorative render — skipped on narrow/mobile viewports
+    // entirely, where budget-Android bandwidth and battery matter most.
+    const narrow = typeof window !== "undefined" && window.innerWidth < 1024;
+    if (!reduced && !lowEnd && !narrow) setShow3D(true);
+  }, []);
 
   return (
-    <section className="relative pt-40 pb-20 md:pt-48 md:pb-28">
-      <div className="container-edu">
+    <section className="relative pt-40 pb-20 md:pt-48 md:pb-28 overflow-hidden">
+      <div className="container-edu grid lg:grid-cols-[1fr_320px] gap-8 items-center">
         <div className="max-w-3xl animate-chalk-in">
           <h1
             className="font-display font-semibold text-edu-ink mb-6"
@@ -38,6 +55,12 @@ export default function HeroSection() {
             28+ ZIMSEC subjects. All 10 provinces. No credit card, ever.
           </p>
         </div>
+
+        {show3D && (
+          <div className="hidden lg:block" style={{ height: 320 }} aria-hidden="true">
+            <HeroScene />
+          </div>
+        )}
       </div>
     </section>
   );

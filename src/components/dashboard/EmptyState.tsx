@@ -9,29 +9,14 @@ interface EmptyStateProps {
 
 export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
   return (
-    <div style={{
-      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-      padding: "48px 24px", textAlign: "center", gap: "12px",
-    }}>
-      <div style={{
-        width: 56, height: 56, borderRadius: "16px",
-        background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        color: "#4A5170", marginBottom: "4px",
-      }}>
+    <div className="flex flex-col items-center justify-center text-center gap-3 py-12 px-6">
+      <div className="w-14 h-14 rounded flex items-center justify-center border border-edu-slate-200 text-edu-slate-400 mb-1">
         {icon}
       </div>
-      <p style={{ fontSize: "15px", fontWeight: 600, color: "#8892B0", fontFamily: "'Space Grotesk', sans-serif" }}>{title}</p>
-      <p style={{ fontSize: "13px", color: "#4A5170", maxWidth: "280px", lineHeight: 1.5 }}>{description}</p>
+      <p className="font-display font-semibold text-[15px] text-edu-ink">{title}</p>
+      <p className="text-[13px] leading-relaxed text-edu-slate-500 max-w-[280px]">{description}</p>
       {action && (
-        <button
-          onClick={action.onClick}
-          style={{
-            marginTop: "8px", padding: "8px 20px", borderRadius: "10px",
-            background: "rgba(77,127,255,0.15)", border: "1px solid rgba(77,127,255,0.25)",
-            color: "#4D7FFF", fontSize: "13px", fontWeight: 600, cursor: "pointer",
-          }}
-        >
+        <button onClick={action.onClick} className="btn-ghost mt-2 py-2 px-5 text-[13px]">
           {action.label}
         </button>
       )}

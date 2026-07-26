@@ -107,103 +107,63 @@ export function TopBar({ profile, onMenuClick }: TopBarProps) {
   };
 
   return (
-    <header style={{
-      height: 56, flexShrink: 0,
-      background: "#07080C", borderBottom: "1px solid rgba(255,255,255,0.05)",
-      display: "flex", alignItems: "center", justifyContent: "space-between",
-      padding: "0 20px", gap: "16px", position: "sticky", top: 0, zIndex: 30,
-    }}>
+    <header className="h-14 flex-shrink-0 bg-edu-paper border-b border-edu-slate-200 flex items-center justify-between px-5 gap-4 sticky top-0 z-30">
       {/* Left */}
-      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-        {/* Hamburger — mobile */}
+      <div className="flex items-center gap-3">
         <button
           onClick={onMenuClick}
-          className="lg:hidden"
-          style={{
-            width: 36, height: 36, borderRadius: "10px", background: "rgba(255,255,255,0.03)",
-            border: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center",
-            justifyContent: "center", cursor: "pointer", color: "#8892B0",
-          }}
+          className="lg:hidden w-9 h-9 rounded flex items-center justify-center border border-edu-slate-300 text-edu-slate-600"
         >
           <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
 
-        <h1 style={{ fontSize: "15px", fontWeight: 600, color: "#CDD6F4", fontFamily: "'Space Grotesk', sans-serif" }}>
+        <h1 className="font-display font-semibold text-[15px] text-edu-ink">
           {title}
         </h1>
       </div>
 
       {/* Right */}
-      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+      <div className="flex items-center gap-2">
         <NotificationBell profileId={profile.id} role={profile.role} />
 
         {/* Profile dropdown */}
-        <div ref={ref} style={{ position: "relative" }}>
+        <div ref={ref} className="relative">
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            style={{
-              display: "flex", alignItems: "center", gap: "8px",
-              padding: "4px 8px 4px 4px", borderRadius: "10px",
-              background: dropdownOpen ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              cursor: "pointer", transition: "all 0.15s",
-            }}
-            onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.06)")}
-            onMouseLeave={(e) => { if (!dropdownOpen) (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.03)"; }}
+            className={`flex items-center gap-2 pl-1 pr-2 py-1 rounded border border-edu-slate-300 transition-colors duration-150 ${dropdownOpen ? "bg-edu-slate-100" : "hover:bg-edu-slate-100"}`}
           >
-            {/* Avatar */}
             {profile.avatar_url ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={profile.avatar_url} alt={profile.full_name} style={{ width: 28, height: 28, borderRadius: "8px", objectFit: "cover" }} />
+              <img src={profile.avatar_url} alt={profile.full_name} className="w-7 h-7 rounded object-cover" />
             ) : (
-              <div style={{
-                width: 28, height: 28, borderRadius: "8px",
-                background: "linear-gradient(135deg, #4D7FFF, #2D5BDF)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: "11px", fontWeight: 700, color: "#fff",
-              }}>
+              <div className="w-7 h-7 rounded flex items-center justify-center text-[11px] font-bold text-edu-paper bg-edu-copper">
                 {initials}
               </div>
             )}
-            <span style={{ fontSize: "12px", fontWeight: 500, color: "#8892B0", maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <span className="text-xs font-medium text-edu-slate-600 max-w-[100px] overflow-hidden text-ellipsis whitespace-nowrap">
               {profile.full_name.split(" ")[0]}
             </span>
-            <svg width="12" height="12" fill="none" stroke="#4A5170" viewBox="0 0 24 24">
+            <svg width="12" height="12" fill="none" stroke="currentColor" className="text-edu-slate-400" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </button>
 
           {dropdownOpen && (
-            <div style={{
-              position: "absolute", top: "calc(100% + 8px)", right: 0,
-              width: 220, background: "#0E1117", border: "1px solid rgba(255,255,255,0.1)",
-              borderRadius: "14px", boxShadow: "0 20px 60px rgba(0,0,0,0.6)",
-              overflow: "hidden", zIndex: 100,
-            }}>
-              {/* User info */}
-              <div style={{ padding: "14px 14px 10px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                <p style={{ fontSize: "13px", fontWeight: 600, color: "#CDD6F4", marginBottom: 2 }}>{profile.full_name}</p>
-                <p style={{ fontSize: "11px", color: "#4A5170", marginBottom: 8, overflow: "hidden", textOverflow: "ellipsis" }}>{profile.email}</p>
+            <div className="absolute top-[calc(100%+8px)] right-0 w-56 bg-edu-paper border border-edu-slate-300 rounded shadow-elevated overflow-hidden z-[100]">
+              <div className="px-3.5 pt-3.5 pb-2.5 border-b border-edu-slate-200">
+                <p className="text-sm font-semibold text-edu-ink mb-0.5">{profile.full_name}</p>
+                <p className="text-xs text-edu-slate-500 mb-2 overflow-hidden text-ellipsis">{profile.email}</p>
                 <RoleBadge role={profile.role} size="xs" />
               </div>
 
-              {/* Links */}
-              <div style={{ padding: "6px" }}>
+              <div className="p-1.5">
                 {[{ label: "Profile settings", href: PROFILE_PATH[profile.role], icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" }].map((item) => (
                   <button
                     key={item.label}
                     onClick={() => { setDropdownOpen(false); router.push(item.href); }}
-                    style={{
-                      display: "flex", alignItems: "center", gap: "8px",
-                      width: "100%", padding: "8px 10px", borderRadius: "8px",
-                      fontSize: "13px", color: "#8892B0", cursor: "pointer",
-                      background: "none", border: "none", textAlign: "left",
-                      transition: "all 0.15s",
-                    }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.04)"; (e.currentTarget as HTMLButtonElement).style.color = "#CDD6F4"; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; (e.currentTarget as HTMLButtonElement).style.color = "#8892B0"; }}
+                    className="flex items-center gap-2 w-full px-2.5 py-2 rounded text-[13px] text-edu-slate-600 hover:bg-edu-slate-100 hover:text-edu-ink transition-colors duration-150 text-left"
                   >
                     <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d={item.icon} />
@@ -212,19 +172,11 @@ export function TopBar({ profile, onMenuClick }: TopBarProps) {
                   </button>
                 ))}
 
-                <div style={{ height: 1, background: "rgba(255,255,255,0.05)", margin: "4px 0" }} />
+                <div className="h-px bg-edu-slate-200 my-1" />
 
                 <button
                   onClick={handleSignOut}
-                  style={{
-                    display: "flex", alignItems: "center", gap: "8px",
-                    width: "100%", padding: "8px 10px", borderRadius: "8px",
-                    fontSize: "13px", color: "#FF6B6B", cursor: "pointer",
-                    background: "none", border: "none", textAlign: "left",
-                    transition: "all 0.15s",
-                  }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,107,107,0.08)"; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
+                  className="flex items-center gap-2 w-full px-2.5 py-2 rounded text-[13px] text-edu-clay hover:bg-edu-clay-100 transition-colors duration-150 text-left"
                 >
                   <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

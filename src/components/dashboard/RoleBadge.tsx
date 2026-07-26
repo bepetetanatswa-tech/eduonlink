@@ -1,28 +1,28 @@
 import type { UserRole } from "@/types/database";
 
 const ROLE_CONFIG: Record<UserRole, { label: string; color: string; bg: string; border: string }> = {
-  super_admin:  { label: "Super Admin",  color: "#F5A623", bg: "rgba(245,166,35,0.12)",  border: "rgba(245,166,35,0.25)"  },
-  school_admin: { label: "School Admin", color: "#4D7FFF", bg: "rgba(77,127,255,0.12)", border: "rgba(77,127,255,0.25)"  },
-  teacher:      { label: "Teacher",      color: "#00E5A3", bg: "rgba(0,229,163,0.12)",  border: "rgba(0,229,163,0.25)"   },
-  student:      { label: "Student",      color: "#BD93F9", bg: "rgba(189,147,249,0.12)", border: "rgba(189,147,249,0.25)" },
-  parent:       { label: "Parent",       color: "#FF9A3C", bg: "rgba(255,154,60,0.12)", border: "rgba(255,154,60,0.25)"  },
+  super_admin:  { label: "Super Admin",  color: "#A9873F", bg: "rgba(169,135,63,0.12)",  border: "rgba(169,135,63,0.3)"  },
+  school_admin: { label: "School Admin", color: "#B1502B", bg: "rgba(177,80,43,0.12)",   border: "rgba(177,80,43,0.3)"   },
+  teacher:      { label: "Teacher",      color: "#1F4738", bg: "rgba(31,71,56,0.1)",     border: "rgba(31,71,56,0.3)"    },
+  student:      { label: "Student",      color: "#566257", bg: "rgba(86,98,87,0.1)",     border: "rgba(86,98,87,0.3)"    },
+  parent:       { label: "Parent",       color: "#3E4A41", bg: "rgba(62,74,65,0.1)",     border: "rgba(62,74,65,0.3)"    },
 };
 
 export function RoleBadge({ role, size = "sm" }: { role: UserRole; size?: "xs" | "sm" | "md" }) {
   const cfg = ROLE_CONFIG[role];
-  const px = size === "xs" ? "6px 8px" : size === "md" ? "6px 14px" : "4px 10px";
+  const px = size === "xs" ? "5px 8px" : size === "md" ? "6px 14px" : "4px 10px";
   const fs = size === "xs" ? "10px" : size === "md" ? "13px" : "11px";
   return (
     <span
+      className="font-display"
       style={{
         display: "inline-flex",
         alignItems: "center",
         padding: px,
         fontSize: fs,
         fontWeight: 600,
-        fontFamily: "'Space Grotesk', sans-serif",
-        letterSpacing: "0.04em",
-        borderRadius: "6px",
+        letterSpacing: "0.02em",
+        borderRadius: "3px",
         color: cfg.color,
         background: cfg.bg,
         border: `1px solid ${cfg.border}`,

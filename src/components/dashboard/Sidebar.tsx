@@ -220,12 +220,12 @@ export function Sidebar({ role, isOpen, onClose }: SidebarProps) {
     exact ? pathname === href : pathname === href || pathname.startsWith(href + "/");
 
   const sidebarContent = (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+    <div className="flex flex-col h-full overflow-hidden">
       {/* Logo */}
-      <div style={{ padding: "20px 20px 16px", borderBottom: "1px solid rgba(255,255,255,0.05)", flexShrink: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
+      <div className="px-5 pt-5 pb-4 border-b border-edu-slate-700 flex-shrink-0">
+        <div className="flex items-center gap-2.5 mb-3">
           <VoaLogoMark size={28} />
-          <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, color: "#fff", fontSize: "16px", letterSpacing: "-0.01em" }}>
+          <span className="font-display font-bold text-edu-paper text-base tracking-tight">
             EduOnLink
           </span>
         </div>
@@ -234,26 +234,18 @@ export function Sidebar({ role, isOpen, onClose }: SidebarProps) {
           <Link
             href="/admin/dashboard"
             onClick={onClose}
-            style={{
-              display: "flex", alignItems: "center", gap: 6, marginTop: 10,
-              padding: "6px 10px", borderRadius: 8, fontSize: 11, fontWeight: 600,
-              color: "#F5A623", background: "rgba(245,166,35,0.1)", border: "1px solid rgba(245,166,35,0.25)",
-              textDecoration: "none",
-            }}
+            className="flex items-center gap-1.5 mt-2.5 px-2.5 py-1.5 rounded text-xs font-semibold text-edu-gold bg-edu-slate-800 border border-edu-gold-300"
           >
-            ← Return to Admin
+            ← Return to admin
           </Link>
         )}
       </div>
 
       {/* Nav */}
-      <nav style={{ flex: 1, overflowY: "auto", padding: "12px 12px", scrollbarWidth: "none" }}>
+      <nav className="flex-1 overflow-y-auto py-3 px-3" style={{ scrollbarWidth: "none" }}>
         {groups.map((group) => (
-          <div key={group.group} style={{ marginBottom: "20px" }}>
-            <p style={{
-              fontSize: "9px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase",
-              color: "#2A2D3E", fontFamily: "monospace", padding: "0 8px", marginBottom: "6px",
-            }}>
+          <div key={group.group} className="mb-5">
+            <p className="text-[9px] font-semibold tracking-[0.1em] uppercase text-edu-slate-500 px-2 mb-1.5">
               {group.group}
             </p>
             {group.items.map((item) => {
@@ -263,29 +255,13 @@ export function Sidebar({ role, isOpen, onClose }: SidebarProps) {
                   key={item.href}
                   href={item.href}
                   onClick={onClose}
-                  style={{
-                    display: "flex", alignItems: "center", gap: "10px",
-                    padding: "9px 10px", borderRadius: "10px", marginBottom: "2px",
-                    fontSize: "13px", fontWeight: active ? 600 : 400,
-                    color: active ? "#CDD6F4" : "#6B7290",
-                    background: active ? "rgba(77,127,255,0.12)" : "transparent",
-                    border: active ? "1px solid rgba(77,127,255,0.2)" : "1px solid transparent",
-                    textDecoration: "none", transition: "all 0.15s",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!active) {
-                      (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)";
-                      (e.currentTarget as HTMLElement).style.color = "#8892B0";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!active) {
-                      (e.currentTarget as HTMLElement).style.background = "transparent";
-                      (e.currentTarget as HTMLElement).style.color = "#6B7290";
-                    }
-                  }}
+                  className={`flex items-center gap-2.5 px-2.5 py-2 rounded mb-0.5 text-[13px] transition-colors duration-150 ${
+                    active
+                      ? "font-semibold text-edu-paper bg-edu-slate-800 border border-edu-slate-700"
+                      : "font-normal text-edu-slate-400 border border-transparent hover:bg-edu-slate-800 hover:text-edu-slate-200"
+                  }`}
                 >
-                  <span style={{ opacity: active ? 1 : 0.6, color: active ? "#4D7FFF" : "currentColor", flexShrink: 0 }}>
+                  <span className={`flex-shrink-0 ${active ? "text-edu-gold" : "opacity-70"}`}>
                     {item.icon}
                   </span>
                   {item.label}
@@ -296,12 +272,9 @@ export function Sidebar({ role, isOpen, onClose }: SidebarProps) {
         ))}
 
         {role === "super_admin" && (
-          <div style={{ marginBottom: "20px" }}>
-            <p style={{
-              fontSize: "9px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase",
-              color: "#2A2D3E", fontFamily: "monospace", padding: "0 8px", marginBottom: "6px",
-            }}>
-              Preview Dashboards
+          <div className="mb-5">
+            <p className="text-[9px] font-semibold tracking-[0.1em] uppercase text-edu-slate-500 px-2 mb-1.5">
+              Preview dashboards
             </p>
             {PREVIEW_LINKS.map((item) => {
               const active = displayRole === item.role;
@@ -310,29 +283,13 @@ export function Sidebar({ role, isOpen, onClose }: SidebarProps) {
                   key={item.href}
                   href={item.href}
                   onClick={onClose}
-                  style={{
-                    display: "flex", alignItems: "center", gap: "10px",
-                    padding: "9px 10px", borderRadius: "10px", marginBottom: "2px",
-                    fontSize: "13px", fontWeight: active ? 600 : 400,
-                    color: active ? "#CDD6F4" : "#6B7290",
-                    background: active ? "rgba(77,127,255,0.12)" : "transparent",
-                    border: active ? "1px solid rgba(77,127,255,0.2)" : "1px solid transparent",
-                    textDecoration: "none", transition: "all 0.15s",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!active) {
-                      (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)";
-                      (e.currentTarget as HTMLElement).style.color = "#8892B0";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!active) {
-                      (e.currentTarget as HTMLElement).style.background = "transparent";
-                      (e.currentTarget as HTMLElement).style.color = "#6B7290";
-                    }
-                  }}
+                  className={`flex items-center gap-2.5 px-2.5 py-2 rounded mb-0.5 text-[13px] transition-colors duration-150 ${
+                    active
+                      ? "font-semibold text-edu-paper bg-edu-slate-800 border border-edu-slate-700"
+                      : "font-normal text-edu-slate-400 border border-transparent hover:bg-edu-slate-800 hover:text-edu-slate-200"
+                  }`}
                 >
-                  <span style={{ opacity: active ? 1 : 0.6, color: active ? "#4D7FFF" : "currentColor", flexShrink: 0 }}>
+                  <span className={`flex-shrink-0 ${active ? "text-edu-gold" : "opacity-70"}`}>
                     {ic("M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422A12.083 12.083 0 0112 21a12.083 12.083 0 01-6.16-10.422L12 14z")}
                   </span>
                   {item.label}
@@ -349,31 +306,16 @@ export function Sidebar({ role, isOpen, onClose }: SidebarProps) {
     <>
       {/* Mobile overlay */}
       {isOpen && (
-        <div
-          onClick={onClose}
-          style={{
-            position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 40,
-            backdropFilter: "blur(2px)",
-          }}
-        />
+        <div onClick={onClose} className="fixed inset-0 bg-black/50 z-40" />
       )}
 
       {/*
         Desktop sidebar — position:fixed, never in layout flow.
         Tailwind classes control display (hidden on mobile, flex on lg+).
-        No inline display property — prevents inline styles overriding Tailwind.
       */}
       <aside
-        className="hidden lg:flex"
-        style={{
-          position: "fixed",
-          left: 0, top: 0, bottom: 0,
-          width: 220,
-          flexDirection: "column",
-          background: "#090B12",
-          borderRight: "1px solid rgba(255,255,255,0.05)",
-          zIndex: 30,
-        }}
+        className="hidden lg:flex fixed left-0 top-0 bottom-0 flex-col bg-edu-ink border-r border-edu-slate-800"
+        style={{ width: 220, zIndex: 30 }}
       >
         {sidebarContent}
       </aside>
@@ -381,18 +323,11 @@ export function Sidebar({ role, isOpen, onClose }: SidebarProps) {
       {/*
         Mobile drawer — fixed overlay, slides in/out with transform.
         Tailwind classes control display (flex on mobile, hidden on lg+).
-        Never takes up layout space — content stays 100vw on mobile.
       */}
       <aside
-        className="flex lg:hidden"
+        className="flex lg:hidden fixed left-0 top-0 bottom-0 flex-col bg-edu-ink border-r border-edu-slate-800"
         style={{
-          position: "fixed",
-          left: 0, top: 0, bottom: 0,
-          width: 240,
-          flexDirection: "column",
-          background: "#090B12",
-          borderRight: "1px solid rgba(255,255,255,0.08)",
-          zIndex: 50,
+          width: 240, zIndex: 50,
           transform: isOpen ? "translateX(0)" : "translateX(-100%)",
           transition: "transform 0.22s ease",
         }}

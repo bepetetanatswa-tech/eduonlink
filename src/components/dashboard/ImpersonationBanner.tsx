@@ -15,28 +15,16 @@ export function ImpersonationBanner({ name, role }: { name: string; role: string
   };
 
   return (
-    <div
-      style={{
-        position: "fixed", top: 12, left: "50%", transform: "translateX(-50%)", zIndex: 200,
-        display: "flex", alignItems: "center", gap: 10,
-        background: "rgba(245,166,35,0.15)", border: "1px solid rgba(245,166,35,0.4)",
-        borderRadius: 999, padding: "6px 8px 6px 16px", backdropFilter: "blur(12px)",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
-      }}
-    >
-      <span style={{ fontSize: 12, fontWeight: 600, color: "#F5A623" }}>
-        👁️ Viewing as {name} <span style={{ opacity: 0.7, textTransform: "capitalize" }}>({role.replace("_", " ")})</span>
+    <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-2.5 rounded-full pl-4 pr-1.5 py-1.5 bg-edu-gold-100 border border-edu-gold-300 shadow-elevated">
+      <span className="text-xs font-semibold text-edu-gold-dark">
+        Viewing as {name} <span className="opacity-70 capitalize">({role.replace("_", " ")})</span>
       </span>
       <button
         onClick={returnToAdmin}
         disabled={returning}
-        style={{
-          padding: "6px 14px", borderRadius: 999, fontSize: 12, fontWeight: 700,
-          background: "#F5A623", border: "none", color: "#07080C",
-          cursor: returning ? "not-allowed" : "pointer",
-        }}
+        className="btn-gold rounded-full py-1.5 px-3.5 text-xs disabled:opacity-60"
       >
-        {returning ? "Returning…" : "← Return to Admin"}
+        {returning ? "Returning…" : "Return to admin"}
       </button>
     </div>
   );

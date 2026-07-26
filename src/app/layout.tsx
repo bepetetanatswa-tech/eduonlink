@@ -3,6 +3,8 @@ import { Fraunces, Public_Sans } from "next/font/google";
 import "./globals.css";
 import { IdleLogout } from "@/components/auth/IdleLogout";
 import { NativeBridge } from "@/components/capacitor/NativeBridge";
+import { ToastProvider } from "@/components/ui/ToastProvider";
+import { ConfirmProvider } from "@/components/ui/ConfirmProvider";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -42,7 +44,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className="antialiased font-sans">
         <NativeBridge />
         <IdleLogout />
-        {children}
+        <ConfirmProvider>
+          <ToastProvider>
+            {children}
+          </ToastProvider>
+        </ConfirmProvider>
       </body>
     </html>
   );

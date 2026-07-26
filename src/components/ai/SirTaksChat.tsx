@@ -3,11 +3,24 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { IconChip, IconAlertTriangle, IconChevronRight } from "@/components/icons";
+import { IconChip, IconAlertTriangle, IconChevronRight, IconChevronDown } from "@/components/icons";
+import { useLongPress } from "@/components/ui/useLongPress";
+import { MessageMenu, CopiedFlash, type MessageMenuAction } from "@/components/ui/MessageMenu";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
+import { useToast } from "@/components/ui/ToastProvider";
 
 type UserRole = "student" | "teacher" | "parent" | "school_admin" | "super_admin";
+type MsgStatus = "sending" | "sent" | "failed";
 
-interface Message { role: "user" | "assistant"; content: string; ts: Date; }
+interface Message {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  ts: Date;
+  status: MsgStatus;
+  deletedAt?: string;
+  editedAt?: string;
+}
 
 interface Props {
   profileId: string;
@@ -98,22 +111,68 @@ function renderContent(text: string) {
   });
 }
 
+function newId() {
+  return typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
+}
+
 export function SirTaksChat({ profileId, userName, userRole, initialQuestionsUsed = 0, dailyLimit = null }: Props) {
   const cfg = ROLE_CONFIG[userRole] ?? ROLE_CONFIG.student;
   const [phase, setPhase] = useState<"select" | "chat">("select");
   const [topic, setTopic] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [streaming, setStreaming] = useState(false);
   const [streamText, setStreamText] = useState("");
   const [questionsUsed, setQuestionsUsed] = useState(initialQuestionsUsed);
   const [convId, setConvId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [menu, setMenu] = useState<{ x: number; y: number; messageId: string } | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [isNearBottom, setIsNearBottom] = useState(true);
+  const [newBelow, setNewBelow] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollBoxRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const supabase = createClient();
+  const confirmDialog = useConfirm();
+  const showToast = useToast();
 
-  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, streamText]);
+  const scrollToBottom = useCallback((smooth = true) => {
+    messagesEndRef.current?.scrollIntoView({ behavior: smooth ? "smooth" : "auto" });
+    setNewBelow(0);
+  }, []);
+
+  useEffect(() => {
+    if (isNearBottom) {
+      scrollToBottom(true);
+    } else if (messages.length > 0) {
+      setNewBelow((n) => n + 1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages.length]);
+
+  useEffect(() => {
+    if (isNearBottom) messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [streamText]);
+
+  const handleScroll = () => {
+    const el = scrollBoxRef.current;
+    if (!el) return;
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+    setIsNearBottom(nearBottom);
+    if (nearBottom) setNewBelow(0);
+  };
+
+  const persist = useCallback(async (msgs: Message[], idOverride?: string) => {
+    if (userRole !== "student") return;
+    const payload = msgs.filter((m) => !m.deletedAt).map((m) => ({ role: m.role, content: m.content, ts: m.ts.toISOString() }));
+    const targetId = idOverride ?? convId;
+    if (targetId) {
+      await (supabase.from("ai_conversations") as any).update({ messages: payload, updated_at: new Date().toISOString() }).eq("id", targetId);
+    }
+  }, [userRole, convId, supabase]);
 
   const startSession = (selectedTopic: string) => {
     setTopic(selectedTopic);
@@ -126,45 +185,49 @@ export function SirTaksChat({ profileId, userName, userRole, initialQuestionsUse
       school_admin: `Hello, ${firstName}! Let's work through **${selectedTopic}** together.\n\nDescribe the challenge or question facing your school, and I'll help you think through options, frameworks, and best practices.\n\nWhat's on your agenda?`,
       super_admin: `Hello, ${firstName}! Ready to work on **${selectedTopic}**.\n\nWhat platform challenge or strategic question would you like to think through?`,
     };
-    setMessages([{ role: "assistant", content: welcomes[userRole] ?? welcomes.student, ts: new Date() }]);
+    setMessages([{ id: newId(), role: "assistant", content: welcomes[userRole] ?? welcomes.student, ts: new Date(), status: "sent" }]);
     setTimeout(() => inputRef.current?.focus(), 100);
   };
 
-  const sendMessage = useCallback(async () => {
-    const text = input.trim();
+  const sendMessage = useCallback(async (overrideText?: string, overrideId?: string) => {
+    const text = (overrideText ?? input).trim();
     if (!text || streaming) return;
     if (dailyLimit !== null && questionsUsed >= dailyLimit) {
       setError(`You've used all ${dailyLimit} free questions today. Upgrade to Student Pro for unlimited access.`);
       return;
     }
-    setInput("");
+    if (!overrideId) setInput("");
     setError(null);
-    const userMsg: Message = { role: "user", content: text, ts: new Date() };
-    const nextMessages = [...messages, userMsg];
-    setMessages(nextMessages);
+
+    const userMsgId = overrideId ?? newId();
+    let nextMessages: Message[];
+    if (overrideId) {
+      // Retry: flip the existing failed message back to sending.
+      nextMessages = messages.map((m) => m.id === overrideId ? { ...m, status: "sending" as MsgStatus } : m);
+      setMessages(nextMessages);
+    } else {
+      const userMsg: Message = { id: userMsgId, role: "user", content: text, ts: new Date(), status: "sending" };
+      nextMessages = [...messages, userMsg];
+      setMessages(nextMessages);
+    }
     setStreaming(true);
     setStreamText("");
 
     try {
-      // Strip leading assistant messages — the welcome message is UI-only.
-      // Every AI provider requires the first message to be from the user.
-      const flat = nextMessages.map((m) => ({ role: m.role, content: m.content }));
+      const flat = nextMessages.filter((m) => !m.deletedAt).map((m) => ({ role: m.role, content: m.content }));
       const firstUserIdx = flat.findIndex((m) => m.role === "user");
       const apiMessages = firstUserIdx > 0 ? flat.slice(firstUserIdx) : flat;
 
       const res = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: apiMessages,
-          topic,
-        }),
+        body: JSON.stringify({ messages: apiMessages, topic }),
       });
 
       if (res.status === 429) {
         const data = await res.json();
         setError(`Daily limit of ${data.limit} questions reached. Upgrade for unlimited access.`);
-        setMessages((p) => p.slice(0, -1));
+        setMessages((p) => p.map((m) => m.id === userMsgId ? { ...m, status: "failed" as MsgStatus } : m));
         setStreaming(false);
         return;
       }
@@ -179,7 +242,7 @@ export function SirTaksChat({ profileId, userName, userRole, initialQuestionsUse
         }
         console.error("[SirTaks]", res.status, errMsg);
         setError(errMsg);
-        setMessages((p) => p.slice(0, -1));
+        setMessages((p) => p.map((m) => m.id === userMsgId ? { ...m, status: "failed" as MsgStatus } : m));
         setStreaming(false);
         return;
       }
@@ -194,8 +257,9 @@ export function SirTaksChat({ profileId, userName, userRole, initialQuestionsUse
         setStreamText(accumulated);
       }
 
-      const aiMsg: Message = { role: "assistant", content: accumulated, ts: new Date() };
-      const final = [...nextMessages, aiMsg];
+      const aiMsg: Message = { id: newId(), role: "assistant", content: accumulated, ts: new Date(), status: "sent" };
+      const confirmed = nextMessages.map((m) => m.id === userMsgId ? { ...m, status: "sent" as MsgStatus } : m);
+      const final = [...confirmed, aiMsg];
       setMessages(final);
       setStreamText("");
       setStreaming(false);
@@ -203,22 +267,77 @@ export function SirTaksChat({ profileId, userName, userRole, initialQuestionsUse
       const used = res.headers.get("X-Questions-Used");
       if (used) setQuestionsUsed(parseInt(used));
 
-      // Save conversation
-      const payload = final.map((m) => ({ role: m.role, content: m.content, ts: m.ts.toISOString() }));
-      if (convId) {
-        await (supabase.from("ai_conversations") as any).update({ messages: payload, updated_at: new Date().toISOString() }).eq("id", convId);
-      } else if (userRole === "student") {
-        const { data: conv } = await (supabase.from("ai_conversations") as any)
-          .insert({ student_id: profileId, subject: topic, title: text.slice(0, 80), messages: payload })
-          .select("id").single();
-        if (conv?.id) setConvId(conv.id);
+      if (userRole === "student") {
+        if (convId) {
+          await persist(final);
+        } else {
+          const payload = final.map((m) => ({ role: m.role, content: m.content, ts: m.ts.toISOString() }));
+          const { data: conv } = await (supabase.from("ai_conversations") as any)
+            .insert({ student_id: profileId, subject: topic, title: text.slice(0, 80), messages: payload })
+            .select("id").single();
+          if (conv?.id) setConvId(conv.id);
+        }
       }
     } catch {
       setError("Connection error. Check your internet and try again.");
-      setMessages((p) => p.slice(0, -1));
+      setMessages((p) => p.map((m) => m.id === userMsgId ? { ...m, status: "failed" as MsgStatus } : m));
       setStreaming(false);
     }
-  }, [input, streaming, messages, topic, profileId, convId, dailyLimit, questionsUsed, supabase, userRole]);
+  }, [input, streaming, messages, topic, profileId, convId, dailyLimit, questionsUsed, supabase, userRole, persist]);
+
+  const retrySend = (m: Message) => sendMessage(m.content, m.id);
+
+  const copyMessage = async (m: Message) => {
+    try {
+      await navigator.clipboard.writeText(m.content);
+      setCopiedId(m.id);
+      setTimeout(() => setCopiedId((c) => (c === m.id ? null : c)), 1500);
+    } catch {
+      showToast("Couldn't copy — try selecting the text manually.", "error");
+    }
+  };
+
+  const deleteMessage = async (m: Message) => {
+    const ok = await confirmDialog({
+      title: "Delete this message?",
+      message: "This removes it from your conversation with Sir Taks. This can't be undone.",
+      danger: true,
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
+    const deletedAt = new Date().toISOString();
+    setMessages((prev) => {
+      const next = prev.map((x) => x.id === m.id ? { ...x, deletedAt } : x);
+      persist(next);
+      return next;
+    });
+    showToast("Message deleted.", "success");
+  };
+
+  const startEdit = (m: Message) => {
+    setEditingId(m.id);
+    setInput(m.content);
+    setTimeout(() => inputRef.current?.focus(), 50);
+  };
+
+  const saveEdit = () => {
+    if (!editingId) return;
+    const text = input.trim();
+    if (!text) return;
+    const editedAt = new Date().toISOString();
+    setMessages((prev) => {
+      const next = prev.map((m) => m.id === editingId ? { ...m, content: text, editedAt } : m);
+      persist(next);
+      return next;
+    });
+    setEditingId(null);
+    setInput("");
+    showToast("Message updated.", "success");
+  };
+
+  const cancelEdit = () => { setEditingId(null); setInput(""); };
+
+  const openMenu = (messageId: string, x: number, y: number) => setMenu({ x, y, messageId });
 
   const quotaPct = dailyLimit ? Math.min((questionsUsed / dailyLimit) * 100, 100) : 0;
   const quotaColor = quotaPct > 80 ? "#A9873F" : "#1F4738";
@@ -264,9 +383,12 @@ export function SirTaksChat({ profileId, userName, userRole, initialQuestionsUse
     );
   }
 
+  const visibleMessages = messages.filter((m) => !m.deletedAt);
+  const menuMessage = menu ? messages.find((m) => m.id === menu.messageId) : null;
+
   // ── CHAT ──────────────────────────────────────────────────────────────────
   return (
-    <div className="max-w-[860px] mx-auto flex flex-col" style={{ height: "calc(100vh - 120px)", minHeight: 500 }}>
+    <div className="max-w-[860px] mx-auto flex flex-col relative" style={{ height: "calc(100vh - 120px)", minHeight: 500 }}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border border-edu-slate-200 rounded-t flex-shrink-0">
         <div className="flex items-center gap-3">
@@ -292,7 +414,7 @@ export function SirTaksChat({ profileId, userName, userRole, initialQuestionsUse
             <span className="text-[11px] text-edu-bottle">Online</span>
           </div>
           <button
-            onClick={() => { setPhase("select"); setMessages([]); setConvId(null); setInput(""); }}
+            onClick={() => { setPhase("select"); setMessages([]); setConvId(null); setInput(""); setEditingId(null); }}
             className="btn-ghost py-1 px-2.5 text-[11px]"
           >
             Change topic
@@ -301,30 +423,16 @@ export function SirTaksChat({ profileId, userName, userRole, initialQuestionsUse
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-5 border-l border-r border-edu-slate-200">
-        {messages.map((m, i) => (
-          <div key={i} className={`flex gap-2.5 mb-5 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-            {m.role === "assistant" && (
-              <div className="w-8 h-8 rounded flex-shrink-0 mt-0.5 flex items-center justify-center bg-edu-slate-100 border border-edu-copper-200 text-edu-copper">
-                <IconChip size={16} />
-              </div>
-            )}
-            <div
-              className={`max-w-[72%] px-4 py-3 rounded border ${
-                m.role === "user"
-                  ? "bg-edu-slate-100 border-edu-slate-200"
-                  : "bg-edu-copper-50 border-edu-copper-200"
-              }`}
-            >
-              <div className="text-sm text-edu-ink leading-relaxed">{renderContent(m.content)}</div>
-              <p className="text-[10px] text-edu-slate-500 mt-1.5 text-right">{m.ts.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</p>
-            </div>
-            {m.role === "user" && (
-              <div className="w-8 h-8 rounded flex-shrink-0 mt-0.5 flex items-center justify-center text-xs font-bold text-edu-paper bg-edu-copper">
-                {userName.charAt(0).toUpperCase()}
-              </div>
-            )}
-          </div>
+      <div ref={scrollBoxRef} onScroll={handleScroll} className="flex-1 overflow-y-auto px-4 py-5 border-l border-r border-edu-slate-200">
+        {visibleMessages.map((m) => (
+          <MessageBubble
+            key={m.id}
+            message={m}
+            userName={userName}
+            copied={copiedId === m.id}
+            onOpenMenu={openMenu}
+            onRetry={() => retrySend(m)}
+          />
         ))}
 
         {streaming && (
@@ -356,8 +464,24 @@ export function SirTaksChat({ profileId, userName, userRole, initialQuestionsUse
         <div ref={messagesEndRef} />
       </div>
 
+      {!isNearBottom && newBelow > 0 && (
+        <button
+          onClick={() => scrollToBottom(true)}
+          className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-edu-ink text-edu-paper text-xs font-semibold shadow-elevated"
+          style={{ bottom: 96 }}
+        >
+          {newBelow} new {newBelow === 1 ? "message" : "messages"} <IconChevronDown size={13} />
+        </button>
+      )}
+
       {/* Input */}
       <div className="px-4 py-3 border border-edu-slate-200 border-t-0 rounded-b flex-shrink-0 bg-edu-paper">
+        {editingId && (
+          <div className="flex items-center justify-between mb-2 px-1">
+            <span className="text-[11px] text-edu-copper font-semibold">Editing message</span>
+            <button onClick={cancelEdit} className="text-[11px] text-edu-slate-500">Cancel</button>
+          </div>
+        )}
         {dailyLimit !== null && questionsUsed >= dailyLimit ? (
           <div className="text-center py-2.5">
             <p className="text-[13px] text-edu-gold-dark mb-1">You&apos;ve reached your {dailyLimit} free questions for today.</p>
@@ -369,21 +493,109 @@ export function SirTaksChat({ profileId, userName, userRole, initialQuestionsUse
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-              placeholder="Type your question… (Shift+Enter for new line)"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  if (editingId) saveEdit(); else sendMessage();
+                }
+                if (e.key === "Escape" && editingId) cancelEdit();
+              }}
+              placeholder={streaming ? "Sir Taks is replying…" : editingId ? "Edit your message… (Enter to save)" : "Type your question… (Shift+Enter for new line)"}
               rows={1}
               disabled={streaming}
-              className="flex-1 resize-none rounded border border-edu-slate-300 px-3.5 py-2.5 text-sm text-edu-ink outline-none transition-colors duration-150 focus:border-edu-copper"
+              aria-disabled={streaming}
+              className="flex-1 resize-none rounded border border-edu-slate-300 px-3.5 py-2.5 text-sm text-edu-ink outline-none transition-colors duration-150 focus:border-edu-copper disabled:opacity-60 disabled:cursor-not-allowed"
               style={{ minHeight: 42, maxHeight: 140, boxSizing: "border-box" }}
               onInput={(e) => { const t = e.currentTarget; t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 140) + "px"; }}
             />
-            <button onClick={sendMessage} disabled={!input.trim() || streaming} className="btn-primary h-[42px] px-4 text-[13px] disabled:opacity-40 flex-shrink-0">
-              {streaming ? "…" : <>Send <IconChevronRight size={14} /></>}
+            <button
+              onClick={() => editingId ? saveEdit() : sendMessage()}
+              disabled={!input.trim() || streaming}
+              className="btn-primary h-[42px] px-4 text-[13px] disabled:opacity-40 flex-shrink-0"
+            >
+              {streaming ? "…" : editingId ? "Save" : <>Send <IconChevronRight size={14} /></>}
             </button>
           </div>
         )}
         <p className="text-[10px] text-edu-slate-400 mt-1.5 text-center">{cfg.disclaimer}</p>
       </div>
+
+      {menu && menuMessage && (
+        <MessageMenu
+          x={menu.x}
+          y={menu.y}
+          onClose={() => setMenu(null)}
+          actions={buildActions(menuMessage, userName, {
+            onCopy: () => copyMessage(menuMessage),
+            onEdit: () => startEdit(menuMessage),
+            onDelete: () => deleteMessage(menuMessage),
+          })}
+        />
+      )}
+    </div>
+  );
+}
+
+function buildActions(
+  m: Message,
+  userName: string,
+  handlers: { onCopy: () => void; onEdit: () => void; onDelete: () => void }
+): MessageMenuAction[] {
+  const actions: MessageMenuAction[] = [{ label: "Copy text", onSelect: handlers.onCopy }];
+  if (m.role === "user" && m.status !== "sending") {
+    actions.push({ label: "Edit", onSelect: handlers.onEdit });
+    actions.push({ label: "Delete", onSelect: handlers.onDelete, danger: true });
+  }
+  return actions;
+}
+
+function MessageBubble({
+  message: m, userName, copied, onOpenMenu, onRetry,
+}: {
+  message: Message;
+  userName: string;
+  copied: boolean;
+  onOpenMenu: (id: string, x: number, y: number) => void;
+  onRetry: () => void;
+}) {
+  const longPress = useLongPress((x, y) => onOpenMenu(m.id, x, y));
+
+  return (
+    <div className={`flex gap-2.5 mb-5 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+      {m.role === "assistant" && (
+        <div className="w-8 h-8 rounded flex-shrink-0 mt-0.5 flex items-center justify-center bg-edu-slate-100 border border-edu-copper-200 text-edu-copper">
+          <IconChip size={16} />
+        </div>
+      )}
+      <div className="flex flex-col" style={{ maxWidth: "72%" }}>
+        <div
+          {...longPress}
+          className={`px-4 py-3 rounded border select-none ${
+            m.role === "user" ? "bg-edu-slate-100 border-edu-slate-200" : "bg-edu-copper-50 border-edu-copper-200"
+          } ${m.status === "failed" ? "opacity-60" : m.status === "sending" ? "opacity-70" : ""}`}
+        >
+          <div className="text-sm text-edu-ink leading-relaxed">{renderContent(m.content)}</div>
+          <div className="flex items-center justify-end gap-1 mt-1.5">
+            {m.editedAt && <span className="text-[10px] text-edu-slate-400">edited</span>}
+            <p className="text-[10px] text-edu-slate-500">{m.ts.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</p>
+            <CopiedFlash show={copied} />
+          </div>
+        </div>
+        {m.status === "sending" && (
+          <span className="text-[10px] text-edu-slate-400 mt-1 text-right">Sending…</span>
+        )}
+        {m.status === "failed" && (
+          <div className="flex items-center gap-1.5 mt-1 justify-end">
+            <span className="text-[10px] text-edu-clay">Not sent</span>
+            <button onClick={onRetry} className="text-[10px] font-semibold text-edu-copper underline">Retry</button>
+          </div>
+        )}
+      </div>
+      {m.role === "user" && (
+        <div className="w-8 h-8 rounded flex-shrink-0 mt-0.5 flex items-center justify-center text-xs font-bold text-edu-paper bg-edu-copper">
+          {userName.charAt(0).toUpperCase()}
+        </div>
+      )}
     </div>
   );
 }

@@ -104,16 +104,16 @@ export default async function AdminOverviewPage() {
       <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))" }}>
         <StatCard label="Total users" value={totalUsers ?? 0} subtitle="All registered accounts"
           accentColor="#B1502B" trend={{ value: recentSignups ?? 0, label: "new this week" }}
-          icon={<IconFamily size={18} />}
+          icon={<IconFamily size={18} />} href="/admin/dashboard/users"
         />
         <StatCard label="Partner schools" value={totalSchools ?? 0} subtitle="Registered institutions"
-          accentColor="#1F4738" icon={<IconSchool size={18} />}
+          accentColor="#1F4738" icon={<IconSchool size={18} />} href="/admin/dashboard/schools"
         />
         <StatCard label="AI conversations" value={totalAI ?? 0} subtitle="Sir Taks sessions total"
-          accentColor="#A9873F" icon={<IconChip size={18} />}
+          accentColor="#A9873F" icon={<IconChip size={18} />} href="/admin/dashboard/ai"
         />
         <StatCard label="Pending payments" value={pendingPayments ?? 0} subtitle="EcoCash verifications"
-          accentColor="#A9873F" icon={<IconCoins size={18} />}
+          accentColor="#A9873F" icon={<IconCoins size={18} />} href="/admin/dashboard/payments"
         />
       </div>
 

@@ -73,9 +73,9 @@ export default async function StudentDashboardPage() {
       </div>
 
       <div className="grid gap-3.5" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))" }}>
-        <StatCard label="Enrolled classes" value={(enrollments ?? []).length} accentColor="#B1502B" icon={<IconBook size={18} />} />
-        <StatCard label="Due assignments" value={(upcomingAssignments ?? []).length} subtitle={dueSoon > 0 ? `${dueSoon} due within 3 days` : undefined} accentColor={dueSoon > 0 ? "#A9873F" : "#1F4738"} icon={<IconFileText size={18} />} />
-        <StatCard label="AI sessions" value={aiCount ?? 0} subtitle="with Sir Taks" accentColor="#A9873F" icon={<IconChip size={18} />} />
+        <StatCard label="Enrolled classes" value={(enrollments ?? []).length} accentColor="#B1502B" icon={<IconBook size={18} />} href="/student/dashboard/classes" />
+        <StatCard label="Due assignments" value={(upcomingAssignments ?? []).length} subtitle={dueSoon > 0 ? `${dueSoon} due within 3 days` : undefined} accentColor={dueSoon > 0 ? "#A9873F" : "#1F4738"} icon={<IconFileText size={18} />} href="/student/dashboard/assignments" />
+        <StatCard label="AI sessions" value={aiCount ?? 0} subtitle="with Sir Taks" accentColor="#A9873F" icon={<IconChip size={18} />} href="/student/dashboard/ai-tutor" />
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">

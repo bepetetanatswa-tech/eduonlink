@@ -64,9 +64,9 @@ export default async function TeacherDashboardPage() {
       </div>
 
       <div className="grid gap-3.5" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))" }}>
-        <StatCard label="My classes" value={(classes ?? []).length} accentColor="#B1502B" icon={<IconBook size={18} />} />
-        <StatCard label="Total students" value={totalStudents ?? 0} accentColor="#A9873F" icon={<IconFamily size={18} />} />
-        <StatCard label="Pending grades" value={pendingGrades ?? 0} subtitle="Submissions to mark" accentColor="#A9873F" icon={<IconFileText size={18} />} />
+        <StatCard label="My classes" value={(classes ?? []).length} accentColor="#B1502B" icon={<IconBook size={18} />} href="/teacher/dashboard/classes" />
+        <StatCard label="Total students" value={totalStudents ?? 0} accentColor="#A9873F" icon={<IconFamily size={18} />} href="/teacher/dashboard/classes" />
+        <StatCard label="Pending grades" value={pendingGrades ?? 0} subtitle="Submissions to mark" accentColor="#A9873F" icon={<IconFileText size={18} />} href="/teacher/dashboard/grades" />
         <StatCard label="Students on EduOnLink" value={Number(platformStudentCount ?? 0)} subtitle="Grow your reach — create more classes" accentColor="#1F4738" icon={<IconFamily size={18} />} />
       </div>
 

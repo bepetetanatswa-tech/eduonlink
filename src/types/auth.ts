@@ -8,9 +8,10 @@ export type FormLevel =
 export const SUPER_ADMIN_EMAIL = "bepetetanatswa@gmail.com";
 
 // Common disposable/temporary email providers — blocked at registration to
-// cut down on throwaway accounts. Not exhaustive (new ones appear constantly)
-// and only checked client-side today, so treat this as a speed bump against
-// casual abuse, not a hard security boundary.
+// cut down on throwaway accounts. Not exhaustive (new ones appear constantly).
+// This client-side check exists to give a friendly error early; the actual
+// security boundary is a BEFORE INSERT trigger on auth.users (migration 074,
+// block_disposable_email()) that mirrors this exact list — keep both in sync.
 export const DISPOSABLE_EMAIL_DOMAINS = new Set([
   "mailinator.com", "10minutemail.com", "guerrillamail.com", "guerrillamail.net",
   "yopmail.com", "trashmail.com", "throwawaymail.com", "getnada.com",

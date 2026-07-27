@@ -118,9 +118,9 @@ export default async function AdminOverviewPage() {
       </div>
 
       {/* Two-column layout */}
-      <div className="grid gap-5" style={{ gridTemplateColumns: "1fr 320px" }}>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-5">
         {/* Recent users table */}
-        <div className="border border-edu-slate-200 rounded overflow-hidden">
+        <div className="min-w-0 border border-edu-slate-200 rounded overflow-hidden">
           <div className="px-5 py-4 border-b border-edu-slate-200 flex justify-between items-center">
             <h3 className="font-display font-semibold text-sm text-edu-ink">Recent signups</h3>
             <Link href="/admin/dashboard/users" className="text-xs text-edu-copper">View all</Link>
@@ -139,14 +139,14 @@ export default async function AdminOverviewPage() {
                   <tr><td colSpan={3} className="px-8 py-8 text-center text-edu-slate-500 text-[13px]">No users yet</td></tr>
                 ) : (recentUsers ?? []).map((u: { id: string; full_name: string; email: string; role: string; created_at: string }) => (
                   <tr key={u.id} className="border-b border-edu-slate-100">
-                    <td className="px-5 py-3">
-                      <div className="flex items-center gap-2.5">
+                    <td className="px-5 py-3 max-w-0 w-full">
+                      <div className="flex items-center gap-2.5 min-w-0">
                         <div className="w-8 h-8 rounded flex items-center justify-center flex-shrink-0 text-[11px] font-bold text-edu-paper bg-edu-copper">
                           {u.full_name.split(" ").map((w: string) => w[0]).slice(0, 2).join("")}
                         </div>
-                        <div>
-                          <p className="text-[13px] font-medium text-edu-ink">{u.full_name}</p>
-                          <p className="text-[11px] text-edu-slate-500">{u.email}</p>
+                        <div className="min-w-0">
+                          <p className="text-[13px] font-medium text-edu-ink truncate">{u.full_name}</p>
+                          <p className="text-[11px] text-edu-slate-500 truncate">{u.email}</p>
                         </div>
                       </div>
                     </td>

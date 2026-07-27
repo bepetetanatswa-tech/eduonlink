@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   const {
     transactionId, phoneNumber, amount, screenshotUrl, purchaseType,
-    planKey, creditPackKey, creditType, creditAmount, courseId, classId,
+    planKey, creditPackKey, courseId, classId,
   } = body ?? {};
 
   const txnId = String(transactionId ?? "").trim();
@@ -55,13 +55,14 @@ export async function POST(request: NextRequest) {
   // approved without manually cross-checking the item's price, get full
   // access for a fraction of the real cost.
   let expectedPrice: number | null = null;
+  let creditPack: (typeof CREDIT_PACKS)[number] | null = null;
   if (purchaseType === "subscription") {
     if (!PLANS.some((p) => p.key === planKey)) return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
     expectedPrice = getPlan(planKey).price;
   } else if (purchaseType === "credits") {
-    const pack = CREDIT_PACKS.find((p) => p.key === creditPackKey);
-    if (!pack) return NextResponse.json({ error: "Invalid credit pack" }, { status: 400 });
-    expectedPrice = pack.price;
+    creditPack = CREDIT_PACKS.find((p) => p.key === creditPackKey) ?? null;
+    if (!creditPack) return NextResponse.json({ error: "Invalid credit pack" }, { status: 400 });
+    expectedPrice = creditPack.price;
   } else if (purchaseType === "course") {
     if (!courseId) return NextResponse.json({ error: "courseId is required" }, { status: 400 });
     const { data: course } = await admin.from("courses").select("price").eq("id", courseId).maybeSingle();
@@ -112,7 +113,11 @@ export async function POST(request: NextRequest) {
     ip_address: ip,
   };
   if (planKey) payload.plan_key = planKey;
-  if (creditPackKey) { payload.credit_pack_key = creditPackKey; payload.credit_type = creditType; payload.credit_amount = creditAmount; }
+  // credit_type/credit_amount are derived from the matched pack, never from
+  // the client body — otherwise a request could pass a cheap pack's price
+  // (which passes the check above) while claiming a different, more
+  // valuable credit_type/credit_amount, and get over-credited on approval.
+  if (creditPack) { payload.credit_pack_key = creditPack.key; payload.credit_type = creditPack.creditType; payload.credit_amount = creditPack.amount; }
   if (courseId) payload.course_id = courseId;
   if (classId) payload.class_id = classId;
 

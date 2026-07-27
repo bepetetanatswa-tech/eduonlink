@@ -2,7 +2,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getPlan } from "@/lib/subscription/plans";
+import { getPlan, CREDIT_PACKS } from "@/lib/subscription/plans";
 
 const CREDIT_COLUMNS = ["ai_questions", "mock_exams", "pdf_downloads", "certificates", "school_seats"];
 
@@ -53,6 +53,15 @@ export async function POST(request: NextRequest) {
   if (statusErr) return NextResponse.json({ error: "Could not mark payment approved" }, { status: 400 });
 
   if (pv.purchase_type === "credits" && pv.credit_type && pv.credit_amount && CREDIT_COLUMNS.includes(pv.credit_type)) {
+    // Belt-and-suspenders: re-derive the expected credit_type/credit_amount
+    // from the stored pack key and refuse to credit on a mismatch, in case
+    // a row was forged before the server-side fix in /api/payments/submit
+    // (which now derives these from the pack itself, not the client body).
+    const pack = CREDIT_PACKS.find((p) => p.key === pv.credit_pack_key);
+    if (!pack || pack.creditType !== pv.credit_type || pack.amount !== pv.credit_amount) {
+      return NextResponse.json({ error: "Payment marked approved, but the stored credit_type/credit_amount don't match the credit pack — this looks tampered with. No credits were granted. Investigate manually." }, { status: 200 });
+    }
+
     // user_credits.user_id references auth.users(id), unlike payment_verifications.user_id (profiles.id).
     const authUserId = pv.profile?.user_id;
     const col = pv.credit_type as string;

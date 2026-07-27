@@ -477,7 +477,12 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
  .single();
 
  if (error || !data) {
- setSendError("Message failed to send. Try again.");
+ console.error("attemptSend failed:", error?.message ?? "no data returned", error?.code ?? "");
+ setSendError(
+ error?.code === "PGRST301" || error?.message?.toLowerCase().includes("jwt")
+ ? "Your session expired. Please refresh and try again."
+ : "Message failed to send. Try again."
+ );
  return false;
  }
 
@@ -524,6 +529,7 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
  const path = `dm/${dmChannelKey(profileId, selected.id)}/${Date.now()}.${ext}`;
  const { error: uploadErr } = await supabase.storage.from("chat-attachments").upload(path, file);
  if (uploadErr) {
+ console.error("uploadFile storage upload failed:", uploadErr.message);
  setSendError("Upload failed. Try again.");
  setUploading(false);
  return;
@@ -552,6 +558,9 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
  }
  return [{ other: selected, lastMsg: data, unread: 0 }, ...prev];
  });
+ } else {
+ console.error("uploadFile message insert failed:", error?.message ?? "no data returned");
+ setSendError("Upload failed. Try again.");
  }
  setUploading(false);
  }
@@ -630,9 +639,13 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
  return [{ other: selected, lastMsg: data, unread: 0 }, ...prev];
  });
  await (supabase.rpc as any)("notify_dm_message", { p_recipient_id: selected.id, p_preview: " Voice message" });
+ } else {
+ console.error("uploadVoiceNote message insert failed:", error?.message ?? "no data returned");
+ setSendError("Voice note failed to send. Try again.");
  }
- } catch {
- // best-effort, matches uploadFile's existing lack of error UI
+ } catch (err) {
+ console.error("uploadVoiceNote failed:", err instanceof Error ? err.message : err);
+ setSendError("Voice note failed to send. Try again.");
  }
  setUploading(false);
  }

@@ -8,28 +8,30 @@ interface FormInputProps extends InputHTMLAttributes<HTMLInputElement> {
   error?: string;
   hint?: string;
   icon?: React.ReactNode;
+  theme?: "light" | "dark";
 }
 
 export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
-  ({ label, error, hint, icon, type, className, ...props }, ref) => {
+  ({ label, error, hint, icon, type, className, theme = "light", ...props }, ref) => {
     const [showPassword, setShowPassword] = useState(false);
     const isPassword = type === "password";
     const inputType = isPassword ? (showPassword ? "text" : "password") : type;
+    const dark = theme === "dark";
 
     return (
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-edu-slate-600">{label}</label>
+        <label className={`text-sm font-medium ${dark ? "text-edu-paper" : "text-edu-slate-600"}`}>{label}</label>
 
         <div className="relative">
           {icon && (
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 pointer-events-none text-edu-slate-400">
+            <div className={`absolute left-0 top-1/2 -translate-y-1/2 pointer-events-none ${dark ? "text-edu-slate-400" : "text-edu-slate-400"}`}>
               {icon}
             </div>
           )}
           <input
             ref={ref}
             type={inputType}
-            className={`field ${className ?? ""}`}
+            className={`field ${dark ? "field-dark" : ""} ${className ?? ""}`}
             data-error={!!error}
             style={{
               paddingLeft: icon ? "26px" : "2px",
@@ -58,8 +60,8 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
           )}
         </div>
 
-        {error && <p className="text-xs text-edu-clay">{error}</p>}
-        {hint && !error && <p className="text-xs text-edu-slate-500">{hint}</p>}
+        {error && <p className={`text-xs ${dark ? "text-[#E38F76]" : "text-edu-clay"}`}>{error}</p>}
+        {hint && !error && <p className={`text-xs ${dark ? "text-edu-slate-400" : "text-edu-slate-500"}`}>{hint}</p>}
       </div>
     );
   }
@@ -73,21 +75,23 @@ interface FormSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> 
   label: string;
   error?: string;
   children: React.ReactNode;
+  theme?: "light" | "dark";
 }
 
-export function FormSelect({ label, error, children, ...props }: FormSelectProps) {
+export function FormSelect({ label, error, children, theme = "light", ...props }: FormSelectProps) {
+  const dark = theme === "dark";
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-sm font-medium text-edu-slate-600">{label}</label>
+      <label className={`text-sm font-medium ${dark ? "text-edu-paper" : "text-edu-slate-600"}`}>{label}</label>
       <div className="relative">
-        <select className="field appearance-none pr-6 cursor-pointer" data-error={!!error} {...props}>
+        <select className={`field ${dark ? "field-dark" : ""} appearance-none pr-6 cursor-pointer`} data-error={!!error} {...props}>
           {children}
         </select>
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none text-edu-slate-400">
+        <div className={`absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none ${dark ? "text-edu-slate-400" : "text-edu-slate-400"}`}>
           <IconChevronDown size={14} />
         </div>
       </div>
-      {error && <p className="text-xs text-edu-clay">{error}</p>}
+      {error && <p className={`text-xs ${dark ? "text-[#E38F76]" : "text-edu-clay"}`}>{error}</p>}
     </div>
   );
 }

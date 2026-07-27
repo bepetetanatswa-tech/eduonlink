@@ -100,10 +100,11 @@ body {
   background: var(--copper);
   border: 1px solid var(--copper);
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: background-color 0.15s ease, transform 0.1s ease;
   text-decoration: none;
 }
 .btn-primary:hover  { background: var(--copper-dark); }
+.btn-primary:active:not(:disabled) { transform: scale(0.98); }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .btn-ghost {
@@ -119,10 +120,11 @@ body {
   background: transparent;
   border: 1px solid #AEB5A6;
   cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.1s ease;
   text-decoration: none;
 }
 .btn-ghost:hover { background: rgba(28,38,32,0.04); border-color: var(--ink); }
+.btn-ghost:active:not(:disabled) { transform: scale(0.98); }
 
 .btn-gold {
   display: inline-flex;
@@ -137,10 +139,42 @@ body {
   background: var(--gold);
   border: 1px solid var(--gold);
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: background-color 0.15s ease, transform 0.1s ease;
   text-decoration: none;
 }
 .btn-gold:hover { background: #8A6D2F; }
+.btn-gold:active:not(:disabled) { transform: scale(0.98); }
+
+/* ─── Ghost button, dark-surface variant — for the bottle-green
+   secondary pages (About, Contact, Privacy, Terms), where the flat
+   ink-on-transparent .btn-ghost text would vanish against a dark bg ─── */
+.btn-ghost-dark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--paper);
+  background: transparent;
+  border: 1px solid rgba(242,238,227,0.32);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.1s ease;
+  text-decoration: none;
+}
+.btn-ghost-dark:hover { background: rgba(242,238,227,0.08); border-color: var(--paper); }
+.btn-ghost-dark:active:not(:disabled) { transform: scale(0.98); }
+
+/* ─── Ruled input, dark-surface variant ─── */
+.field-dark {
+  color: var(--paper);
+  border-bottom-color: rgba(242,238,227,0.32);
+}
+.field-dark::placeholder { color: rgba(242,238,227,0.4); }
+.field-dark:focus { border-bottom-color: var(--gold); }
+.field-dark[data-error="true"] { border-bottom-color: #E38F76; }
 
 /* ─── Section spacing ─── */
 .section { padding: 88px 0; }

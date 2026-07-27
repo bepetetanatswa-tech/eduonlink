@@ -13,7 +13,7 @@ export default function SuspendedPage() {
           Your EduOnLink account has been suspended by an administrator. If you believe this is a mistake, please contact us.
         </p>
         <a
-          href="mailto:vavhimiacademy@gmail.com"
+          href="mailto:bepetetanatswa@gmail.com"
           className="inline-block px-6 py-3 rounded text-sm font-semibold bg-edu-copper-100 border border-edu-copper-300 text-edu-copper-dark"
         >
           Contact support

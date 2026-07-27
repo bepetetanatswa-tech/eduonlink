@@ -64,7 +64,7 @@ export default function CurriculumSection() {
                 key={l.id}
                 onClick={() => setActive(l.id)}
                 className={`px-5 py-2.5 text-sm font-semibold font-display transition-colors duration-150 ${
-                  active === l.id ? "bg-edu-copper text-edu-paper" : "text-edu-slate-600"
+                  active === l.id ? "bg-edu-copper text-edu-paper" : "text-edu-slate-600 hover:bg-edu-slate-100 hover:text-edu-ink"
                 }`}
               >
                 {l.name}

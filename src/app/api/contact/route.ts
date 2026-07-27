@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { sendEmail, contactFormEmail } from "@/lib/email";
 import { gibberishReason } from "@/lib/textQuality";
 
-const CONTACT_INBOX = "vavhimiacademy@gmail.com";
+const CONTACT_INBOX = "bepetetanatswa@gmail.com";
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);

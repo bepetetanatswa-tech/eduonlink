@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { uploadToR2 } from "@/lib/uploadToR2";
 
 interface DocumentUploadProps {
   category: string; // FILE_CATEGORIES key in src/lib/r2.ts
@@ -26,31 +27,12 @@ export function DocumentUpload({ category, ids, label, hint, currentKey, onUploa
     setError(null);
     setUploading(true);
     try {
-      const presignRes = await fetch("/api/uploads/presign", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ category, filename: file.name, contentType: file.type, fileSize: file.size, ids }),
-      });
-      const presignData = await presignRes.json();
-      if (!presignRes.ok) {
-        setError(presignData.error ?? "Could not prepare upload.");
-        return;
-      }
-
-      const putRes = await fetch(presignData.uploadUrl, {
-        method: "PUT",
-        headers: { "Content-Type": file.type },
-        body: file,
-      });
-      if (!putRes.ok) {
-        setError("Upload failed. Please try again.");
-        return;
-      }
-
+      const { key } = await uploadToR2(file, category, ids);
       setFileName(file.name);
-      onUploaded(presignData.key);
-    } catch {
-      setError("Upload failed. Please try again.");
+      onUploaded(key);
+    } catch (err) {
+      console.error("DocumentUpload failed:", err instanceof Error ? err.message : err);
+      setError(err instanceof Error ? err.message : "Upload failed. Please try again.");
     } finally {
       setUploading(false);
     }

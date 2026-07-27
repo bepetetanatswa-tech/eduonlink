@@ -217,19 +217,23 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
 
  async function loadConversations() {
  setLoading(true);
- const { data: sent } = await (supabase.from("messages") as any)
+ const [{ data: sent }, { data: hides }] = await Promise.all([
+ (supabase.from("messages") as any)
  .select("*, sender:profiles!messages_sender_id_fkey(id,full_name,avatar_url,role,email), receiver:profiles!messages_receiver_id_fkey(id,full_name,avatar_url,role,email)")
  .is("class_id", null)
  .eq("is_deleted", false)
  .or(`sender_id.eq.${profileId},receiver_id.eq.${profileId}`)
  .order("created_at", { ascending: false })
- .limit(200);
+ .limit(200),
+ (supabase.from("conversation_hides") as any).select("other_user_id").eq("user_id", profileId),
+ ]);
 
  if (sent) {
+ const hiddenIds = new Set((hides ?? []).map((h: any) => h.other_user_id));
  const convMap = new Map<string, { other: Profile; lastMsg: DMsg; unread: number }>();
  sent.forEach((m: DMsg) => {
  const other = m.sender_id === profileId ? m.receiver : m.sender;
- if (!other) return;
+ if (!other || hiddenIds.has(other.id)) return;
  if (!convMap.has(other.id)) {
  convMap.set(other.id, {
  other,
@@ -667,6 +671,30 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
  }
  }
 
+ // Hides the conversation from just this user's own list (conversation_hides,
+ // RLS-scoped to the owner) — the other participant's copy is untouched. A DB
+ // trigger auto-clears the hide if they send a new message, so this is "clear
+ // my view for now," not a permanent block, matching WhatsApp/iMessage.
+ async function deleteConversation(other: Profile) {
+ const ok = await confirmDialog({
+ title: "Delete this chat?",
+ message: `This removes "${other.full_name}" from your conversation list. ${other.full_name.split(" ")[0]} will still have their copy. If they message you again, it'll reappear.`,
+ danger: true,
+ confirmLabel: "Delete",
+ });
+ if (!ok) return;
+ const { error } = await (supabase.from("conversation_hides") as any)
+ .upsert({ user_id: profileId, other_user_id: other.id }, { onConflict: "user_id,other_user_id" });
+ if (error) {
+ console.error("deleteConversation failed:", error.message);
+ showToast("Couldn't delete the chat — try again.", "error");
+ return;
+ }
+ setConversations(prev => prev.filter(c => c.other.id !== other.id));
+ if (selected?.id === other.id) setSelected(null);
+ showToast("Chat deleted.", "success");
+ }
+
  async function toggleBlock() {
  if (!selected) return;
  if (blockedByMe) {
@@ -712,6 +740,15 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
  {conv.lastMsg.sender_id === profileId ? "You: " : ""}{conv.lastMsg.message_type === "text" ? conv.lastMsg.content : conv.lastMsg.message_type === "voice" ? " Voice message" : ` ${conv.lastMsg.attachment_name ?? "Attachment"}`}
  </p>
  </div>
+ {/* Always visible, not hover-only — hover reveals were a known problem
+ on touch devices elsewhere in this app and were removed for that. */}
+ <button
+ onClick={(e) => { e.stopPropagation(); deleteConversation(conv.other); }}
+ aria-label={`Delete chat with ${conv.other.full_name}`}
+ style={{ width: 28, height: 28, borderRadius: 8, border: "none", background: "transparent", color: S.dim, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
+ >
+ <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14zM10 11v6M14 11v6" /></svg>
+ </button>
  </div>
  ))
  )}
@@ -761,6 +798,9 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
  </button>
  <button onClick={() => setShowBlockConfirm(true)} style={{ background: "none", border: `1px solid ${S.border}`, borderRadius: 8, color: blockedByMe ? "#1F4738" : S.muted, cursor: "pointer", fontSize: 11, padding: "6px 10px" }}>
  {blockedByMe ? "Unblock" : "Block"}
+ </button>
+ <button onClick={() => deleteConversation(selected)} title="Delete chat" style={{ width: 28, height: 28, borderRadius: 8, border: `1px solid ${S.border}`, background: "none", color: S.muted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+ <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14zM10 11v6M14 11v6" /></svg>
  </button>
  </div>
 

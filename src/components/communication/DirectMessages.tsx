@@ -107,6 +107,14 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
  const [revealedId, setRevealedId] = useState<string | null>(null);
  const confirmDialog = useConfirm();
  const showToast = useToast();
+ // other_user_id -> ISO timestamp. A "deleted" chat isn't erased from the
+ // DB (the other participant's copy must stay intact) — it's a permanent
+ // per-user watermark: any message at or before this moment is filtered
+ // out of *my* view, forever, even if the conversation later resurfaces
+ // because of a new message sent after the watermark.
+ const [hiddenSince, setHiddenSince] = useState<Map<string, string>>(new Map());
+ const hiddenSinceRef = useRef<Map<string, string>>(new Map());
+ useEffect(() => { hiddenSinceRef.current = hiddenSince; }, [hiddenSince]);
  const touchTimerRef = useRef<ReturnType<typeof setTimeout>>();
  const touchMovedRef = useRef(false);
  const handleTouchStart = (msgId: string) => {
@@ -225,15 +233,19 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
  .or(`sender_id.eq.${profileId},receiver_id.eq.${profileId}`)
  .order("created_at", { ascending: false })
  .limit(200),
- (supabase.from("conversation_hides") as any).select("other_user_id").eq("user_id", profileId),
+ (supabase.from("conversation_hides") as any).select("other_user_id, hidden_at").eq("user_id", profileId),
  ]);
 
+ const hiddenMap = new Map<string, string>((hides ?? []).map((h: any) => [h.other_user_id, h.hidden_at]));
+ setHiddenSince(hiddenMap);
+
  if (sent) {
- const hiddenIds = new Set((hides ?? []).map((h: any) => h.other_user_id));
  const convMap = new Map<string, { other: Profile; lastMsg: DMsg; unread: number }>();
  sent.forEach((m: DMsg) => {
  const other = m.sender_id === profileId ? m.receiver : m.sender;
- if (!other || hiddenIds.has(other.id)) return;
+ if (!other) return;
+ const watermark = hiddenMap.get(other.id);
+ if (watermark && m.created_at <= watermark) return; // deleted from my view, permanently
  if (!convMap.has(other.id)) {
  convMap.set(other.id, {
  other,
@@ -412,13 +424,17 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
  // Fetch the most recent 100 (descending), then reverse to ascending —
  // ordering ascending with a limit returns the oldest 100 messages ever
  // sent instead, hiding all recent activity past 100 messages.
- const { data } = await (supabase.from("messages") as any)
+ let query = (supabase.from("messages") as any)
  .select("*, sender:profiles!messages_sender_id_fkey(id,full_name,avatar_url,role,email), receiver:profiles!messages_receiver_id_fkey(id,full_name,avatar_url,role,email), parent:messages!messages_parent_id_fkey(id,content,sender:profiles!messages_sender_id_fkey(full_name))")
  .is("class_id", null)
  .eq("is_deleted", false)
- .or(`and(sender_id.eq.${profileId},receiver_id.eq.${other.id}),and(sender_id.eq.${other.id},receiver_id.eq.${profileId})`)
- .order("created_at", { ascending: false })
- .limit(100);
+ .or(`and(sender_id.eq.${profileId},receiver_id.eq.${other.id}),and(sender_id.eq.${other.id},receiver_id.eq.${profileId})`);
+ // Chat was deleted from my view before — never resurface anything at or
+ // before that moment, even though the thread itself still exists for
+ // the other participant.
+ const watermark = hiddenSinceRef.current.get(other.id);
+ if (watermark) query = query.gt("created_at", watermark);
+ const { data } = await query.order("created_at", { ascending: false }).limit(100);
  if (data) setMessages([...data].reverse());
 
  await (supabase.from("messages") as any)
@@ -671,25 +687,28 @@ export function DirectMessages({ profileId, userRole, allowedRoles, heightOffset
  }
  }
 
- // Hides the conversation from just this user's own list (conversation_hides,
- // RLS-scoped to the owner) — the other participant's copy is untouched. A DB
- // trigger auto-clears the hide if they send a new message, so this is "clear
- // my view for now," not a permanent block, matching WhatsApp/iMessage.
+ // Records a permanent per-user watermark (conversation_hides.hidden_at,
+ // RLS-scoped to the owner) — every message at or before this instant is
+ // filtered out of *my* view from now on, in the list and if the thread is
+ // reopened. The other participant's copy is completely untouched; if they
+ // message me again, only that new message (and anything after it) shows.
  async function deleteConversation(other: Profile) {
  const ok = await confirmDialog({
  title: "Delete this chat?",
- message: `This removes "${other.full_name}" from your conversation list. ${other.full_name.split(" ")[0]} will still have their copy. If they message you again, it'll reappear.`,
+ message: `This clears "${other.full_name}"'s message history from your view and removes them from your conversation list. ${other.full_name.split(" ")[0]} still has their own copy. If they message you again, you'll only see messages from that point on.`,
  danger: true,
  confirmLabel: "Delete",
  });
  if (!ok) return;
+ const hiddenAt = new Date().toISOString();
  const { error } = await (supabase.from("conversation_hides") as any)
- .upsert({ user_id: profileId, other_user_id: other.id }, { onConflict: "user_id,other_user_id" });
+ .upsert({ user_id: profileId, other_user_id: other.id, hidden_at: hiddenAt }, { onConflict: "user_id,other_user_id" });
  if (error) {
  console.error("deleteConversation failed:", error.message);
  showToast("Couldn't delete the chat — try again.", "error");
  return;
  }
+ setHiddenSince(prev => new Map(prev).set(other.id, hiddenAt));
  setConversations(prev => prev.filter(c => c.other.id !== other.id));
  if (selected?.id === other.id) setSelected(null);
  showToast("Chat deleted.", "success");

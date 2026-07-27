@@ -83,7 +83,7 @@ export default async function StudentDashboardPage() {
         <div className="border border-edu-slate-200 rounded overflow-hidden">
           <div className="px-4 py-3 border-b border-edu-slate-200 flex justify-between items-center">
             <h3 className="font-display font-semibold text-sm text-edu-ink">My classes</h3>
-            <Link href="/student/dashboard/lessons" className="text-[11px] text-edu-copper flex items-center gap-0.5">
+            <Link href="/student/dashboard/classes" className="text-[11px] text-edu-copper flex items-center gap-0.5">
               View all <IconChevronRight size={11} />
             </Link>
           </div>

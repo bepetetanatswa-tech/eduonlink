@@ -49,15 +49,15 @@ export function CourseAccessGate({ courseId, courseTitle, price, hasPurchased, m
  if (locked) {
  return (
  <>
- <div style={{ padding: "18px 14px", textAlign: "center" }}>
- <p style={{ fontSize: 12, color: "#6E7A6C", marginBottom: 10 }}>
- {materials.length} lesson{materials.length !== 1 ? "s" : ""} · unlock for <strong style={{ color: "#A9873F" }}>${price.toFixed(2)}</strong>
+ <div style={{ padding: "20px 16px", textAlign: "center" }}>
+ <p style={{ fontSize: 12, color: "#6E7A6C", marginBottom: 12 }}>
+ {materials.length} lesson{materials.length !== 1 ? "s" : ""} in this course
  </p>
  <button
  onClick={() => setShowPurchase(true)}
- style={{ padding: "8px 20px", borderRadius: 9, background: "rgba(169,135,63,0.12)", border: "1px solid rgba(169,135,63,0.3)", color: "#A9873F", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+ style={{ padding: "13px 28px", borderRadius: 10, background: "#A9873F", border: "1px solid #A9873F", color: "#F2EEE3", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 2px 8px rgba(169,135,63,0.25)" }}
  >
- Unlock this course
+ Enroll now — ${price.toFixed(2)}
  </button>
  </div>
  {showPurchase && (

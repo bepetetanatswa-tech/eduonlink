@@ -38,7 +38,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/teacher/dashboard/messages":         "EduChat",
   "/teacher/dashboard/announcements":    "Announcements",
   "/student/dashboard":                  "My Dashboard",
-  "/student/dashboard/lessons":          "My Lessons",
+  "/student/dashboard/lessons":          "Lessons & Courses",
   "/student/dashboard/assignments":      "Assignments",
   "/student/dashboard/grades":           "My Grades",
   "/student/dashboard/exam-prep":        "Exam Preparation",

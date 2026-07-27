@@ -87,19 +87,21 @@ export function ClassCard({ c }: { c: ClassInfo }) {
         )}
       </div>
 
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-        <Link href={`/student/dashboard/classes/${c.id}/chat`} style={{ flex: "1 1 40%", padding: "8px", borderRadius: 8, background: `${S.accent}15`, border: `1px solid ${S.accent}30`, color: S.accent, fontSize: 12, fontWeight: 600, textAlign: "center", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        <Link href={`/student/dashboard/classes/${c.id}/chat`} style={{ padding: "8px", borderRadius: 8, background: `${S.accent}15`, border: `1px solid ${S.accent}30`, color: S.accent, fontSize: 12, fontWeight: 600, textAlign: "center", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
           <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
           Chat
         </Link>
-        <Link href={`/student/dashboard/classes/${c.id}/live`} style={{ flex: "1 1 40%", padding: "8px", borderRadius: 8, background: "rgba(31,71,56,0.1)", border: "1px solid rgba(31,71,56,0.25)", color: "#1F4738", fontSize: 12, fontWeight: 600, textAlign: "center", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+        <Link href={`/student/dashboard/classes/${c.id}/live`} style={{ padding: "8px", borderRadius: 8, background: "rgba(31,71,56,0.1)", border: "1px solid rgba(31,71,56,0.25)", color: "#1F4738", fontSize: 12, fontWeight: 600, textAlign: "center", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
           <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
           Live
         </Link>
-        <Link href={`/student/dashboard/classes/${c.id}/lessons`} style={{ flex: "1 1 40%", padding: "8px", borderRadius: 8, background: "rgba(169,135,63,0.1)", border: "1px solid rgba(169,135,63,0.25)", color: "#A9873F", fontSize: 12, fontWeight: 600, textAlign: "center", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+        <Link href={`/student/dashboard/classes/${c.id}/lessons`} style={{ padding: "8px", borderRadius: 8, background: "rgba(169,135,63,0.08)", border: "1px solid rgba(169,135,63,0.2)", color: "#A9873F", fontSize: 12, fontWeight: 600, textAlign: "center", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+          <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
           Lessons
         </Link>
-        <Link href={`/student/dashboard/classes/${c.id}/assignments`} style={{ flex: "1 1 40%", padding: "8px", borderRadius: 8, background: "rgba(169,135,63,0.1)", border: "1px solid rgba(169,135,63,0.25)", color: "#A9873F", fontSize: 12, fontWeight: 600, textAlign: "center", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+        <Link href={`/student/dashboard/classes/${c.id}/assignments`} style={{ padding: "8px", borderRadius: 8, background: "rgba(169,135,63,0.08)", border: "1px solid rgba(169,135,63,0.2)", color: "#A9873F", fontSize: 12, fontWeight: 600, textAlign: "center", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+          <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
           Assignments
         </Link>
       </div>

@@ -41,8 +41,8 @@ export default async function StudentLessonsPage() {
  return (
  <div style={{ maxWidth: 900, display: "flex", flexDirection: "column", gap: 24 }}>
  <div>
- <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1C2620", fontFamily: "inherit", margin: 0 }}>My Lessons</h2>
- <p style={{ fontSize: 12, color: "#6E7A6C", marginTop: 4 }}>ZIMSEC-aligned courses and study materials</p>
+ <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1C2620", fontFamily: "inherit", margin: 0 }}>My Lessons &amp; Courses</h2>
+ <p style={{ fontSize: 12, color: "#6E7A6C", marginTop: 4 }}>ZIMSEC-aligned courses and study materials — enroll in a paid course below to unlock it</p>
  </div>
 
  {(courses ?? []).length === 0 ? (

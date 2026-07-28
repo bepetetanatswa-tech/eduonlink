@@ -10,7 +10,7 @@ import { IconBell } from "@/components/icons";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { useToast } from "@/components/ui/ToastProvider";
 
-interface Sender { id: string; full_name: string; avatar_url: string | null; role: string }
+interface Sender { id: string; full_name: string; role: string }
 interface Reaction { emoji: string; user_id: string }
 interface ParentMsg { id: string; content: string; sender: { full_name: string } }
 
@@ -44,9 +44,8 @@ interface Props {
 
 const EMOJIS = ["👍", "❤", "😂", "😮", "😢", "🔥", "✅", "👎"];
 
-function Avatar({ name, url, size = 28 }: { name: string; url?: string | null; size?: number }) {
+function Avatar({ name, size = 28 }: { name: string; size?: number }) {
  const initials = name.split("").map(w => w[0]).slice(0, 2).join("").toUpperCase();
- if (url) return <img src={url} alt={name} style={{ width: size, height: size, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />;
  return (
  <div style={{ width: size, height: size, borderRadius: "50%", background: "linear-gradient(135deg,#B1502B,#8F4022)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.38, fontWeight: 700, color: "#fff", flexShrink: 0 }}>
  {initials}
@@ -110,7 +109,7 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
  const prevMessageCount = useRef(0);
  const [showInfo, setShowInfo] = useState(false);
  const [infoTab, setInfoTab] = useState<"members" | "media" | "files" | "links" | "starred">("members");
- const [members, setMembers] = useState<{ id: string; full_name: string; avatar_url: string | null; role: string }[] | null>(null);
+ const [members, setMembers] = useState<{ id: string; full_name: string; role: string }[] | null>(null);
  const [isOnline, setIsOnline] = useState(true);
  const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
  const pendingMessagesRef = useRef<PendingMessage[]>([]);
@@ -192,7 +191,7 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
  // messages ever sent instead, hiding all recent activity once a class
  // chat has grown past 100 messages.
  const { data } = await (supabase.from("messages") as any)
- .select(`*, sender:profiles!messages_sender_id_fkey(id,full_name,avatar_url,role), reactions:message_reactions(emoji,user_id), parent:messages!messages_parent_id_fkey(id,content,sender:profiles!messages_sender_id_fkey(full_name))`)
+ .select(`*, sender:profiles!messages_sender_id_fkey(id,full_name,role), reactions:message_reactions(emoji,user_id), parent:messages!messages_parent_id_fkey(id,content,sender:profiles!messages_sender_id_fkey(full_name))`)
  .eq("class_id", classId)
  .eq("is_deleted", false)
  .order("created_at", { ascending: false })
@@ -251,7 +250,7 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
  .channel(`class-msgs:${classId}`)
  .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `class_id=eq.${classId}` }, async (payload) => {
  const { data } = await (supabase.from("messages") as any)
- .select(`*, sender:profiles!messages_sender_id_fkey(id,full_name,avatar_url,role), reactions:message_reactions(emoji,user_id), parent:messages!messages_parent_id_fkey(id,content,sender:profiles!messages_sender_id_fkey(full_name))`)
+ .select(`*, sender:profiles!messages_sender_id_fkey(id,full_name,role), reactions:message_reactions(emoji,user_id), parent:messages!messages_parent_id_fkey(id,content,sender:profiles!messages_sender_id_fkey(full_name))`)
  .eq("id", payload.new.id)
  .single();
  if (data) setMessages(prev => [...prev, data]);
@@ -471,9 +470,9 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
  setShowInfo(true);
  if (members === null) {
  const { data: enrolled } = await (supabase.from("class_enrollments") as any)
- .select("profiles(id,full_name,avatar_url,role)").eq("class_id", classId).eq("status", "active");
+ .select("profiles(id,full_name,role)").eq("class_id", classId).eq("status", "active");
  const { data: cls } = await (supabase.from("classes") as any)
- .select("profiles!classes_teacher_id_fkey(id,full_name,avatar_url,role)").eq("id", classId).single();
+ .select("profiles!classes_teacher_id_fkey(id,full_name,role)").eq("id", classId).single();
  const list = (enrolled ?? []).map((r: any) => r.profiles).filter(Boolean);
  if (cls?.profiles) list.unshift(cls.profiles);
  setMembers(list);
@@ -663,7 +662,7 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
  {/* Avatar */}
  {!isOwn && (
  <div style={{ width: 28, flexShrink: 0, alignSelf: "flex-end" }}>
- {showAvatar && <Avatar name={msg.sender?.full_name ?? "?"} url={msg.sender?.avatar_url} size={28} />}
+ {showAvatar && <Avatar name={msg.sender?.full_name ?? "?"} size={28} />}
  </div>
  )}
 
@@ -842,7 +841,7 @@ export function ClassChat({ classId, profileId, userName, className, isTeacher =
  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
  {members.map((m, i) => (
  <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
- <Avatar name={m.full_name} url={m.avatar_url} size={32} />
+ <Avatar name={m.full_name} size={32} />
  <div>
  <p style={{ fontSize: 13, color: S.text, margin: 0, fontWeight: 600 }}>{m.full_name}</p>
  <p style={{ fontSize: 10, color: S.dim, margin: 0, textTransform: "capitalize" }}>{i === 0 && m.role === "teacher" ? "Teacher" : m.role.replace("_", "")}</p>

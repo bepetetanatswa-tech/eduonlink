@@ -12,7 +12,6 @@ interface Props {
     full_name: string;
     email: string;
     role: UserRole;
-    avatar_url: string | null;
   };
   children: React.ReactNode;
 }

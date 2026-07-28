@@ -9,7 +9,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: profile } = await (supabase.from("profiles") as any)
-    .select("id, full_name, email, role, avatar_url")
+    .select("id, full_name, email, role")
     .eq("user_id", user.id)
     .single();
 

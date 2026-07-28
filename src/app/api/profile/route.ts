@@ -6,7 +6,7 @@ import { logAdminAction } from "@/lib/auditLog";
 
 const UPDATABLE_FIELDS = [
   "first_name", "last_name", "date_of_birth", "gender", "phone",
-  "province", "district", "town", "bio", "avatar_url",
+  "province", "district", "town", "bio",
   "school_id", "school_name",
   "form_level", "enrolled_subjects",
   "guardian_name", "guardian_phone",

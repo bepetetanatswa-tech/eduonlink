@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { FormInput, FormSelect } from "@/components/auth/FormInput";
 import { AuthButton, AuthError, AuthSuccess } from "@/components/auth/AuthCard";
-import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import { SecurityPanel } from "@/components/profile/SecurityPanel";
 import {
   FORM_LEVELS, ZIMSEC_SUBJECTS, PROVINCES,
@@ -21,7 +20,7 @@ type ChildLink = {
 type School = { id: string; name: string };
 
 const REQUIRED_FIELDS: (keyof Profile)[] = [
-  "first_name", "last_name", "avatar_url", "date_of_birth", "gender", "phone",
+  "first_name", "last_name", "date_of_birth", "gender", "phone",
   "province", "district", "town", "bio",
 ];
 const STUDENT_REQUIRED: (keyof Profile)[] = ["form_level", "enrolled_subjects", "guardian_name", "guardian_phone"];
@@ -54,7 +53,6 @@ export function ProfileEditor() {
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [dob, setDob] = useState("");
   const [gender, setGender] = useState("");
   const [phone, setPhone] = useState("");
@@ -96,7 +94,6 @@ export function ProfileEditor() {
 
       setFirstName(p.first_name ?? "");
       setLastName(p.last_name ?? "");
-      setAvatarUrl(p.avatar_url);
       setDob(p.date_of_birth ?? "");
       setGender(p.gender ?? "");
       setPhone(p.phone ?? "");
@@ -134,7 +131,7 @@ export function ProfileEditor() {
     setSuccess(null);
     try {
       const fields: Record<string, unknown> = {
-        first_name: firstName, last_name: lastName, avatar_url: avatarUrl,
+        first_name: firstName, last_name: lastName,
         date_of_birth: dob || null, gender: gender || null, phone: phone || null, bio: bio || null,
         province: province || null, district: district || null, town: town || null,
       };
@@ -242,7 +239,6 @@ export function ProfileEditor() {
 
       <div className="rounded-2xl p-6 flex flex-col gap-4" style={{ background: "rgba(28,38,32,0.02)", border: "1px solid rgba(28,38,32,0.06)" }}>
         <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#6E7A6C" }}>Basic info</p>
-        <AvatarUpload userId={profile.user_id} currentUrl={avatarUrl} name={`${firstName} ${lastName}`} onUploaded={setAvatarUrl} />
         <div className="grid grid-cols-2 gap-3">
           <FormInput label="First name" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
           <FormInput label="Last name" value={lastName} onChange={(e) => setLastName(e.target.value)} />

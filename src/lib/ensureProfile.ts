@@ -81,7 +81,6 @@ export async function ensureProfileExists(
       first_name: firstName || null,
       last_name: lastName || null,
       role,
-      avatar_url: meta.avatar_url ?? meta.picture ?? null,
       ...registrationFields,
     });
 

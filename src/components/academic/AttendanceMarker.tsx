@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 interface Cls { id: string; name: string; subject: string }
-interface Student { id: string; full_name: string; avatar_url: string | null }
+interface Student { id: string; full_name: string }
 interface AttRow { student_id: string; status: string; reason: string }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -37,7 +37,7 @@ export function AttendanceMarker({ profileId, lockedClassId }: { profileId: stri
   useEffect(() => {
     if (!classId) return;
     (supabase.from("class_enrollments") as any)
-      .select("student:profiles!class_enrollments_student_id_fkey(id,full_name,avatar_url)")
+      .select("student:profiles!class_enrollments_student_id_fkey(id,full_name)")
       .eq("class_id", classId).eq("status", "active")
       .then(({ data }: any) => {
         const studs = (data ?? []).map((e: any) => e.student).filter(Boolean);

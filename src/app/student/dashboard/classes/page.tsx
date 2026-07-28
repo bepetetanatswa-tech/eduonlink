@@ -14,14 +14,13 @@ export default async function StudentClassesPage() {
   if (!profile) redirect("/auth/login");
 
   const { data: enrollments } = await (supabase.from("class_enrollments") as any)
-    .select("class_id, status, classes(id,name,subject,grade_level,teacher_id,profiles!classes_teacher_id_fkey(full_name,avatar_url))")
+    .select("class_id, status, classes(id,name,subject,grade_level,teacher_id,profiles!classes_teacher_id_fkey(full_name))")
     .eq("student_id", profile.id)
     .eq("status", "active");
 
   const classes = (enrollments ?? []).map((e: any) => ({
     ...e.classes,
     teacherName: e.classes?.profiles?.full_name,
-    teacherAvatar: e.classes?.profiles?.avatar_url,
   }));
   const classIds = classes.map((c: any) => c.id);
 

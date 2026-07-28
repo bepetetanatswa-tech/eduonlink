@@ -20,7 +20,7 @@ interface Assignment {
 interface Submission {
  id: string; student_id: string; content: string | null; file_url: string | null;
  score: number | null; feedback: string | null; submitted_at: string; status: string; is_late: boolean;
- student: { full_name: string; avatar_url: string | null };
+ student: { full_name: string };
 }
 
 function daysLate(submittedAt: string, dueDate: string | null): number {
@@ -86,7 +86,7 @@ export function AssignmentManager({ profileId, lockedClassId }: { profileId: str
 
  const loadSubmissions = async (a: Assignment) => {
  const { data } = await (supabase.from("submissions") as any)
- .select("*, student:profiles!submissions_student_id_fkey(full_name,avatar_url)")
+ .select("*, student:profiles!submissions_student_id_fkey(full_name)")
  .eq("assignment_id", a.id).order("submitted_at");
  const enriched = { ...a, submissions: data ?? [] };
  setSelectedAssignment(enriched);

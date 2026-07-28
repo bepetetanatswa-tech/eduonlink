@@ -13,7 +13,7 @@ interface DocumentUploadProps {
 }
 
 // Private-document upload (qualification proof, national ID) via the R2
-// presign flow — unlike AvatarUpload/SchoolLogoUpload, these aren't public
+// presign flow — unlike SchoolLogoUpload, these aren't public
 // Supabase Storage buckets: the file never gets a public URL, only an R2
 // object key, which /api/files/[...key] later resolves to a freshly-signed
 // URL after an ownership check (see canAccessFileKey in src/lib/r2.ts).

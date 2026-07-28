@@ -29,7 +29,7 @@ export default async function TeacherClassStudentsPage({ params }: Props) {
   if (!cls || cls.teacher_id !== profile.id) redirect("/teacher/dashboard/classes");
 
   const { data: enrollments } = await (supabase.from("class_enrollments") as any)
-    .select("student:profiles!class_enrollments_student_id_fkey(id,full_name,avatar_url,email)")
+    .select("student:profiles!class_enrollments_student_id_fkey(id,full_name,email)")
     .eq("class_id", classId)
     .eq("status", "active");
 
@@ -61,14 +61,9 @@ export default async function TeacherClassStudentsPage({ params }: Props) {
           const status = attendanceByStudent.get(s.id);
           return (
             <div key={s.id} style={{ background: "rgba(28,38,32,0.02)", border: `1px solid ${S.border}`, borderRadius: 12, padding: "12px 16px", display: "flex", alignItems: "center", gap: 12 }}>
-              {s.avatar_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={s.avatar_url} alt={s.full_name} style={{ width: 36, height: 36, borderRadius: 10, objectFit: "cover", flexShrink: 0 }} />
-              ) : (
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#B1502B,#8F4022)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff", flexShrink: 0 }}>
-                  {initials(s.full_name)}
-                </div>
-              )}
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#B1502B,#8F4022)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff", flexShrink: 0 }}>
+                {initials(s.full_name)}
+              </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ fontSize: 13, fontWeight: 600, color: S.text, margin: 0 }}>{s.full_name}</p>
                 <p style={{ fontSize: 11, color: S.dim, margin: 0 }}>{s.email}</p>

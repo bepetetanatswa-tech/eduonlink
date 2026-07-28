@@ -73,7 +73,7 @@ const PROFILE_PATH: Record<UserRole, string> = {
 };
 
 interface TopBarProps {
-  profile: { id: string; full_name: string; email: string; role: UserRole; avatar_url: string | null };
+  profile: { id: string; full_name: string; email: string; role: UserRole };
   onMenuClick: () => void;
 }
 
@@ -129,14 +129,9 @@ export function TopBar({ profile, onMenuClick }: TopBarProps) {
             onClick={() => setDropdownOpen(!dropdownOpen)}
             className={`flex items-center gap-2 pl-1 pr-2 py-1 rounded border border-edu-slate-300 transition-colors duration-150 ${dropdownOpen ? "bg-edu-slate-100" : "hover:bg-edu-slate-100"}`}
           >
-            {profile.avatar_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={profile.avatar_url} alt={profile.full_name} className="w-7 h-7 rounded object-cover" />
-            ) : (
-              <div className="w-7 h-7 rounded flex items-center justify-center text-[11px] font-bold text-edu-paper bg-edu-copper">
-                {initials}
-              </div>
-            )}
+            <div className="w-7 h-7 rounded flex items-center justify-center text-[11px] font-bold text-edu-paper bg-edu-copper">
+              {initials}
+            </div>
             <span className="text-xs font-medium text-edu-slate-600 max-w-[100px] overflow-hidden text-ellipsis whitespace-nowrap">
               {profile.full_name.split(" ")[0]}
             </span>

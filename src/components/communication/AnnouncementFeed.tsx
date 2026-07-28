@@ -20,7 +20,7 @@ interface Announcement {
  scheduled_at: string | null;
  created_at: string;
  edited_at: string | null;
- author: { full_name: string; avatar_url: string | null; role: string };
+ author: { full_name: string; role: string };
  reads?: number;
  is_read?: boolean;
 }
@@ -68,7 +68,7 @@ export function AnnouncementFeed({ profileId, schoolId, classId, showAuthorContr
  const load = useCallback(async () => {
  setLoading(true);
  let q = (supabase.from("announcements") as any)
- .select("*, author:profiles!announcements_author_id_fkey(full_name,avatar_url,role), reads:announcement_reads(count)")
+ .select("*, author:profiles!announcements_author_id_fkey(full_name,role), reads:announcement_reads(count)")
  .order("is_pinned", { ascending: false })
  .order("is_emergency", { ascending: false })
  .order("created_at", { ascending: false })

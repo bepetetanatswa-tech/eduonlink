@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { FormInput, FormSelect } from "@/components/auth/FormInput";
 import { AuthButton, AuthError } from "@/components/auth/AuthCard";
-import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import { SchoolLogoUpload } from "@/components/profile/SchoolLogoUpload";
 import { DocumentUpload } from "@/components/profile/DocumentUpload";
 import { gibberishReason, invalidCodeReason } from "@/lib/textQuality";
@@ -52,7 +51,6 @@ export default function OnboardingPage() {
  // Local form state
  const [firstName, setFirstName] = useState("");
  const [lastName, setLastName] = useState("");
- const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
  const [dob, setDob] = useState("");
  const [gender, setGender] = useState("");
  const [phone, setPhone] = useState("");
@@ -115,7 +113,6 @@ export default function OnboardingPage() {
 
  setFirstName(p.first_name ?? "");
  setLastName(p.last_name ?? "");
- setAvatarUrl(p.avatar_url);
  setDob(p.date_of_birth ?? "");
  setGender(p.gender ?? "");
  setPhone(p.phone ?? "");
@@ -363,7 +360,6 @@ export default function OnboardingPage() {
 
  {currentKey === "basics" && (
  <>
- <AvatarUpload userId={userId} currentUrl={avatarUrl} name={`${firstName} ${lastName}`} onUploaded={setAvatarUrl} />
  <div className="grid grid-cols-2 gap-3">
  <FormInput label="First name" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
  <FormInput label="Last name" value={lastName} onChange={(e) => setLastName(e.target.value)} />

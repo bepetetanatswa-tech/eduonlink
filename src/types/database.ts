@@ -13,7 +13,6 @@ export interface Profile {
   full_name: string;
   email: string;
   role: UserRole;
-  avatar_url: string | null;
   phone: string | null;
   first_name: string | null;
   last_name: string | null;

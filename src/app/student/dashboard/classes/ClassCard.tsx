@@ -8,7 +8,6 @@ interface ClassInfo {
   subject: string | null;
   grade_level: string | null;
   teacherName?: string;
-  teacherAvatar?: string | null;
   nextSessionAt?: string | null;
   lastActivityAt?: string | null;
   unreadCount?: number;
@@ -53,14 +52,9 @@ export function ClassCard({ c }: { c: ClassInfo }) {
       onMouseEnter={(e) => (e.currentTarget.style.borderColor = `${S.accent}40`)}
       onMouseLeave={(e) => (e.currentTarget.style.borderColor = S.border)}>
       <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-        {c.teacherAvatar ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={c.teacherAvatar} alt={c.teacherName ?? ""} style={{ width: 36, height: 36, borderRadius: 10, objectFit: "cover", flexShrink: 0 }} />
-        ) : (
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#B1502B,#8F4022)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff", flexShrink: 0 }}>
-            {initials(c.teacherName)}
-          </div>
-        )}
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#B1502B,#8F4022)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff", flexShrink: 0 }}>
+          {initials(c.teacherName)}
+        </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <h3 style={{ fontSize: 15, fontWeight: 700, color: S.text, fontFamily: "inherit", margin: "0 0 3px" }}>{c.name}</h3>
           {c.subject && <p style={{ fontSize: 12, color: S.muted, margin: 0 }}>{c.subject}{c.grade_level ? ` · Grade ${c.grade_level}` : ""}</p>}

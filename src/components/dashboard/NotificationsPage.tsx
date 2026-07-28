@@ -17,16 +17,6 @@ function timeAgo(iso: string) {
  return `${Math.floor(hrs / 24)}d ago`;
 }
 
-// Notification message notifications embed the sender's profile id as
-// ?with=<id> in their link (see notify_dm_message / notify_class_message,
-// migration 026) — there's no separate sender_id column on notifications.
-function parseWithId(link?: string | null): string | null {
- if (!link) return null;
- const q = link.split("?")[1];
- if (!q) return null;
- return new URLSearchParams(q).get("with");
-}
-
 const TYPE_COLOR: Record<string, string> = {
  info: "#B1502B", warning: "#A9873F", success: "#1F4738",
  assignment: "#A9873F", grade: "#A9873F", announcement: "#B1502B",
@@ -35,7 +25,7 @@ const TYPE_COLOR: Record<string, string> = {
 
 const TYPE_LABELS: Record<string, string> = {
  info: "General", success: "Success", warning: "Warnings",
- assignment: "Assignments", grade: "Grades", message: "Messages",
+ assignment: "Assignments", grade: "Grades", message: "Class chat",
  announcement: "Announcements", payment: "Payments",
 };
 
@@ -60,9 +50,6 @@ export function NotificationsPage({ profileId }: { profileId: string }) {
  const [tab, setTab] = useState<Tab>("All");
  const [showPrefs, setShowPrefs] = useState(false);
  const [disabledTypes, setDisabledTypes] = useState<Set<string>>(new Set());
- const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
- const [replySending, setReplySending] = useState<Record<string, boolean>>({});
- const [replySent, setReplySent] = useState<Record<string, boolean>>({});
  const supabase = createClient();
  const router = useRouter();
 
@@ -154,42 +141,6 @@ export function NotificationsPage({ profileId }: { profileId: string }) {
  if (n.link) router.push(n.link);
  };
 
- const sendReply = async (n: Notification) => {
- const recipientId = parseWithId(n.link);
- const text = (replyDrafts[n.id] ?? "").trim();
- if (!recipientId || !text) return;
-
- setReplySending((prev) => ({ ...prev, [n.id]: true }));
-
- // eslint-disable-next-line @typescript-eslint/no-explicit-any
- const { data: blocked } = await (supabase.from("blocked_users") as any)
- .select("id")
- .or(`and(blocker_id.eq.${profileId},blocked_id.eq.${recipientId}),and(blocker_id.eq.${recipientId},blocked_id.eq.${profileId})`)
- .maybeSingle();
-
- if (blocked) {
- setReplySending((prev) => ({ ...prev, [n.id]: false }));
- return;
- }
-
- // eslint-disable-next-line @typescript-eslint/no-explicit-any
- const { error } = await (supabase.from("messages") as any)
- .insert({ sender_id: profileId, receiver_id: recipientId, content: text, class_id: null, message_type: "text" });
-
- if (!error) {
- // Client can't insert a notification row for another user under RLS —
- // this RPC (migration 026) runs SECURITY DEFINER and re-checks
- // block/mute status server-side.
- // eslint-disable-next-line @typescript-eslint/no-explicit-any
- await supabase.rpc("notify_dm_message", { p_recipient_id: recipientId, p_preview: text.slice(0, 80) } as any);
- setReplyDrafts((prev) => ({ ...prev, [n.id]: "" }));
- setReplySent((prev) => ({ ...prev, [n.id]: true }));
- setTimeout(() => setReplySent((prev) => ({ ...prev, [n.id]: false })), 3000);
- await markRead(n);
- }
- setReplySending((prev) => ({ ...prev, [n.id]: false }));
- };
-
  const filtered = notifications.filter((n) => matchesTab(n, tab));
 
  return (
@@ -259,9 +210,7 @@ export function NotificationsPage({ profileId }: { profileId: string }) {
  <p style={{ textAlign: "center", color: S.dim, fontSize: 13, padding: 40 }}>No notifications here</p>
  ) : (
  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
- {filtered.map((n) => {
- const isMessage = n.type === "message" && !!parseWithId(n.link);
- return (
+ {filtered.map((n) => (
  <div key={n.id} style={{
  background: S.card, border: `1px solid ${S.border}`, borderRadius: 12,
  padding: "12px 14px", borderLeft: `3px solid ${n.read ? S.border : TYPE_COLOR[n.type] ?? S.accent}`,
@@ -286,36 +235,8 @@ export function NotificationsPage({ profileId }: { profileId: string }) {
  ✕
  </button>
  </div>
-
- {isMessage && (
- <div style={{ display: "flex", gap: 8, marginTop: 10 }} onClick={(e) => e.stopPropagation()}>
- <input
- value={replyDrafts[n.id] ?? ""}
- onChange={(e) => setReplyDrafts((prev) => ({ ...prev, [n.id]: e.target.value }))}
- onKeyDown={(e) => { if (e.key === "Enter") sendReply(n); }}
- placeholder={replySent[n.id] ? "Sent ✓" : "Reply…"}
- disabled={!!replySending[n.id]}
- style={{
- flex: 1, padding: "7px 10px", background: "rgba(28,38,32,0.04)",
- border: `1px solid ${S.border}`, borderRadius: 8, color: S.text, fontSize: 12, outline: "none",
- }}
- />
- <button
- onClick={() => sendReply(n)}
- disabled={!!replySending[n.id] || !(replyDrafts[n.id] ?? "").trim()}
- style={{
- padding: "7px 14px", borderRadius: 8, border: "none", cursor: "pointer",
- background: S.accent, color: "#fff", fontSize: 12, fontWeight: 600,
- opacity: !(replyDrafts[n.id] ?? "").trim() ? 0.5 : 1,
- }}
- >
- Send
- </button>
  </div>
- )}
- </div>
- );
- })}
+ ))}
  </div>
  )}
  </div>
